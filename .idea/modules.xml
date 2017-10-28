@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/MethodsCompare.iml" filepath="$PROJECT_DIR$/.idea/MethodsCompare.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../OptProbl/.idea/OptProbl.iml" filepath="$PROJECT_DIR$/../OptProbl/.idea/OptProbl.iml" />
     </modules>
   </component>
 </project>
