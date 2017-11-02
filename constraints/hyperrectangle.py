@@ -1,6 +1,6 @@
 import numpy as np
 import itertools
-from tools.print_utils import vectorToString
+from utils.print_utils import vectorToString
 from constraints.convex_set_constraint import ConvexSetConstraints
 
 
