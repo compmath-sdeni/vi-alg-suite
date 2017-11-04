@@ -2,12 +2,14 @@ from problems.viproblem import VIProblem
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from constraints.allspace import Rn
-from tools.print_utils import vectorToString
+from utils.print_utils import vectorToString
 
 
+# noinspection PyPep8Naming
 class MatrixOperVI(VIProblem):
-    def __init__(self, A: np.ndarray, b: np.ndarray, C: ConvexSetConstraints = None, x0: np.ndarray = None):
-        super().__init__(x0=x0 if x0 is not None else b)
+    def __init__(self, A: np.ndarray, b: np.ndarray, C: ConvexSetConstraints = None,
+                 x0: np.ndarray = None, hr_name: str= None):
+        super().__init__(x0=x0 if x0 is not None else b, hr_name=hr_name)
         self.C = C if C is not None else Rn(A.shape[0])
         self.A = A
         self.b = b

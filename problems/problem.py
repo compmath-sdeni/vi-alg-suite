@@ -9,9 +9,10 @@ class Problem:
     defDataDir = 'data'
 
     def __init__(self, *,
-                 xtest: Union[np.ndarray, float] = None, x0: Union[np.ndarray, float] = None):
+                 xtest: Union[np.ndarray, float] = None, x0: Union[np.ndarray, float] = None, hr_name: str = None):
         self._x0: Union[np.ndarray, float] = x0
         self.xtest: Union[np.ndarray, float] = xtest
+        self.hr_name: str = hr_name
 
     @property
     def x0(self) -> Union[np.ndarray, float]:
@@ -46,3 +47,6 @@ class Problem:
 
     def GetErrorByTestX(self, xstar: Union[np.array, np.ndarray, float]) -> float:
         return np.dot((self.xtest - xstar), (self.xtest - xstar)) if self.xtest is not None else xstar
+
+    def GetHRName(self):
+        return self.hr_name if self.hr_name is not None else self.__class__.__name__

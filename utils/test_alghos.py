@@ -31,7 +31,7 @@ class BasicAlghoTests:
             stats[alg_name]['problem'] = probl_name
 
             if self.on_alg_start is not None:
-                self.on_alg_start(alg, alg.currentState())
+                self.on_alg_start(alg, alg.currentState()) # dict()
 
             start: float = time.process_time()
             prev_time: float = 0

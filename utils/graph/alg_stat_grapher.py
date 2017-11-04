@@ -43,9 +43,6 @@ class AlgStatGrapher:
              legend: list = None,
              xLabel: str = 'Iterations', yLabel: str = 'Error', plotTitle: str = ''):
 
-        if len(data.shape) == 1:
-            data = [data]
-
         if xDataIndices is None or (isinstance(xDataIndices, list) and not xDataIndices):
             xDataIndices = [0]
 
@@ -100,5 +97,3 @@ class AlgStatGrapher:
             plt.title(plotTitle, loc='center')
 
         fig.tight_layout()
-
-        plt.show()

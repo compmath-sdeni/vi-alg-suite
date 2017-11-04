@@ -2,7 +2,7 @@ from problems.problem import Problem
 
 
 class IterativeAlgorithm:
-    def __init__(self, problem: Problem, eps: float = 0.0001, lam: float = 0.1, min_iters: int = 0):
+    def __init__(self, problem: Problem, eps: float = 0.0001, lam: float = 0.1, *, min_iters: int = 0):
         self.iter: int = 0
         self.problem: Problem = problem
         self.eps: float = eps
