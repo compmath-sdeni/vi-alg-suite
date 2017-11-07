@@ -14,7 +14,7 @@ class VaristepTwo(IterGradTypeMethod):
         self.theta: float = theta
         self.sigma: float = sigma
         self.tau: float = tau
-        self.alfaCalc = alfa_calc if alfa_calc is not None else lambda i : 1.0/np.sqrt(i+1)
+        self.alphaCalc = alfa_calc if alfa_calc is not None else lambda i : 1.0 / np.sqrt(i + 1)
 
         self._currentStateInfo: dict = {'x': 0, 'y': 0, 'lam': 0}
         self.j: int = 0
@@ -26,6 +26,7 @@ class VaristepTwo(IterGradTypeMethod):
         self.y: Union[np.ndarray, float] = self.x.copy()
         self.D: float = 0
         self.xstar: Union[np.ndarray, float] = xstar if xstar is not None else self.problem.x0.copy()
+        self.alpha = self.alphaCalc(1.0)
 
 
     def _supportHProject(self, x: np.ndarray):
@@ -121,7 +122,8 @@ class VaristepTwo(IterGradTypeMethod):
 
         if self.D >= self.eps or self.iter == 0 or self.min_iters > self.iter:
             self.iter += 1
-            self.x = self.xstar*self.alfaCalc(self.iter) + self._supportHProject(self.x - self.lam * self.problem.GradF(self.y))
+            self.alpha = self.alphaCalc(self.iter)
+            self.x = self.xstar*self.alpha + (1.0-self.alpha)*self._supportHProject(self.x - self.lam * self.problem.GradF(self.y))
             # self.x = self.problem.Project(self.x - self.lam * self.problem.GradF(self.y))
 
             return self.currentState()
@@ -136,7 +138,7 @@ class VaristepTwo(IterGradTypeMethod):
         return super().paramsInfoString() + "; x0: {0};".format(self.problem.XToString(self.problem.x0))
 
     def currentStateString(self) -> str:
-        return "{0}: j: {1}; lam: {2}; D: {3}; x: {4}; y: {5}; F(x): {6};".format(
+        return "{0}: j: {1}; lam: {2}; D: {3}; x: {4}; y: {5}; F(x): {6}; alp: {7}".format(
             self.iter, self.j, scalarToString(self.lam), self.D,
             self.problem.XToString(self.x), self.problem.XToString(self.y),
-            self.problem.FValToString(self.problem.F(self.x)))
+            self.problem.FValToString(self.problem.F(self.x)), self.alpha)

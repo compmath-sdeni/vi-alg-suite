@@ -72,16 +72,16 @@ def allAlgsFinished():
 
 # region default parameters
 lam = 0.1
-eps = 1e-13
+eps = 1e-3
 tet = 0.5
 tau = 0.75
 sigma = 1.0
 stab = 0
 
 minIterTime = 0
-printIterEvery = 0
-maxIters = 4000
-minIters = 100
+printIterEvery = 50
+maxIters = 50000
+minIters = 0
 
 dataPath = 'storage/methodstats'
 # endregion
@@ -117,26 +117,40 @@ problems: List[Problem] = []
 #               )
 # )
 
-N = 4000
-A = np.identity(N, dtype=float)
-#A = np.random.rand(dim, dim)
-A[0,3] = 1
-A[3,0] = 1
-A[N-1,7] = -1
-A[7,N-1] = -1
-testX = np.ones(N, dtype=float)
-x0 = np.random.rand(N)
-
+N = 2
 problems.append(
-    MatrixOperVI(A=A, b=A @ testX, x0=x0,
-                 hr_name='$Ax=b$')
+    FuncNDMin(2,
+              lambda x: (x[0] + x[1] - 1) ** 2,
+              lambda x: np.array([2 * (x[0] + x[1] - 1), 2 * (x[0] + x[1] - 1)]),
+              C=Hyperrectangle(2, [(-5, 5), (-5, 5)]),
+              x0=np.array([3, 2]),
+              xtest=np.array([1, 0]),
+              L=10,
+              vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
+              hr_name='$(x + y -1)^2->min, C = [-5,5]x[-5,5]$'
+              )
 )
+
+# N = 100
+# A = np.identity(N, dtype=float)
+# #A = np.random.rand(dim, dim)
+# A[0,3] = 1
+# A[3,0] = 1
+# A[N-1,7] = -1
+# A[7,N-1] = -1
+# testX = np.ones(N, dtype=float)
+# x0 = np.random.rand(N)
+#
+# hr_bounds = [(-5,5) for i in range(N)]
+#
+# problems.append(
+#     MatrixOperVI(A=A, b=A @ testX, x0=x0,
+#                  hr_name='$Ax=b$')
+# )
 
 # problems.append(
 #      NonlinR2Oper(x0=np.array([1,1]), hr_name='$NonLinA$')
 # )
-
-N = 100
 
 #hr_bounds = [(-5,5) for i in range(N)]
 #problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard'),)
@@ -150,9 +164,9 @@ N = 100
 # rotP.hr_name = 'Приклад 1'
 # problems.append(rotP)
 
-# problems.append(KoshimaShindo(x0=np.array([1,1,1,1])))
+#problems.append(KoshimaShindo(x0=np.random.rand(4)))
 
-#ppr = PageRankProblem.CreateRandom(N, 0.2)
+#ppr = PageRankProblem.CreateRandom(N, 0.01)
 #problems.append(ppr)
 
 # endregion
@@ -171,8 +185,10 @@ for p in problems:
 
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
+    xst = np.ones(N)
+    # xst[0]=0
 
-    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.ones(N), alfa_calc=lambda i:1.0/np.sqrt(i))
+    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=xst, alfa_calc=lambda i:1.0/(i+1))
     varisteptwo.hr_name = 'Alg2'
     varistepthree = VaristepThree(p, eps, lam, min_iters=minIters)
     varistepthree.hr_name = 'Alg3'
@@ -183,7 +199,7 @@ for p in problems:
 
     tested_items = [
         varistepone
-        #,varisteptwo
+        ,varisteptwo
         #,varistepthree
         ,korpele_basic
         #,korpele_mod

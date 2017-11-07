@@ -71,7 +71,7 @@ def allAlgsFinished():
 
 # region default parameters
 lam = 0.000001
-eps = 1e-10
+eps = 1e-6
 
 tet = 0.9
 tau = 0.75
@@ -136,11 +136,9 @@ problems: List[Problem] = []
 #     NonlinR2Oper(x0=np.array([1,1]), hr_name='$NonLinA$')
 # )
 
-N = 2000
+N = 100
 
-#hr_bounds = [(-5,5) for i in range(N)]
-#problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard'),)
-
+# ht = HarkerTest(N, C=Hyperrectangle(N, [(-50,50) for i in range(N)]), hr_name='HarkerTest', x0=np.random.rand(N))
 ht = HarkerTest(N, C=ClassicSimplex(N, N), hr_name='HarkerTest', x0=np.ones(N))
 problems.append(ht,)
 lam = 0.4/ht.norm
@@ -170,7 +168,7 @@ for p in problems:
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
 
-    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.zeros(N))
+    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.ones(N))
     varisteptwo.hr_name = 'Alg2'
     varistepthree = VaristepThree(p, eps, lam, min_iters=minIters)
     varistepthree.hr_name = 'Alg3'
