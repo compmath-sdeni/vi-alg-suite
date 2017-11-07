@@ -8,13 +8,13 @@ from scipy import linalg
 class GradProj(IterGradTypeMethod):
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, min_iters: int = 0):
         super().__init__(problem, eps, lam, min_iters=min_iters)
-        self.x: Union[np.ndarray, float] = self.problem.x0
-        self.px: Union[np.ndarray, float] = self.x
+        self.x: Union[np.ndarray, float] = self.problem.x0.copy()
+        self.px: Union[np.ndarray, float] = self.x.copy()
         self.D: float = 0
 
     def __iter__(self):
-        self.x = self.problem.x0
-        self.px = self.x
+        self.x = self.problem.x0.copy()
+        self.px = self.x.copy()
 
         return super().__iter__()
 

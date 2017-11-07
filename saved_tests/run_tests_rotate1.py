@@ -5,7 +5,6 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from typing import List
 
-from constraints.classic_simplex import ClassicSimplex
 from methods.korpele_mod import KorpelevichMod
 from methods.varistepthree import VaristepThree
 from methods.varisteptwo import VaristepTwo
@@ -13,7 +12,6 @@ from problems.harker_test import HarkerTest
 from problems.koshima_shindo import KoshimaShindo
 from problems.matrix_oper_vi import MatrixOperVI
 from problems.nonlin_r2_oper import NonlinR2Oper
-from problems.page_rank_problem import PageRankProblem
 from problems.problem import Problem
 from problems.visual_params import VisualParams
 from utils.graph.alg_stat_grapher import AlgStatGrapher
@@ -71,17 +69,18 @@ def allAlgsFinished():
 # endregion
 
 # region default parameters
-lam = 0.1
-eps = 1e-13
-tet = 0.5
+lam = 0.3
+eps = 1e-5
+
+tet = 0.9
 tau = 0.75
 sigma = 1.0
 stab = 0
 
 minIterTime = 0
 printIterEvery = 0
-maxIters = 4000
-minIters = 100
+maxIters = 1000
+minIters = 0
 
 dataPath = 'storage/methodstats'
 # endregion
@@ -117,43 +116,36 @@ problems: List[Problem] = []
 #               )
 # )
 
-N = 4000
-A = np.identity(N, dtype=float)
-#A = np.random.rand(dim, dim)
-A[0,3] = 1
-A[3,0] = 1
-A[N-1,7] = -1
-A[7,N-1] = -1
-testX = np.ones(N, dtype=float)
-x0 = np.random.rand(N)
-
-problems.append(
-    MatrixOperVI(A=A, b=A @ testX, x0=x0,
-                 hr_name='$Ax=b$')
-)
-
+# dim = 100
+# A = np.identity(dim, dtype=float)
+# #A = np.random.rand(dim, dim)
+# A[0,3] = 1
+# A[3,0] = 1
+# A[dim-1,7] = -1
+# A[7,dim-1] = -1
+# testX = np.ones(dim, dtype=float)
+# x0 = np.random.rand(dim)
+#
 # problems.append(
-#      NonlinR2Oper(x0=np.array([1,1]), hr_name='$NonLinA$')
+#     MatrixOperVI(A=A, b=A @ testX, x0=x0,
+#                  hr_name='$Ax=b$')
 # )
 
-N = 100
+# problems.append(
+#     NonlinR2Oper(x0=np.array([1,1]), hr_name='$NonLinA$')
+# )
 
-#hr_bounds = [(-5,5) for i in range(N)]
-#problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard'),)
+N = 4000
 
-#ht = HarkerTest(N, C=PositiveSimplexArea(N, 4), hr_name='HarkerTest', x0=np.ones(N))
-#problems.append(ht,)
-#lam = 0.4/ht.norm
-#print('Lam: ', lam)
+# hr_bounds = [(-5,5) for i in range(N)]
+# problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HarkerTest on hyperrect'),)
+# problems.append(HarkerTest(N, C=PositiveSimplexArea(N), hr_name='HarkerTest on simplex', x0=np.ones(N)),)
 
-# rotP = getProblem(N, False, False)
-# rotP.hr_name = 'Приклад 1'
-# problems.append(rotP)
+rotP = getProblem(N, False, False)
+rotP.hr_name = 'Приклад 1'
+problems.append(rotP)
 
-# problems.append(KoshimaShindo(x0=np.array([1,1,1,1])))
-
-#ppr = PageRankProblem.CreateRandom(N, 0.2)
-#problems.append(ppr)
+# problems.append(KoshimaShindo(x0=np.array([5,1,1,1])))
 
 # endregion
 
@@ -172,7 +164,7 @@ for p in problems:
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
 
-    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.ones(N), alfa_calc=lambda i:1.0/np.sqrt(i))
+    varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.zeros(N))
     varisteptwo.hr_name = 'Alg2'
     varistepthree = VaristepThree(p, eps, lam, min_iters=minIters)
     varistepthree.hr_name = 'Alg3'
@@ -183,11 +175,11 @@ for p in problems:
 
     tested_items = [
         varistepone
-        #,varisteptwo
+        ,varisteptwo
         #,varistepthree
         ,korpele_basic
         #,korpele_mod
-        #,popov_subgrad
+        ,popov_subgrad
         #,grad_desc
     ]
 
@@ -199,12 +191,12 @@ for p in problems:
     grapher = AlgStatGrapher()
 
     if statIdx > 0:
-        grapher.plot(np.array(stat), xDataIndices=[1 for i in range(len(tested_items))], yDataIndices=[[2] for i in range(len(tested_items))],
-                     plotTitle=p.GetHRName(), xLabel='Час, c.', yLabel='$||x_{n}-y_n||^2$',
+        grapher.plot(np.array(stat), xDataIndices=[1 for i in range(len(tested_items))], yDataIndices=[[3] for i in range(len(tested_items))],
+                     plotTitle=p.GetHRName(), xLabel='Час, c.', yLabel='$||x_{n}-x^*||^2$',
                      legend=[[it.GetHRName(), it.GetHRName() + " D"] for it in tested_items])
 
-        grapher.plot(np.array(stat), xDataIndices=[0 for i in range(len(tested_items))], yDataIndices=[[2] for i in range(len(tested_items))],
-                     plotTitle=p.GetHRName(), xLabel='Кількість ітерацій $n$', yLabel='$||x_{n}-y_n||^2$',
+        grapher.plot(np.array(stat), xDataIndices=[0 for i in range(len(tested_items))], yDataIndices=[[3] for i in range(len(tested_items))],
+                     plotTitle=p.GetHRName(), xLabel='Кількість ітерацій $n$', yLabel='$||x_{n}-x^*||^2$',
                      legend=[[it.GetHRName(), it.GetHRName() + " D"] for it in tested_items])
 
 plt.show()

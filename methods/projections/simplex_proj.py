@@ -1,18 +1,19 @@
 from collections import deque
 from methods.IterativeAlgorithm import IterativeAlgorithm
 from problems.simplex_proj import SimplexProjProblem
-from tools.print_utils import *
+from utils.print_utils import *
 
 
 class SimplexProj(IterativeAlgorithm):
-    def __init__(self, *, problem: SimplexProjProblem, eps: float = 0.0001, lam: float = 0.1, maxiters=1000):
+    def __init__(self, *, problem: SimplexProjProblem, eps: float = 0.0001, lam: float = 0.1, maxiters=1000, b:float = 1.0):
         super().__init__(problem, eps, lam)
         self.maxiters = maxiters
         self.n = self.problem.n
         self.z = self.problem.z
+        self.b = b;
 
     def __iter__(self):
-        lam = (1.0 - np.sum(self.z)) / self.n
+        lam = (self.b - np.sum(self.z)) / self.n
 
         self.x = self.z + lam
         self.px = np.copy(self.x)
@@ -36,7 +37,7 @@ class SimplexProj(IterativeAlgorithm):
         if neg == 0:
             raise StopIteration()
 
-        lam = (1.0 - posvals) / pos
+        lam = (self.b - posvals) / pos
         self.x[self.x < 0] = 0
         self.x[self.x > 0] += lam
 
@@ -51,9 +52,9 @@ class SimplexProj(IterativeAlgorithm):
         return dq.pop()['x'][0]
 
     @classmethod
-    def doInplace(cls, z: np.ndarray):
+    def doInplace(cls, z: np.ndarray, b: float = 1.0):
 
-        lam = (1.0 - np.sum(z)) / z.shape[0]
+        lam = (b - np.sum(z)) / z.shape[0]
         z += lam
 
         neg = 0
@@ -67,7 +68,7 @@ class SimplexProj(IterativeAlgorithm):
                 posvals += v
 
         while neg > 0:
-            lam = (1.0 - posvals) / pos
+            lam = (b - posvals) / pos
             z[z < 0] = 0
             z[z > 0] += lam
 
@@ -82,12 +83,12 @@ class SimplexProj(IterativeAlgorithm):
                     posvals += v
 
     @classmethod
-    def doB1BallProjInplace(cls, z: np.ndarray):
+    def doB1BallProjInplace(cls, z: np.ndarray, b: float = 1.0):
         t = np.ones_like(z, int)
         t[z < 0] = -1
         z *= t
-        if np.sum(z) > 1:
-            cls.doInplace(z)
+        if np.sum(z) > b:
+            cls.doInplace(z, b)
         z *= t
 
     def currentError(self) -> float:

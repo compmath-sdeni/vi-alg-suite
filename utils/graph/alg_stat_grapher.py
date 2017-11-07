@@ -64,7 +64,7 @@ class AlgStatGrapher:
 
         if graphColors is None:
             graphColors = self.initParamsArray(data.shape[0] if dims>1 else 1, len(yDataIndices) if dims == 1 else len(yDataIndices[0]),
-                                               ['g-', 'b-', 'r-', 'y-', 'c-', 'm-', 'k-'])
+                                               ['g-', 'b--', 'r:', 'y-.', 'c-', 'm--', 'k:'])
 
         if not isinstance(graphColors[0], list):
             graphColors = [graphColors]

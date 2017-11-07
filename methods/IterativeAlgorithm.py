@@ -2,12 +2,13 @@ from problems.problem import Problem
 
 
 class IterativeAlgorithm:
-    def __init__(self, problem: Problem, eps: float = 0.0001, lam: float = 0.1, *, min_iters: int = 0):
+    def __init__(self, problem: Problem, eps: float = 0.0001, lam: float = 0.1, *, min_iters: int = 0, hr_name: str = None):
         self.iter: int = 0
         self.problem: Problem = problem
         self.eps: float = eps
         self.lam: float = lam
         self.min_iters: int = min_iters
+        self.hr_name = hr_name
 
     def isStopConditionMet(self) -> float:
         return self.iter > self.min_iters
@@ -43,3 +44,6 @@ class IterativeAlgorithm:
 
     def GetErrorByTestX(self, x) -> float:
         return self.problem.GetErrorByTestX(x)
+
+    def GetHRName(self):
+        return self.hr_name if self.hr_name is not None else self.__class__.__name__

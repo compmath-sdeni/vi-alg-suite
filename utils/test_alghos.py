@@ -33,7 +33,7 @@ class BasicAlghoTests:
             if self.on_alg_start is not None:
                 self.on_alg_start(alg, alg.currentState()) # dict()
 
-            start: float = time.process_time()
+            start: float = time.perf_counter()
             prev_time: float = 0
             # noinspection PyBroadException
             if self.min_time > 0:
@@ -41,7 +41,7 @@ class BasicAlghoTests:
 
             for curState in alg:
                 if self.on_iteration is not None:
-                    cur: float = time.process_time()
+                    cur: float = time.perf_counter()
                     if not self.on_iteration(alg, curState, iter_num, cur - start):
                         return True
 
@@ -64,7 +64,7 @@ class BasicAlghoTests:
 
                     prev_time = time.perf_counter()
 
-            end:float = time.process_time()
+            end:float = time.perf_counter()
             stats[alg_name]['iterations'] = iter_num
             stats[alg_name]['time'] = (end - start)
             stats[alg_name]['solution'] = curState['x'] if not isinstance(curState['x'], (list, tuple, np.ndarray)) \

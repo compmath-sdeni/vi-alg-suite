@@ -2,7 +2,7 @@ import numpy as np
 
 from problems.problem import Problem
 from constraints.hyperplanes_bounded_set import HyperplanesBoundedSet
-from tools.print_utils import *
+from utils.print_utils import *
 
 
 class SimplexProjProblem(Problem):

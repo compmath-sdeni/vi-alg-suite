@@ -2,7 +2,7 @@ from problems.viproblem import VIProblem
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from constraints.allspace import Rn
-from tools.print_utils import vectorToString
+from utils.print_utils import vectorToString
 
 
 class PageRankProblem(VIProblem):

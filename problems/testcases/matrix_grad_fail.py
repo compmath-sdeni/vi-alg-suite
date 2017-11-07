@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg, vectorize
 import random
-from tools.print_utils import vectorToString
+from utils.print_utils import vectorToString
 
 from constraints.allspace import Rn
 from problems.matrix_oper_vi import MatrixOperVI

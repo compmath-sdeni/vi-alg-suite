@@ -10,12 +10,12 @@ class PopovSubgrad(IterGradTypeMethod):
     def __init__(self, problem:VIProblem, eps: float = 0.0001, lam:float = 0.1, *, min_iters:int = 0):
         super().__init__(problem, eps, lam, min_iters=min_iters)
 
-        self.x: Union[np.ndarray, float] = self.problem.x0
-        self.y: Union[np.ndarray, float] = self.x
+        self.x: Union[np.ndarray, float] = self.problem.x0.copy()
+        self.y: Union[np.ndarray, float] = self.x.copy()
 
-        self.px: Union[np.ndarray, float] = self.x
-        self.py: Union[np.ndarray, float] = self.x
-        self.ppy: Union[np.ndarray, float] = self.x
+        self.px: Union[np.ndarray, float] = self.x.copy()
+        self.py: Union[np.ndarray, float] = self.x.copy()
+        self.ppy: Union[np.ndarray, float] = self.x.copy()
 
         self.D: float = 0
 
@@ -32,8 +32,8 @@ class PopovSubgrad(IterGradTypeMethod):
 
 
     def __iter__(self):
-        self.x = self.px = self.problem.x0
-        self.y = self.py = self.ppy = self.problem.x0
+        self.x = self.px = self.problem.x0.copy()
+        self.y = self.py = self.ppy = self.problem.x0.copy()
 
         self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.ppy))
         self.ppy, self.py = self.py, self.problem.Project(self.x - self.lam * self.problem.GradF(self.ppy))
@@ -62,4 +62,4 @@ class PopovSubgrad(IterGradTypeMethod):
                     D=self.D)
 
     def currentStateString(self) -> str:
-        return "{0}: D: {1}; x: {2}; y: {3}".format(self.iter, self.D, self.problem.XToString(self.x), self.problem.XToString(self.y))
+        return "{0}: D: {1}; x: {2}; y: {3}; F: {4}".format(self.iter, self.D, self.problem.XToString(self.x), self.problem.XToString(self.y), self.problem.FValToString(self.problem.F(self.x)))
