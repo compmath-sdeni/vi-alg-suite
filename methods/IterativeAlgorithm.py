@@ -7,6 +7,10 @@ class IterativeAlgorithm:
         self.problem: Problem = problem
         self.eps: float = eps
         self.lam: float = lam
+
+        if self.problem.lam_override is not None:
+            self.lam = self.problem.lam_override
+
         self.min_iters: int = min_iters
         self.hr_name = hr_name
 

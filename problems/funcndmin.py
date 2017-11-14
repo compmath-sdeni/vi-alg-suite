@@ -12,7 +12,7 @@ from constraints.convex_set_constraint import ConvexSetConstraints
 class FuncNDMin(VIProblem):
     L = 10  # type: float
 
-    def __init__(self, arity: int, f: Callable[[np.ndarray], float], df: Callable[[np.ndarray], float], *,
+    def __init__(self, arity: int, f: Callable[[np.ndarray], float], df: Callable[[np.ndarray], np.ndarray], *,
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, L: float = 10, vis: Sequence[VisualParams] = None,
                  defaultProjection: np.ndarray = None, xtest: Union[np.ndarray, float] = None, hr_name: str = None):
@@ -33,7 +33,7 @@ class FuncNDMin(VIProblem):
     def F(self, x: np.array) -> float:
         return self.f(x)
 
-    def GradF(self, x: np.array) -> float:
+    def GradF(self, x: np.array) -> np.ndarray:
         return self.df(x)
 
     def Project(self, x: np.array) -> np.array:

@@ -10,19 +10,20 @@ class GradProj(IterGradTypeMethod):
         super().__init__(problem, eps, lam, min_iters=min_iters)
         self.x: Union[np.ndarray, float] = self.problem.x0.copy()
         self.px: Union[np.ndarray, float] = self.x.copy()
-        self.D: float = 0
+        self.D: float = None
 
     def __iter__(self):
         self.x = self.problem.x0.copy()
         self.px = self.x.copy()
+        self.D = None
 
         return super().__iter__()
 
     def __next__(self) -> dict:
-        self.D = linalg.norm(self.x - self.px)
         if self.min_iters > self.iter or self.iter == 0 or self.D >= self.eps:
             self.iter += 1
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.x))
+            self.D = linalg.norm(self.x - self.px)
             return self.currentState()
         else:
             raise StopIteration()

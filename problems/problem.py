@@ -9,10 +9,11 @@ class Problem:
     defDataDir = 'data'
 
     def __init__(self, *,
-                 xtest: Union[np.ndarray, float] = None, x0: Union[np.ndarray, float] = None, hr_name: str = None):
+                 xtest: Union[np.ndarray, float] = None, x0: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
         self._x0: Union[np.ndarray, float] = x0
         self.xtest: Union[np.ndarray, float] = xtest
         self.hr_name: str = hr_name
+        self.lam_override = lam_override
 
     @property
     def x0(self) -> Union[np.ndarray, float]:

@@ -23,7 +23,7 @@ class BasicAlghoTests:
         stats: dict = {}
         for alg in tested_items:
             iter_num: int = 0
-            alg_name: str = type(alg).__name__
+            alg_name: str = alg.hr_name if alg.hr_name is not None else type(alg).__name__
             probl_name: str = type(alg.problem).__name__
             print("\nStarting {0}. Params: {1}\nProblem: {2}".format(alg_name, alg.paramsInfoString(), probl_name))
             stats[alg_name] = {}

@@ -23,6 +23,8 @@ class MatrixOperVI(VIProblem):
 
     def df(self, x: np.ndarray) -> np.ndarray:
         return np.dot(self.A, x) - self.b
+        #return np.dot(self.A.T, np.dot(self.A, x) - self.b)
+
 
     def F(self, x: np.ndarray) -> float:
         return self.f(x)

@@ -41,7 +41,7 @@ class AlgStatGrapher:
 
     def plot(self, data: np.ndarray, *, xDataIndices: list = None, yDataIndices: list = None, graphColors: list = None,
              legend: list = None,
-             xLabel: str = 'Iterations', yLabel: str = 'Error', plotTitle: str = ''):
+             xLabel: str = 'Iterations', yLabel: str = 'Error', plotTitle: str = '', xScale: str = 'linear', yScale: str = 'log'):
 
         if xDataIndices is None or (isinstance(xDataIndices, list) and not xDataIndices):
             xDataIndices = [0]
@@ -86,7 +86,9 @@ class AlgStatGrapher:
                                yDataIndices=yDataIndices if dims == 1 else yDataIndices[j], graphColors=graphColors[j],
                                legend=legend[j], ax=ax)
 
-        ax.set_yscale('log')
+        ax.set_xscale(xScale)
+        ax.set_yscale(yScale)
+
         plt.legend(loc="upper right", bbox_to_anchor=[1, 1],
                    ncol=2, shadow=False, title="", fancybox=False, fontsize=self.defFont)
 
