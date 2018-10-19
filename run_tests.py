@@ -161,7 +161,7 @@ N = 3
 #               )
 # )
 
-N = 40
+N = 20
 np.random.seed(N)
 
 if N == 3:
@@ -196,22 +196,23 @@ xtest = np.array([i + 1 for i in range(N)])
 # b = A @ np.ones(N, dtype=float)
 b = A @ xtest
 # x0 = np.ones(N)
-x0 = (np.random.rand(N)*0.01 - 0.5*0.01) + xtest
+# x0 = (np.random.rand(N)*0.01 - 0.5*0.01) + xtest
+x0 = (np.random.rand(N)*5 - 5) + xtest
 
 print("Initial error 2: ", (np.dot(A@x0 - b, A@x0 - b)))
 print("Initial error 1: ", (np.abs(A@x0 - b).sum()))
 
-# problems.append(
-#     LinSysSplitted(N, A, b,
-#                    #C=Hyperrectangle(N, [(i+0.5, i+1.5) for i in range(N)]),
-#                    C=Hyperrectangle(N, [(-100, 100) for i in range(N)]),
-#                    x0=x0,
-#                    xtest=xtest,
-#                    vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
-#                    hr_name='$||Ax-b||_2$',
-#                    lam_override=lam*lam
-#                    )
-# )
+problems.append(
+    LinSysSplitted(N, A, b,
+                   #C=Hyperrectangle(N, [(i+0.5, i+1.5) for i in range(N)]),
+                   C=Hyperrectangle(N, [(-100, 100) for i in range(N)]),
+                   x0=x0,
+                   xtest=xtest,
+                   vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
+                   hr_name='$||Ax-b||_2$',
+                   lam_override=lam*lam
+                   )
+)
 
 # lam = 0.00001
 # problems.append(
@@ -225,37 +226,37 @@ print("Initial error 1: ", (np.abs(A@x0 - b).sum()))
 #               )
 # )
 
-X = np.array([
-    [1, 1, 1],
-    [-1, 1, 1],
-    [1, 1, -1],
-    [-31, 1, -1],
-    [31, 1, 1],
-    [-12, 1, 1],
-    [21, 1, -1],
-    [-1, 45, 1],
-    [-1, 4, 1],
-    [-1, -31, 1],
-    [1, 33, -1]
-])
+# X = np.array([
+#     [1, 1, 1],
+#     [-1, 1, 1],
+#     [1, 1, -1],
+#     [-31, 1, -1],
+#     [31, 1, 1],
+#     [-12, 1, 1],
+#     [21, 1, -1],
+#     [-1, 45, 1],
+#     [-1, 4, 1],
+#     [-1, -31, 1],
+#     [1, 33, -1]
+# ])
+#
+# y = np.array([np.sign(t[-1]) for t in X])
+#
+# print("LogRegCont: X: {0}; y:{1} ", (np.dot(A@x0 - b, A@x0 - b)))
+# print("Initial error 1: ", (np.abs(A@x0 - b).sum()))
+#
+# wtest = np.array([0, 0, 1])
+# w0 = np.array([1., 1, 1.0])
 
-y = np.array([np.sign(t[-1]) for t in X])
-
-print("LogRegCont: X: {0}; y:{1} ", (np.dot(A@x0 - b, A@x0 - b)))
-print("Initial error 1: ", (np.abs(A@x0 - b).sum()))
-
-wtest = np.array([0, 0, 1])
-w0 = np.array([1., 1, 1.0])
-
-problems.append(
-    LogRegFlavorTwo(X, y,
-                    C=Hyperrectangle(X.shape[1], [(-100, 100) for i in range(X.shape[1])]),
-                    w0=w0,
-                    wtest=wtest,
-                    hr_name='LogResCont',
-                    lam_override=0.01
-                    )
-)
+# problems.append(
+#     LogRegFlavorOne(X, y,
+#                     C=Hyperrectangle(X.shape[1], [(-100, 100) for i in range(X.shape[1])]),
+#                     w0=w0,
+#                     wtest=wtest,
+#                     hr_name='LogResCont',
+#                     lam_override=0.1
+#                     )
+# )
 
 # problems.append(
 #     MatrixOperVI(A, b,
@@ -347,10 +348,10 @@ for p in problems:
     stat = []
 
     tested_items = [
-        grad_desc
-        ,
+        #grad_desc
+        #,
         batched_grad_proj
-        #, batched_grad_proj2
+        , batched_grad_proj2
         , batched_grad_proj4
         #, batched_grad_proj8
         # ,varistepone
