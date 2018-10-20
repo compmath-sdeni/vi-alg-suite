@@ -1,3 +1,5 @@
+from typing import Union
+
 from problems.viproblem import VIProblem
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
@@ -8,8 +10,11 @@ from utils.print_utils import vectorToString
 # noinspection PyPep8Naming
 class MatrixOperVI(VIProblem):
     def __init__(self, A: np.ndarray, b: np.ndarray, C: ConvexSetConstraints = None,
-                 x0: np.ndarray = None, hr_name: str= None):
-        super().__init__(x0=x0 if x0 is not None else b, hr_name=hr_name)
+                 x0: np.ndarray = None, hr_name: str= None,
+                 xtest: Union[np.ndarray, float] = None, lam_override: float = None):
+        super().__init__(
+            x0=x0 if x0 is not None else b, hr_name=hr_name, xtest=xtest, lam_override=lam_override)
+
         self.C = C if C is not None else Rn(A.shape[0])
         self.A = A
         self.b = b

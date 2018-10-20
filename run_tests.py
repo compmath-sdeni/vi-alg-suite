@@ -7,6 +7,7 @@ from typing import List
 
 from constraints.classic_simplex import ClassicSimplex
 from methods.batched_grad_proj import BatchedGradProj
+from methods.korpele_vari_x_y import KorpeleVariX_Y
 from methods.korpele_mod import KorpelevichMod
 from methods.varistepthree import VaristepThree
 from methods.varisteptwo import VaristepTwo
@@ -83,16 +84,18 @@ def allAlgsFinished():
 # region default parameters
 do_graph = True
 
-lam = 0.001
+lam = 0.1
+lamInit = 1.0
 eps = 1e-10
 tet = 0.9
 tau = 0.5
 sigma = 1.0
 stab = 0
+N = 2
 
 minIterTime = 0
-printIterEvery = 1
-maxIters = 100000
+printIterEvery = 100
+maxIters = 10000
 minIters = 0
 
 dataPath = 'storage/methodstats'
@@ -129,7 +132,7 @@ problems: List[Problem] = []
 #               )
 # )
 
-N = 3
+# N = 3
 # problems.append(
 #     FuncSumMinSimple(3,
 #               [lambda x: (x[0] - 1) ** 2, lambda x: x[1] ** 2, lambda x: (x[2] + 2) ** 2],
@@ -143,86 +146,6 @@ N = 3
 #               xtest=np.array([1, 0, -2]),
 #               vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
 #               hr_name='$(x-1)^2+y^2+(z+2)^2->min, C = [-10,0.6]x[0.3,13]x[-1.5,13]$'
-#               )
-# )
-
-# N = 3
-#
-# A = np.eye(N, N)
-# b = np.ones(N)
-#
-# problems.append(
-#     LinSysSplitted(N, A, b,
-#               C=Hyperrectangle(N, [(-10, 10), (-10.3, 13), (-10.5, 13)]),
-#               x0=np.array([2, 2, -7]),
-#               xtest=np.array([1, 0, -2]),
-#               vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
-#               hr_name='$Ax-b$'
-#               )
-# )
-
-N = 20
-np.random.seed(N)
-
-if N == 3:
-    A = np.array([
-        [5, 2, 1]
-        , [1, 13, 4]
-        , [3, 7, 1]
-    ], dtype=float)
-else:
-    A = np.random.rand(N, N)
-
-A = A @ A.T
-
-for i in range(N):
-    A[i, i] += np.sum(A[i]) * 2.0
-
-print(vectorToString(A))
-
-norm = np.linalg.norm(A, 2)
-lam = (1.0 / norm)
-print("Norm: {0}; Lam: {1}".format(norm, lam))
-
-# lam = 0.1
-
-lam_batched = lam
-
-maxIters = 500
-printIterEvery = 1
-
-xtest = np.array([i + 1 for i in range(N)])
-
-# b = A @ np.ones(N, dtype=float)
-b = A @ xtest
-# x0 = np.ones(N)
-# x0 = (np.random.rand(N)*0.01 - 0.5*0.01) + xtest
-x0 = (np.random.rand(N)*5 - 5) + xtest
-
-print("Initial error 2: ", (np.dot(A@x0 - b, A@x0 - b)))
-print("Initial error 1: ", (np.abs(A@x0 - b).sum()))
-
-problems.append(
-    LinSysSplitted(N, A, b,
-                   #C=Hyperrectangle(N, [(i+0.5, i+1.5) for i in range(N)]),
-                   C=Hyperrectangle(N, [(-100, 100) for i in range(N)]),
-                   x0=x0,
-                   xtest=xtest,
-                   vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
-                   hr_name='$||Ax-b||_2$',
-                   lam_override=lam*lam
-                   )
-)
-
-# lam = 0.00001
-# problems.append(
-#     LinSysSplittedL1(N, A, b,
-#               C=Hyperrectangle(N, [(-100, 100) for i in range(N)]),
-#               x0=x0,
-#               xtest=xtest,
-#               vis=[VisualParams(xl=-3, xr=3, yb=-3, yt=3, zn=0, zf=56, elev=22, azim=-49)],
-#               hr_name='$||Ax-b||_1$',
-#               lam_override=lam*lam
 #               )
 # )
 
@@ -258,27 +181,69 @@ problems.append(
 #                     )
 # )
 
-# problems.append(
-#     MatrixOperVI(A, b,
-#               x0=np.array([1.3, 0.7, 1], dtype=float),
-#               hr_name='$Ax-b$'
-#               )
-# )
+
+# region SLAE problem #2
+
+isLoad = True
+matrixProblemId = 1
+baseProblemPath='storage/data/BadMatrix100-1/'
+
+if not isLoad:
+    N = 100
+    maxEl = 5
+    isOk = False
+
+    while not isOk:
+        A = np.random.rand(N, N)*maxEl
+
+        A = A.T*A
+        A += (N*maxEl/5)*np.identity(N)
+        testX = np.ones(N, dtype=float)
+
+        isOk = np.all(np.linalg.eigvals(A) > 0)
+
+    if isOk:
+        x0 = testX + (np.random.rand(N)*10 - 5)
+        np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
+        np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
+    else:
+        print("Error: matric is not PD!")
+else:
+    A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
+    x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
+
+    N = x0.shape[0]
+
+    testX = np.ones(N, dtype=float)
+
+C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
+
+problems.append(
+    MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+                 hr_name='$Ax=b$', xtest=testX, lam_override=0.0013)
+)
+
+# endregion
+
+# region (X1+X2+...+Xn - n/2)^2 -> min; lam = 1/4N
 
 # N = 100
 # problems.append(
 #     FuncNDMin(N,
 #               lambda x: (np.sum(x) - N/2) ** 2,
 #               lambda x: np.ones(N) * 2 * (np.sum(x) - N/2),
-#               C=Hyperrectangle(N, [(-5, 5) for i in range(N)]),
+#               C=Hyperrectangle(N, [(0, 5) for i in range(N)]),
 #               x0=np.array([i+1 for i in range(N)]),
-#               hr_name='$(x + y -1)^2->min, C = [-5,5]x[-5,5]$'
+#               hr_name='$(x + y -1)^2->min, C = [-5,5]x[-5,5]$',
+#               lam_override=1.0/N/4
 #               )
 # )
 
+# endregion
+
 # N = 100
 # A = np.identity(N, dtype=float)
-# #A = np.random.rand(dim, dim)
+# # #A = np.random.rand(dim, dim)
 # A[0,3] = 1
 # A[3,0] = 1
 # A[N-1,7] = -1
@@ -297,6 +262,7 @@ problems.append(
 #      NonlinR2Oper(x0=np.array([1,1]), hr_name='$NonLinA$')
 # )
 
+# N = 20
 # hr_bounds = [(-5,5) for i in range(N)]
 # problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard'),)
 
@@ -311,6 +277,7 @@ problems.append(
 
 # problems.append(KoshimaShindo(x0=np.random.rand(4)))
 
+# N = 5
 # ppr = PageRankProblem.CreateRandom(N, 0.01)
 # problems.append(ppr)
 
@@ -322,11 +289,12 @@ for p in problems:
     grad_desc = GradProj(p, eps, lam, min_iters=minIters)
     popov_subgrad = PopovSubgrad(p, eps, lam, min_iters=minIters)
     popov_subgrad.hr_name = 'Popov'
-    korpele_basic = Korpelevich(p, eps, lam, min_iters=minIters)
-    korpele_basic.hr_name = 'EGM'
+    korpele_basic = Korpelevich(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
+    korpele_basic.hr_name = 'Korpelevich'
     korpele_mod = KorpelevichMod(p, eps, lam, min_iters=minIters)
     varistepone = VaristepOne(p, eps, lam, min_iters=minIters)
     varistepone.hr_name = 'Alg1'
+    korpele_vari_x_y = KorpeleVariX_Y(p, eps, lamInit, min_iters=minIters, phi=0.9, gap=-1)
 
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
@@ -338,11 +306,6 @@ for p in problems:
     varistepthree = VaristepThree(p, eps, lam, min_iters=minIters)
     varistepthree.hr_name = 'Alg3'
 
-    batched_grad_proj = BatchedGradProj(p, eps, lam_batched, min_iters=minIters, split_count=1, hr_name='BatchedNoSplit')
-    batched_grad_proj2 = BatchedGradProj(p, eps, lam_batched, min_iters=minIters, split_count=2, hr_name='Batched x2')
-    batched_grad_proj4 = BatchedGradProj(p, eps, lam_batched, min_iters=minIters, split_count=4, hr_name='Batched x4')
-    batched_grad_proj8 = BatchedGradProj(p, eps, lam_batched, min_iters=minIters, split_count=8, hr_name='Batched x8')
-
     tryTimestamp = datetime.now()
     statIdx = 0
     stat = []
@@ -350,15 +313,13 @@ for p in problems:
     tested_items = [
         #grad_desc
         #,
-        batched_grad_proj
-        , batched_grad_proj2
-        , batched_grad_proj4
-        #, batched_grad_proj8
-        # ,varistepone
+        #,varistepone
         # ,varisteptwo
         # ,varistepthree
-        # ,korpele_basic
-        # ,korpele_mod
+        #,
+        korpele_vari_x_y
+      ,korpele_basic
+        #,korpele_mod
         # ,popov_subgrad
     ]
 

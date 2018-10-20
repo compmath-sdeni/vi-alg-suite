@@ -9,7 +9,11 @@ class Problem:
     defDataDir = 'data'
 
     def __init__(self, *,
-                 xtest: Union[np.ndarray, float] = None, x0: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
+                 xtest: Union[np.ndarray, float] = None,
+                 x0: Union[np.ndarray, float] = None,
+                 hr_name: str = None,
+                 lam_override: float = None):
+
         self._x0: Union[np.ndarray, float] = x0
         self.xtest: Union[np.ndarray, float] = xtest
         self.hr_name: str = hr_name
@@ -51,3 +55,6 @@ class Problem:
 
     def GetHRName(self):
         return self.hr_name if self.hr_name is not None else self.__class__.__name__
+
+    def GetLambdaOverride(self):
+        return self.lam_override

@@ -12,11 +12,13 @@ from constraints.convex_set_constraint import ConvexSetConstraints
 class FuncNDMin(VIProblem):
     L = 10  # type: float
 
-    def __init__(self, arity: int, f: Callable[[np.ndarray], float], df: Callable[[np.ndarray], np.ndarray], *,
+    def __init__(self,
+                 arity: int, f: Callable[[np.ndarray], float], df: Callable[[np.ndarray], np.ndarray], *,
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, L: float = 10, vis: Sequence[VisualParams] = None,
-                 defaultProjection: np.ndarray = None, xtest: Union[np.ndarray, float] = None, hr_name: str = None):
-        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name)
+                 defaultProjection: np.ndarray = None,
+                 xtest: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
+        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override)
 
         self.arity = arity
         self.f = f

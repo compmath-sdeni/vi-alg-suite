@@ -33,16 +33,19 @@ class BasicAlghoTests:
             if self.on_alg_start is not None:
                 self.on_alg_start(alg, alg.currentState()) # dict()
 
-            start: float = time.perf_counter()
-            prev_time: float = 0
+            prev_time: float = 0 # used only to ensure min iteration time if needed
             # noinspection PyBroadException
             if self.min_time > 0:
-                prev_time = time.perf_counter()
+                prev_time = time.process_time()
+
+            totalAlghoTime: float = 0
+            referenceTime:float = time.process_time() # used to count pure algho time, without output etc
 
             for curState in alg:
+                totalAlghoTime += (time.process_time() - referenceTime)
+
                 if self.on_iteration is not None:
-                    cur: float = time.perf_counter()
-                    if not self.on_iteration(alg, curState, iter_num, cur - start):
+                    if not self.on_iteration(alg, curState, iter_num, totalAlghoTime):
                         return True
 
                 if (iter_num == 1 and self.print_every > 0) or (
@@ -58,15 +61,16 @@ class BasicAlghoTests:
                     break
 
                 if self.min_time > 0:
-                    tm = time.perf_counter()
+                    tm = time.process_time()
                     if (tm - prev_time) < self.min_time:
                         time.sleep(self.min_time - (tm - prev_time))
 
-                    prev_time = time.perf_counter()
+                    prev_time = time.process_time()
 
-            end:float = time.perf_counter()
+                referenceTime = time.process_time()
+
             stats[alg_name]['iterations'] = iter_num
-            stats[alg_name]['time'] = (end - start)
+            stats[alg_name]['time'] = totalAlghoTime
             stats[alg_name]['solution'] = curState['x'] if not isinstance(curState['x'], (list, tuple, np.ndarray)) \
                 else curState['x'][0]
 
@@ -76,7 +80,7 @@ class BasicAlghoTests:
             stats[alg_name]['test_error'] = alg.GetErrorByTestX(stats[alg_name]['solution'])
 
             print(alg_name + " done {0} iterations in {1} seconds. Result:\n{2}".format(
-                iter_num, end - start, alg.currentStateString()))
+                iter_num, totalAlghoTime, alg.currentStateString()))
 
             if not (self.on_alg_finish is None):
                 self.on_alg_finish(alg, curState)
