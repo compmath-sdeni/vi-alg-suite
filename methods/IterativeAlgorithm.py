@@ -1,3 +1,5 @@
+import time
+
 from problems.problem import Problem
 
 
@@ -7,6 +9,7 @@ class IterativeAlgorithm:
         self.problem: Problem = problem
         self.eps: float = eps
         self.lam: float = lam
+        self.iterEndTime = 0
 
         if self.problem.lam_override is not None:
             self.lam = self.problem.lam_override
@@ -22,11 +25,13 @@ class IterativeAlgorithm:
 
     def __iter__(self):
         self.iter = 0
+        self.iterEndTime = 0
         return self
 
     def __next__(self) -> dict:
         if not self.isStopConditionMet():
             self.doStep()
+            self.iterEndTime = time.process_time()
 
             self.iter += 1
             return self.currentState()

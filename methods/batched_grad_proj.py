@@ -1,4 +1,5 @@
 from typing import Union
+import time
 
 import numpy as np
 from scipy import linalg
@@ -58,13 +59,16 @@ class BatchedGradProj(IterGradTypeMethod):
             self.topsum += self.lam * self.x
             self.bottomsum += self.lam
             self.z = self.topsum/self.bottomsum
+
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.x, self.z), D=self.D, F=(self.problem.F(self.x), self.problem.F(self.z)),
-                    mini_iter=self.mini_iter)
+                    mini_iter=self.mini_iter, iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0} ({1}): D: {2}; x: {3}; z: {4}; F(x): {5}; F(z): {6}".format(

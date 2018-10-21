@@ -1,3 +1,4 @@
+import time
 from scipy import linalg
 from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
@@ -28,6 +29,8 @@ class KorpelevichMod(IterGradTypeMethod):
 
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.y));
 
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
@@ -38,7 +41,7 @@ class KorpelevichMod(IterGradTypeMethod):
     def currentState(self) -> dict:
         # return dict(super().currentState(), x=([*self.x, self.problem.F(self.x)], [*self.y, self.problem.F(self.y)]), lam=self.lam)
         return dict(super().currentState(), x=(self.x, self.y), F=(self.problem.F(self.x), self.problem.F(self.y)),
-                    D=self.D, lam=self.lam)
+                    D=self.D, lam=self.lam, iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: x: {1}; lam: {2}; F(x): {3}".format(self.iter, self.problem.XToString(self.x), self.lam, self.problem.FValToString(self.problem.F(self.x)))

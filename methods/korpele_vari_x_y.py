@@ -1,4 +1,5 @@
 from typing import Union
+import time
 
 from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
@@ -69,13 +70,15 @@ class KorpeleVariX_Y(IterGradTypeMethod):
             self.ay = self.problem.GradF(self.y)
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.ay)
 
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
 
     def currentState(self) -> dict:
-        return dict(super().currentState(), x=(self.px, self.y), D=self.D,
-                    F=(self.problem.F(self.px), self.problem.F(self.y)), lam=self.lam)
+        return dict(super().currentState(), x=(self.px, self.y), D=(self.D, linalg.norm(self.x - self.px)),
+                    F=(self.problem.F(self.px), self.problem.F(self.y)), lam=self.lam, iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: D: {1}; lam:{2}; x: {3}; y: {4}; F: {5}".format(

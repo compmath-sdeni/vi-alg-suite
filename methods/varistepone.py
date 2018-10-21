@@ -1,4 +1,6 @@
 from typing import Union
+import time
+
 import numpy as np
 from scipy import linalg
 from problems.viproblem import VIProblem
@@ -120,13 +122,15 @@ class VaristepOne(IterGradTypeMethod):
             self.x = self._supportHProject(self.x - self.lam * self.problem.GradF(self.y))
             # self.x = self.problem.Project(self.x - self.lam * self.problem.GradF(self.y))
 
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.x, self.y), F=(self.problem.F(self.x), self.problem.F(self.y)),
-                    D=self.D, lam=self.lam)
+                    D=self.D, lam=self.lam, iterEndTime = self.iterEndTime)
 
     def paramsInfoString(self) -> str:
         return super().paramsInfoString() + "; x0: {0};".format(self.problem.XToString(self.problem.x0))

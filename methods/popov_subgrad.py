@@ -1,4 +1,6 @@
 from typing import Union
+import time
+
 from scipy import linalg
 import numpy as np
 
@@ -49,6 +51,8 @@ class PopovSubgrad(IterGradTypeMethod):
 
             self.ppy, self.py, self.y = self.py, self.y, self.problem.Project(self.x - self.lam * self.problem.GradF(self.y))
 
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
@@ -59,7 +63,7 @@ class PopovSubgrad(IterGradTypeMethod):
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.py, self.y, self.x), F=(self.problem.F(self.py), self.problem.F(self.y), self.problem.F(self.x)),
-                    D=self.D)
+                    D=self.D, iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: D: {1}; x: {2}; y: {3}; F: {4}".format(self.iter, self.D, self.problem.XToString(self.x), self.problem.XToString(self.y), self.problem.FValToString(self.problem.F(self.x)))

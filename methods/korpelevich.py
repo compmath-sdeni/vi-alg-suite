@@ -1,4 +1,5 @@
 from typing import Union
+import time
 
 from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
@@ -27,13 +28,16 @@ class Korpelevich(IterGradTypeMethod):
             self.iter += 1
             self.y: Union[np.ndarray, float]  = self.problem.Project(self.x - self.lam * self.problem.GradF(self.x))
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.y))
+
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
 
     def currentState(self) -> dict:
-        return dict(super().currentState(), x=(self.x, self.y), D=self.D,
-                    F=(self.problem.F(self.x), self.problem.F(self.y)))
+        return dict(super().currentState(), x=(self.x, self.y), D=(self.D, linalg.norm(self.x - self.px)),
+                    F=(self.problem.F(self.x), self.problem.F(self.y)), iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: D: {1}; x: {2}; y: {3}; F: {4}".format(

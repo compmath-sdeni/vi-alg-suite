@@ -1,4 +1,6 @@
 from typing import Union
+import time
+
 from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
 import numpy as np
@@ -24,12 +26,16 @@ class GradProj(IterGradTypeMethod):
             self.iter += 1
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.x))
             self.D = linalg.norm(self.x - self.px)
+
+            self.iterEndTime = time.process_time()
+
             return self.currentState()
         else:
             raise StopIteration()
 
     def currentState(self) -> dict:
-        return dict(super().currentState(), x=(self.x,), D=self.D, F=(self.problem.F(self.x), ))
+        return dict(super().currentState(), x=(self.x,), D=self.D, F=(self.problem.F(self.x), ),
+                    iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: D: {1}; x: {2}; F(x): {3}".format(

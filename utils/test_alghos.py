@@ -42,7 +42,7 @@ class BasicAlghoTests:
             referenceTime:float = time.process_time() # used to count pure algho time, without output etc
 
             for curState in alg:
-                totalAlghoTime += (time.process_time() - referenceTime)
+                totalAlghoTime += (curState['iterEndTime'] - referenceTime)
 
                 if self.on_iteration is not None:
                     if not self.on_iteration(alg, curState, iter_num, totalAlghoTime):

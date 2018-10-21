@@ -68,8 +68,21 @@ def onAlgFinish(alg, currentState):
 
 def onIter(alg, currentState, iterNum, timeElapsed):
     # print("{0}: {1}; D: {2:.4f}; R: {3:.4f}".format(iterNum, timeElapsed, currentState['D'], np.dot(currentState['x'][2],currentState['x'][2])))
-    if iterNum >= 0:
-        stat[statIdx].append([iterNum, timeElapsed, currentState['D'], currentState['F'][0], currentState['F'][1] if len(currentState['F'])>1 else currentState['F'][0]])
+    if iterNum > 1:
+        stat[statIdx].append([
+            iterNum, #0
+            timeElapsed, #1
+            #2
+            currentState['D'][0] if isinstance(currentState['D'], tuple) else currentState['D'],
+            #3
+            currentState['D'][1] if isinstance(currentState['D'], tuple) and len(currentState['D'])>1 else
+            currentState['D'][0] if isinstance(currentState['D'], tuple) else currentState['D'],
+            #4
+            currentState['F'][0],
+            #5
+            currentState['F'][1] if len(currentState['F'])>1 else currentState['F'][0]]
+        )
+
     return True
 
 
@@ -86,7 +99,7 @@ do_graph = True
 
 lam = 0.1
 lamInit = 1.0
-eps = 1e-10
+eps = 1e-5
 tet = 0.9
 tau = 0.5
 sigma = 1.0
@@ -97,6 +110,8 @@ minIterTime = 0
 printIterEvery = 100
 maxIters = 10000
 minIters = 0
+
+extraTitle = ''
 
 dataPath = 'storage/methodstats'
 # endregion
@@ -185,7 +200,7 @@ problems: List[Problem] = []
 # region SLAE problem #2
 
 isLoad = True
-matrixProblemId = 1
+matrixProblemId = 3
 baseProblemPath='storage/data/BadMatrix100-1/'
 
 if not isLoad:
@@ -218,9 +233,10 @@ else:
 
 C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
 
+lam_override = 0.0001385
 problems.append(
     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-                 hr_name='$Ax=b$', xtest=testX, lam_override=0.0013)
+                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
 )
 
 # endregion
@@ -294,7 +310,9 @@ for p in problems:
     korpele_mod = KorpelevichMod(p, eps, lam, min_iters=minIters)
     varistepone = VaristepOne(p, eps, lam, min_iters=minIters)
     varistepone.hr_name = 'Alg1'
-    korpele_vari_x_y = KorpeleVariX_Y(p, eps, lamInit, min_iters=minIters, phi=0.9, gap=-1)
+    korpele_vari_x_y = KorpeleVariX_Y(p, eps, lamInit, min_iters=minIters, phi=0.75, gap=-1)
+    extraTitle = '$;\phi='+str(korpele_vari_x_y.phi) + (
+                 ';$ no $\lambda$ increase' if korpele_vari_x_y.gap < 0 else '; \lambda$ inc every '+str(korpele_vari_x_y.gap+1) + ' iters')
 
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
@@ -332,15 +350,18 @@ for p in problems:
         grapher = AlgStatGrapher()
 
         if statIdx > 0:
-            grapher.plot(np.array(stat), xDataIndices=[1 for i in range(len(tested_items))],
-                         yDataIndices=[[3, 4] for i in range(len(tested_items))],
-                         plotTitle=p.GetHRName(), xLabel='Час, c.', yLabel='$||x_{n}-y_n||^2$',
-                         legend=[[it.GetHRName() + ' $u_n=x_n$', it.GetHRName() + " $u_n=z_n$"] for it in tested_items])
+            statsAsArray = np.array(stat)
+            grapher.plot(statsAsArray, xDataIndices=[1 for i in range(len(tested_items))],
+                         yDataIndices=[[2, 4] for i in range(len(tested_items))],
+                         plotTitle=p.GetHRName() + (' ' + extraTitle if extraTitle != '' else ''),
+                         xLabel='Час, c.', yLabel='$||x_{n}-y_n||^2, ||F(x)||^2$',
+                         legend=[[it.GetHRName() + ' $||x_n-y_n||^2$', it.GetHRName() + " $||F(x)||^2$"] for it in tested_items])
 
-            grapher.plot(np.array(stat), xDataIndices=[0 for i in range(len(tested_items))],
-                         yDataIndices=[[3, 4] for i in range(len(tested_items))],
-                         plotTitle=p.GetHRName(), xLabel='Кількість ітерацій $n$', yLabel='$||F(u_n)||^2$',
-                         legend=[[it.GetHRName() + ' $u_n=x_n$', it.GetHRName() + " $u_n=z_n$"] for it in tested_items])
+            grapher.plot(statsAsArray, xDataIndices=[0 for i in range(len(tested_items))],
+                         yDataIndices=[[2, 4] for i in range(len(tested_items))],
+                         plotTitle=p.GetHRName() + (' ' + extraTitle if extraTitle != '' else ''),
+                         xLabel='Кількість ітерацій $n$', yLabel='$||x_{n}-y_n||^2, ||F(x)||^2$',
+                         legend=[[it.GetHRName() + ' $||x_n-y_n||^2$', it.GetHRName() + " $||F(x)||^2$"] for it in tested_items])
 
 
         plt.show()
