@@ -10,6 +10,7 @@ from constraints.allspace import Rn
 from methods.batched_grad_proj import BatchedGradProj
 from methods.korpele_vari_x_y import KorpeleVariX_Y
 from methods.korpele_mod import KorpelevichMod
+from methods.semenov_forback import SemenovForBack
 from methods.varistepthree import VaristepThree
 from methods.varisteptwo import VaristepTwo
 from problems.func_sum_min_simple import FuncSumMinSimple
@@ -202,46 +203,46 @@ problems: List[Problem] = []
 
 # region SLAE problem #2
 
-# isLoad = True
-# matrixProblemId = 3
-# baseProblemPath='storage/data/BadMatrix100-1/'
-#
-# if not isLoad:
-#     N = 100
-#     maxEl = 5
-#     isOk = False
-#
-#     while not isOk:
-#         A = np.random.rand(N, N)*maxEl
-#
-#         A = A.T*A
-#         A += (N*maxEl/5)*np.identity(N)
-#         testX = np.ones(N, dtype=float)
-#
-#         isOk = np.all(np.linalg.eigvals(A) > 0)
-#
-#     if isOk:
-#         x0 = testX + (np.random.rand(N)*10 - 5)
-#         np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
-#         np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
-#     else:
-#         print("Error: matric is not PD!")
-# else:
-#     A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
-#     x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
-#
-#     N = x0.shape[0]
-#
-#     testX = np.ones(N, dtype=float)
-#
-# C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
-#
-# lam_override = 0.0001385
-#
-# problems.append(
-#     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-#                  hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
-# )
+isLoad = True
+matrixProblemId = 3
+baseProblemPath='storage/data/BadMatrix100-1/'
+
+if not isLoad:
+    N = 100
+    maxEl = 5
+    isOk = False
+
+    while not isOk:
+        A = np.random.rand(N, N)*maxEl
+
+        A = A.T*A
+        A += (N*maxEl/5)*np.identity(N)
+        testX = np.ones(N, dtype=float)
+
+        isOk = np.all(np.linalg.eigvals(A) > 0)
+
+    if isOk:
+        x0 = testX + (np.random.rand(N)*10 - 5)
+        np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
+        np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
+    else:
+        print("Error: matric is not PD!")
+else:
+    A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
+    x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
+
+    N = x0.shape[0]
+
+    testX = np.ones(N, dtype=float)
+
+C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
+
+lam_override = 0.0001385
+
+problems.append(
+    MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
+)
 
 # endregion
 
@@ -321,20 +322,21 @@ problems: List[Problem] = []
 
 # region plain Saddle point problems
 
-N = 2
-# x^2 - y^2
-problems.append(
-    FuncSaddlePoint(arity=N, f=lambda x: x[0] ** 2 - x[1] ** 2,
-                    dfConvex=lambda x: np.array([x[0] * 2]), dfConcave=lambda x: np.array([-x[1] * 2]),
-                    convexVarIndices=[0], concaveVarIndices=[1],
-                    C=Rn(N),
-                    x0=np.array([2, 3]),
-                    xtest=np.array([0, 0]),
-                    L=10,
-                    vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
-                    hr_name='$x^2 - y^2->SP, (x,y) \in R^2$'
-                    )
-)
+# N = 2
+# # x^2 - y^2
+# problems.append(
+#     FuncSaddlePoint(arity=N, f=lambda x: x[0] ** 2 - x[1] ** 2,
+#                     dfConvex=lambda x: np.array([x[0] * 2]), dfConcave=lambda x: np.array([-x[1] * 2]),
+#                     convexVarIndices=[0], concaveVarIndices=[1],
+#                     C=Rn(N),
+#                     x0=np.array([2, 3]),
+#                     xtest=np.array([0, 0]),
+#                     L=10,
+#                     vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
+#                     hr_name='$x^2 - y^2->SP, (x,y) \in R^2$'
+#                     )
+# )
+
 # endregion
 
 # endregion
@@ -348,6 +350,8 @@ for p in problems:
     korpele_basic = Korpelevich(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
     korpele_basic.hr_name = 'Korpelevich'
     korpele_mod = KorpelevichMod(p, eps, lam, min_iters=minIters)
+    semenov_forback = SemenovForBack(p, eps, 0.001, min_iters=minIters)
+
     varistepone = VaristepOne(p, eps, lam, min_iters=minIters)
     varistepone.hr_name = 'Alg1'
     korpele_vari_x_y = KorpeleVariX_Y(p, eps, lamInit, min_iters=minIters, phi=0.75, gap=-1)
@@ -375,8 +379,9 @@ for p in problems:
         # ,varisteptwo
         # ,varistepthree
         #,
-        korpele_vari_x_y
-      ,korpele_basic
+        #korpele_vari_x_y
+      #,korpele_basic
+        semenov_forback
         #,korpele_mod
         # ,popov_subgrad
     ]
