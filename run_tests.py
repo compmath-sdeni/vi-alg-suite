@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from typing import List
 
 from constraints.classic_simplex import ClassicSimplex
+from constraints.allspace import Rn
 from methods.batched_grad_proj import BatchedGradProj
 from methods.korpele_vari_x_y import KorpeleVariX_Y
 from methods.korpele_mod import KorpelevichMod
@@ -18,6 +19,8 @@ from problems.lin_sys_splitted import LinSysSplitted
 from problems.lin_sys_splitted_l1 import LinSysSplittedL1
 from problems.log_reg_flavor_one import LogRegFlavorOne
 from problems.log_reg_flavor_two import LogRegFlavorTwo
+from problems.linear_prog import LinearProgProblem
+from problems.func_saddle_point import FuncSaddlePoint
 
 from problems.matrix_oper_vi import MatrixOperVI
 from problems.nonlin_r2_oper import NonlinR2Oper
@@ -99,7 +102,7 @@ do_graph = True
 
 lam = 0.1
 lamInit = 1.0
-eps = 1e-5
+eps = 1e-8
 tet = 0.9
 tau = 0.5
 sigma = 1.0
@@ -199,45 +202,46 @@ problems: List[Problem] = []
 
 # region SLAE problem #2
 
-isLoad = True
-matrixProblemId = 3
-baseProblemPath='storage/data/BadMatrix100-1/'
-
-if not isLoad:
-    N = 100
-    maxEl = 5
-    isOk = False
-
-    while not isOk:
-        A = np.random.rand(N, N)*maxEl
-
-        A = A.T*A
-        A += (N*maxEl/5)*np.identity(N)
-        testX = np.ones(N, dtype=float)
-
-        isOk = np.all(np.linalg.eigvals(A) > 0)
-
-    if isOk:
-        x0 = testX + (np.random.rand(N)*10 - 5)
-        np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
-        np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
-    else:
-        print("Error: matric is not PD!")
-else:
-    A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
-    x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
-
-    N = x0.shape[0]
-
-    testX = np.ones(N, dtype=float)
-
-C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
-
-lam_override = 0.0001385
-problems.append(
-    MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
-)
+# isLoad = True
+# matrixProblemId = 3
+# baseProblemPath='storage/data/BadMatrix100-1/'
+#
+# if not isLoad:
+#     N = 100
+#     maxEl = 5
+#     isOk = False
+#
+#     while not isOk:
+#         A = np.random.rand(N, N)*maxEl
+#
+#         A = A.T*A
+#         A += (N*maxEl/5)*np.identity(N)
+#         testX = np.ones(N, dtype=float)
+#
+#         isOk = np.all(np.linalg.eigvals(A) > 0)
+#
+#     if isOk:
+#         x0 = testX + (np.random.rand(N)*10 - 5)
+#         np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
+#         np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
+#     else:
+#         print("Error: matric is not PD!")
+# else:
+#     A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
+#     x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
+#
+#     N = x0.shape[0]
+#
+#     testX = np.ones(N, dtype=float)
+#
+# C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
+#
+# lam_override = 0.0001385
+#
+# problems.append(
+#     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+#                  hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
+# )
 
 # endregion
 
@@ -296,6 +300,42 @@ problems.append(
 # N = 5
 # ppr = PageRankProblem.CreateRandom(N, 0.01)
 # problems.append(ppr)
+
+# region LinearProgProblems
+# N = 5
+# p = LinearProgProblem(
+#     A=np.array([
+#         [-1, 0]
+#         ,[-1, -1]
+#         ,[0, -1]
+#         ,[1, 0]
+#         ,[-0.25, 1]
+#     ]),
+#     b=np.array([-1, -4, 0, 9, 23.0*0.25]),
+#     c=np.array([1, -1]),
+#     x0=np.array([4, 4, 1, 1, 1, 1, 1])
+# )
+#
+# problems.append(p)
+# endregion
+
+# region plain Saddle point problems
+
+N = 2
+# x^2 - y^2
+problems.append(
+    FuncSaddlePoint(arity=N, f=lambda x: x[0] ** 2 - x[1] ** 2,
+                    dfConvex=lambda x: np.array([x[0] * 2]), dfConcave=lambda x: np.array([-x[1] * 2]),
+                    convexVarIndices=[0], concaveVarIndices=[1],
+                    C=Rn(N),
+                    x0=np.array([2, 3]),
+                    xtest=np.array([0, 0]),
+                    L=10,
+                    vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
+                    hr_name='$x^2 - y^2->SP, (x,y) \in R^2$'
+                    )
+)
+# endregion
 
 # endregion
 

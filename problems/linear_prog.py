@@ -9,11 +9,23 @@ from constraints.convex_set_constraint import ConvexSetConstraints
 
 class LinearProgProblem(VIProblem):
 
-    def __init__(self, *, A:np.array = np.array([[1,0], [0,1]]), b:np.array = np.array([1,1]), c = np.array([1,1]), x0 = np.array([1,1,1,1]), vis:VisualParams = VisualParams(), defaultProjection: np.array = None, xtest: np.array = None):
+    def __init__(self, *,
+                 A:np.array = np.array([[1,0], [0,1]]),
+                 b:np.array = np.array([1,1]),
+                 c = np.array([1,1]),
+                 x0: np.ndarray = None,
+                 hr_name: str = None,
+                 vis:VisualParams = VisualParams(),
+                 defaultProjection: np.array = None,
+                 xtest: np.array = None,
+                 lam_override: float = None
+                 ):
+        super().__init__(
+            x0=x0 if x0 is not None else b, hr_name=hr_name, xtest=xtest, lam_override=lam_override)
+
         self.A = A
         self.b = b
         self.c = c
-        self.x0 = x0
 
         self.n = c.shape[0]
         self.m = b.shape[0]
@@ -33,7 +45,11 @@ class LinearProgProblem(VIProblem):
         #return np.dot(self.c, self.x(u) + np.dot(self.y(u), np.dot(self.A, self.x(u))))
 
     def GradF(self, u:np.array) -> float:
-        return np.array([*(np.dot(np.transpose(self.A), self.y(u))+self.c),*(self.b-np.dot(self.A, self.x(u)))])
+        y = self.y(u)
+        x = self.x(u)
+        d1 = np.dot(np.transpose(self.A), y)
+        d2 = np.dot(self.A, x)
+        return np.array([*(d1+self.c),*(self.b-d2)])
 
     def Project(self, u:np.array) -> np.array:
         return np.array([v if v >=0 else 0 for v in u])

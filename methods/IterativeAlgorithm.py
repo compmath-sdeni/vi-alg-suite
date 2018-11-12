@@ -11,7 +11,7 @@ class IterativeAlgorithm:
         self.lam: float = lam
         self.iterEndTime = 0
 
-        if self.problem.lam_override is not None:
+        if hasattr(self.problem, 'lam_override') and self.problem.lam_override is not None:
             self.lam = self.problem.lam_override
 
         self.min_iters: int = min_iters
