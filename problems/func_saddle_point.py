@@ -13,8 +13,7 @@ class FuncSaddlePoint(VIProblem):
     L = 10  # type: float
 
     def __init__(self, *,
-                 arity: int, f: Callable[[np.ndarray], float], dfConvex: Callable[[np.ndarray], np.ndarray],
-                 dfConcave: Callable[[np.ndarray], np.ndarray],
+                 arity: int, f: Callable[[np.ndarray], float], gradF: Callable[[np.ndarray], np.ndarray],
                  convexVarIndices: np.ndarray, concaveVarIndices: np.ndarray,
                  x0: Union[np.ndarray, float] = None, C: ConvexSetConstraints, L: float = 10,
                  vis: Sequence[VisualParams] = None, defaultProjection: np.ndarray = None,
@@ -23,8 +22,7 @@ class FuncSaddlePoint(VIProblem):
 
         self.arity = arity
         self.f = f
-        self.dfConvex = dfConvex
-        self.dfConcave = dfConcave
+        self.gradF = gradF
         self.convexVarIndices = convexVarIndices
         self.concaveVarIndices = concaveVarIndices
         self.C = C
@@ -36,11 +34,15 @@ class FuncSaddlePoint(VIProblem):
         else:
             self.xtest = np.zeros(self.arity)
 
+
+
     def F(self, x: np.array) -> float:
         return self.f(x)
 
     def GradF(self, x: np.array) -> np.ndarray:
-        return np.concatenate((self.dfConvex(x), -self.dfConcave(x)))
+        t = self.gradF(x)
+        t[self.concaveVarIndices] *= -1
+        return t
 
     def Project(self, x: np.array) -> np.array:
         return self.C.project(x)

@@ -203,46 +203,46 @@ problems: List[Problem] = []
 
 # region SLAE problem #2
 
-isLoad = True
-matrixProblemId = 3
-baseProblemPath='storage/data/BadMatrix100-1/'
-
-if not isLoad:
-    N = 100
-    maxEl = 5
-    isOk = False
-
-    while not isOk:
-        A = np.random.rand(N, N)*maxEl
-
-        A = A.T*A
-        A += (N*maxEl/5)*np.identity(N)
-        testX = np.ones(N, dtype=float)
-
-        isOk = np.all(np.linalg.eigvals(A) > 0)
-
-    if isOk:
-        x0 = testX + (np.random.rand(N)*10 - 5)
-        np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
-        np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
-    else:
-        print("Error: matric is not PD!")
-else:
-    A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
-    x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
-
-    N = x0.shape[0]
-
-    testX = np.ones(N, dtype=float)
-
-C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
-
-lam_override = 0.0001385
-
-problems.append(
-    MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
-)
+# isLoad = True
+# matrixProblemId = 3
+# baseProblemPath='storage/data/BadMatrix100-1/'
+#
+# if not isLoad:
+#     N = 100
+#     maxEl = 5
+#     isOk = False
+#
+#     while not isOk:
+#         A = np.random.rand(N, N)*maxEl
+#
+#         A = A.T*A
+#         A += (N*maxEl/5)*np.identity(N)
+#         testX = np.ones(N, dtype=float)
+#
+#         isOk = np.all(np.linalg.eigvals(A) > 0)
+#
+#     if isOk:
+#         x0 = testX + (np.random.rand(N)*10 - 5)
+#         np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
+#         np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
+#     else:
+#         print("Error: matric is not PD!")
+# else:
+#     A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
+#     x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
+#
+#     N = x0.shape[0]
+#
+#     testX = np.ones(N, dtype=float)
+#
+# C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
+#
+# lam_override = 0.0001385
+#
+# problems.append(
+#     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+#                  hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
+# )
 
 # endregion
 
@@ -337,6 +337,21 @@ problems.append(
 #                     )
 # )
 
+# N = 3
+# # (x-1.3)^2 - (y-2.1)^2 + z^2
+# problems.append(
+#     FuncSaddlePoint(arity=N, f=lambda x: (x[0]-1.3) ** 2 - (x[1]-2.1) ** 2 + x[2] ** 2,
+#                     gradF=lambda x: np.array([(x[0]-1.3) * 2, -(x[1] - 2.1) * 2, x[2] * 2]),
+#                     convexVarIndices=[0,2], concaveVarIndices=[1],
+#                     C=Rn(N),
+#                     x0=np.array([1,1,1]),
+#                     xtest=np.array([0, 0, 0]),
+#                     L=10,
+#                     vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
+#                     hr_name='$x^2 - y^2 + z^2->SP, (x,y, z) \in R^3$'
+#                     )
+# )
+
 # endregion
 
 # endregion
@@ -373,15 +388,15 @@ for p in problems:
     stat = []
 
     tested_items = [
-        #grad_desc
+        #grad_desc,
         #,
         #,varistepone
         # ,varisteptwo
         # ,varistepthree
         #,
         #korpele_vari_x_y
-      #,korpele_basic
-        semenov_forback
+      korpele_basic
+        #semenov_forback
         #,korpele_mod
         # ,popov_subgrad
     ]
