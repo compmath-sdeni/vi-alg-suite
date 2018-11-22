@@ -8,8 +8,8 @@ from utils.print_utils import vectorToString
 # noinspection PyPep8Naming
 class HarkerTest(VIProblem):
     def __init__(self, M: int, C: ConvexSetConstraints = None,
-                 x0: np.ndarray = None, hr_name: str = None):
-        super().__init__(x0=x0 if x0 is not None else np.ones(M), hr_name=hr_name)
+                 x0: np.ndarray = None, hr_name: str = None, lam_override: float = None):
+        super().__init__(x0=x0 if x0 is not None else np.ones(M), hr_name=hr_name, lam_override=lam_override)
 
         B = np.random.rand(M, M) * 5 - 10
         S = np.random.rand(M, M) * 5 - 10

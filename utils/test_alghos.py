@@ -50,7 +50,7 @@ class BasicAlghoTests:
 
                 if (iter_num == 1 and self.print_every > 0) or (
                                 self.print_every > 0 and iter_num % self.print_every == 0):
-                    print(alg.currentStateString())
+                    print("{0:.3f}s. {1}".format(totalAlghoTime, alg.currentStateString()))
                     # print("{0}: {1} -> {2}; err: {3}; {4}".format(iter, alg.problem.XToString(curState['x']),
                     # alg.problem.FValToString(v), scalartostring(alg.problem.GetErrorByTestX(curState['x'])),
                     # extra if extra is not None else ''))

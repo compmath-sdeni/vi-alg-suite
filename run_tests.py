@@ -112,7 +112,7 @@ N = 2
 
 minIterTime = 0
 printIterEvery = 100
-maxIters = 10000
+maxIters = 5000
 minIters = 0
 
 extraTitle = ''
@@ -123,6 +123,7 @@ dataPath = 'storage/methodstats'
 # region problems
 problems: List[Problem] = []
 
+# region function minima problems
 # 4d funcmin
 # problems.append(
 #     FuncNDMin(3,
@@ -168,6 +169,9 @@ problems: List[Problem] = []
 #               )
 # )
 
+# endregion
+
+# region logistic regression problems
 # X = np.array([
 #     [1, 1, 1],
 #     [-1, 1, 1],
@@ -200,6 +204,7 @@ problems: List[Problem] = []
 #                     )
 # )
 
+# endregion
 
 # region SLAE problem #2
 
@@ -237,7 +242,7 @@ problems: List[Problem] = []
 #
 # C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
 #
-# lam_override = 0.0001385
+# lam_override = 0.00005
 #
 # problems.append(
 #     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
@@ -285,7 +290,7 @@ problems: List[Problem] = []
 
 # N = 20
 # hr_bounds = [(-5,5) for i in range(N)]
-# problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard'),)
+# problems.append(HarkerTest(N, C=Hyperrectangle(N, hr_bounds), hr_name='HPHard', lam_override=0.00003336),)
 
 # ht = HarkerTest(N, C=PositiveSimplexArea(N, 4), hr_name='HarkerTest', x0=np.ones(N))
 # problems.append(ht,)
@@ -337,20 +342,20 @@ problems: List[Problem] = []
 #                     )
 # )
 
-# N = 3
-# # (x-1.3)^2 - (y-2.1)^2 + z^2
-# problems.append(
-#     FuncSaddlePoint(arity=N, f=lambda x: (x[0]-1.3) ** 2 - (x[1]-2.1) ** 2 + x[2] ** 2,
-#                     gradF=lambda x: np.array([(x[0]-1.3) * 2, -(x[1] - 2.1) * 2, x[2] * 2]),
-#                     convexVarIndices=[0,2], concaveVarIndices=[1],
-#                     C=Rn(N),
-#                     x0=np.array([1,1,1]),
-#                     xtest=np.array([0, 0, 0]),
-#                     L=10,
-#                     vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
-#                     hr_name='$x^2 - y^2 + z^2->SP, (x,y, z) \in R^3$'
-#                     )
-# )
+N = 3
+# (x-1.3)^2 - (y-2.1)^2 + (z-1)^2
+problems.append(
+    FuncSaddlePoint(arity=N, f=lambda x: (x[0]-1.3) ** 2 - (x[1]-2.1) ** 2 + (x[2]-1) ** 2,
+                    gradF=lambda x: np.array([(x[0]-1.3) * 2, -(x[1] - 2.1) * 2, (x[2]-1) * 2]),
+                    convexVarIndices=[0,2], concaveVarIndices=[1],
+                    C=Rn(N),
+                    x0=np.array([1,1,1]),
+                    xtest=np.array([0, 0, 0]),
+                    L=10,
+                    vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
+                    hr_name='$x^2 - y^2 + z^2->SP, (x,y, z) \in R^3$'
+                    )
+)
 
 # endregion
 
@@ -394,11 +399,13 @@ for p in problems:
         # ,varisteptwo
         # ,varistepthree
         #,
-        #korpele_vari_x_y
-      korpele_basic
+        #korpele_basic
+        #,
+        korpele_vari_x_y
+        #,
         #semenov_forback
         #,korpele_mod
-        # ,popov_subgrad
+        # popov_subgrad
     ]
 
     alghoTester = BasicAlghoTests(print_every=printIterEvery, max_iters=maxIters, min_time=minIterTime,

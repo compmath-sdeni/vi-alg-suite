@@ -1,23 +1,25 @@
 import numpy as np
 
 from constraints.positive_simplex_area import PositiveSimplexArea
+from constraints.positive_simplex_surface import PositiveSimplexSurface
 from methods.projections.simplex_proj import SimplexProj
 
-b = 4.0
+b = 1.0
 
-x = np.array([1, -2], dtype=float)
+x = np.array([-0.97, 0.99], dtype=float)
 px = x.copy()
 
-simpl = PositiveSimplexArea(2, b)
-# xp = simpl.project(x)
+simpl = PositiveSimplexSurface(2, b)
+xp = simpl.project(x)
 
-SimplexProj.doInplace(x, b)
-xp = x
+#SimplexProj.doInplace(x, b)
+#xp = x
+
 x = px
 
-print("{0}".format(simpl.getSomeInteriorPoint()))
+print("Rand inter point: {0}".format(simpl.getSomeInteriorPoint()))
 
-print("{0} -> {1}".format(x, xp))
+print("Projected {0} -> {1}".format(x, xp))
 
 if not simpl.isIn(xp):
     print("Not in area!")

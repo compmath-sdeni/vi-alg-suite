@@ -18,8 +18,8 @@ class SemenovForBack(IterGradTypeMethod):
         self.px: Union[np.ndarray, float] = self.x.copy()
         self.D: float = 0
 
-        self.ax = None
-        self.pax = None
+        self.ax: np.ndarray = None
+        self.pax: np.ndarray = None
 
     def __iter__(self):
         self.px = self.problem.x0.copy()
@@ -35,7 +35,7 @@ class SemenovForBack(IterGradTypeMethod):
 
             self.ax = self.problem.GradF(self.x)
             self.px, self.x = self.x, self.problem.Project(self.x - self.lam * 2 * self.ax + self.lam * self.pax)
-            self.pax = self.ax
+            self.pax = np.copy(self.ax)
 
             self.iterEndTime = time.process_time()
 
@@ -44,7 +44,7 @@ class SemenovForBack(IterGradTypeMethod):
             raise StopIteration()
 
     def currentState(self) -> dict:
-        return dict(super().currentState(), x=(self.px), D=(self.D, linalg.norm(self.x - self.px)),
+        return dict(super().currentState(), x=(self.px, self.px), D=(self.D, linalg.norm(self.x - self.px)),
                     F=(self.problem.F(self.px),), lam=self.lam, iterEndTime = self.iterEndTime)
 
     def currentStateString(self) -> str:
