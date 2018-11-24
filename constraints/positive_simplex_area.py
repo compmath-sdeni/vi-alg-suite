@@ -2,7 +2,7 @@ import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from methods.projections.simplex_proj import SimplexProj
 
-
+# looks erroneus, not a simplex??
 class PositiveSimplexArea(ConvexSetConstraints):
     def __init__(self, n: int, b: float = 1.0):
         super().__init__()

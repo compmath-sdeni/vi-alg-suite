@@ -5,11 +5,19 @@ from constraints.positive_simplex_surface import PositiveSimplexSurface
 from methods.projections.simplex_proj import SimplexProj
 
 b = 1.0
+n = 2
 
 x = np.array([-0.97, 0.99], dtype=float)
+x = np.array([-0.2, 0.2], dtype=float)
+
+n = 4
+x = np.array([-2./9, 0, 0, -1./9], dtype=float)
+
+n=6
+x = np.array([-1, 1, 0, -1, 0, 2./3], dtype=float)
 px = x.copy()
 
-simpl = PositiveSimplexSurface(2, b)
+simpl = PositiveSimplexSurface(n, b)
 xp = simpl.project(x)
 
 #SimplexProj.doInplace(x, b)

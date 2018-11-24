@@ -9,7 +9,7 @@ class PositiveSimplexSurface(PositiveSimplexArea):
         self.delta = delta
 
     def isIn(self, x: np.ndarray) -> bool:
-        return abs(x.sum() - self.b) < self.delta
+        return (not (x<0).any()) and (abs(x.sum() - self.b) < self.delta)
 
     def getSomeInteriorPoint(self) -> np.ndarray:
         res = np.zeros(self.n)
@@ -22,9 +22,6 @@ class PositiveSimplexSurface(PositiveSimplexArea):
 
     def project(self, x: np.ndarray) -> np.ndarray:
         res: np.ndarray = x.copy()
-        for i in range(self.n):
-            if res[i] < 0:
-                res[i] = 0
 
         if not self.isIn(res):
             SimplexProj.doInplace(res, self.b)
