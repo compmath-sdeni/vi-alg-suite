@@ -101,7 +101,7 @@ def allAlgsFinished():
 # region default parameters
 do_graph = True
 
-lam = 0.1
+lam = 0.2
 lamInit = 1.0
 eps = 1e-8
 tet = 0.9
@@ -208,46 +208,46 @@ problems: List[Problem] = []
 
 # region SLAE problem #2
 
-# isLoad = True
-# matrixProblemId = 3
-# baseProblemPath='storage/data/BadMatrix100-1/'
-#
-# if not isLoad:
-#     N = 100
-#     maxEl = 5
-#     isOk = False
-#
-#     while not isOk:
-#         A = np.random.rand(N, N)*maxEl
-#
-#         A = A.T*A
-#         A += (N*maxEl/5)*np.identity(N)
-#         testX = np.ones(N, dtype=float)
-#
-#         isOk = np.all(np.linalg.eigvals(A) > 0)
-#
-#     if isOk:
-#         x0 = testX + (np.random.rand(N)*10 - 5)
-#         np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
-#         np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
-#     else:
-#         print("Error: matric is not PD!")
-# else:
-#     A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
-#     x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
-#
-#     N = x0.shape[0]
-#
-#     testX = np.ones(N, dtype=float)
-#
-# C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
-#
-# lam_override = 0.00005
-#
-# problems.append(
-#     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-#                  hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
-# )
+isLoad = True
+matrixProblemId = 3
+baseProblemPath='storage/data/BadMatrix100-1/'
+
+if not isLoad:
+    N = 100
+    maxEl = 5
+    isOk = False
+
+    while not isOk:
+        A = np.random.rand(N, N)*maxEl
+
+        A = A.T*A
+        A += (N*maxEl/5)*np.identity(N)
+        testX = np.ones(N, dtype=float)
+
+        isOk = np.all(np.linalg.eigvals(A) > 0)
+
+    if isOk:
+        x0 = testX + (np.random.rand(N)*10 - 5)
+        np.save(baseProblemPath+'A'+str(matrixProblemId)+'.data', A)
+        np.save(baseProblemPath+'x0'+str(matrixProblemId)+'.data', x0)
+    else:
+        print("Error: matric is not PD!")
+else:
+    A = np.load(baseProblemPath+'A'+str(matrixProblemId)+'.data.npy')
+    x0 = np.load(baseProblemPath+'x0'+str(matrixProblemId)+'.data.npy')
+
+    N = x0.shape[0]
+
+    testX = np.ones(N, dtype=float)
+
+C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
+
+lam_override = 0.00005
+
+problems.append(
+    MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
+)
 
 # endregion
 
@@ -303,9 +303,10 @@ problems: List[Problem] = []
 
 # problems.append(KoshimaShindo(x0=np.random.rand(4)))
 
-# N = 5
-# ppr = PageRankProblem.CreateRandom(N, 0.01)
-# problems.append(ppr)
+N = 1000
+ppr = PageRankProblem.CreateRandom(N, 0.01)
+ppr.hr_name = "PageRank, random, {0} nodes".format(N)
+problems.append(ppr)
 
 # region LinearProgProblems
 # N = 5
@@ -353,7 +354,7 @@ problems.append(
                     xtest=np.array([0, 0, 0]),
                     L=10,
                     vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
-                    hr_name='$x^2 - y^2 + z^2->SP, (x,y, z) \in R^3$'
+                    hr_name='$x^2 - y^2 + z^2 -> saddle point, (x,y, z) \in R^3$'
                     )
 )
 
@@ -368,15 +369,16 @@ for p in problems:
     popov_subgrad = PopovSubgrad(p, eps, lam, min_iters=minIters)
     popov_subgrad.hr_name = 'Popov'
     korpele_basic = Korpelevich(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
-    korpele_basic.hr_name = 'Korpelevich'
+    korpele_basic.hr_name = "Korpelevich, $\lambda={0}$, ".format(korpele_basic.lam)
     korpele_mod = KorpelevichMod(p, eps, lam, min_iters=minIters)
-    semenov_forback = SemenovForBack(p, eps, 0.001, min_iters=minIters)
+    semenov_forback = SemenovForBack(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
+    semenov_forback.hr_name = "SVV-for-back, $\lambda={0}$, ".format(semenov_forback.lam)
 
     varistepone = VaristepOne(p, eps, lam, min_iters=minIters)
     varistepone.hr_name = 'Alg1'
     korpele_vari_x_y = KorpeleVariX_Y(p, eps, lamInit, min_iters=minIters, phi=0.75, gap=-1)
-    extraTitle = '$;\phi='+str(korpele_vari_x_y.phi) + (
-                 ';$ no $\lambda$ increase' if korpele_vari_x_y.gap < 0 else '; \lambda$ inc every '+str(korpele_vari_x_y.gap+1) + ' iters')
+    #extraTitle = '$;\phi='+str(korpele_vari_x_y.phi) + (
+    #             ';$ no $\lambda$ increase' if korpele_vari_x_y.gap < 0 else '; \lambda$ inc every '+str(korpele_vari_x_y.gap+1) + ' iters')
 
     # varisteptwo = VaristepTwo(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
     # varistepthree = VaristepThree(p, eps, lam, min_iters=minIters, xstar=np.array([1.2247, 0, 0, 2.7753]))
@@ -399,11 +401,11 @@ for p in problems:
         # ,varisteptwo
         # ,varistepthree
         #,
-        #korpele_basic
-        #,
+        korpele_basic
+        ,
         korpele_vari_x_y
-        #,
-        #semenov_forback
+        ,
+        semenov_forback
         #,korpele_mod
         # popov_subgrad
     ]
@@ -422,7 +424,7 @@ for p in problems:
                          yDataIndices=[[2, 4] for i in range(len(tested_items))],
                          plotTitle=p.GetHRName() + (' ' + extraTitle if extraTitle != '' else ''),
                          xLabel='Час, c.', yLabel='$||x_{n}-y_n||^2, ||F(x)||^2$',
-                         legend=[[it.GetHRName() + ' $||x_n-y_n||^2$', it.GetHRName() + " $||F(x)||^2$"] for it in tested_items])
+                         legend=[[it.GetHRName()  + ' $||x_n-y_n||^2$', it.GetHRName() + " $||F(x)||^2$"] for it in tested_items])
 
             grapher.plot(statsAsArray, xDataIndices=[0 for i in range(len(tested_items))],
                          yDataIndices=[[2, 4] for i in range(len(tested_items))],

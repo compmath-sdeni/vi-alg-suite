@@ -15,6 +15,7 @@ print("Adj. matrix:\n", adjMatr)
 
 p = PageRankProblem(adjMatr)
 print("Page rank source matrix:\n", p.A)
+p = PageRankProblem.CreateRandom(100, 0.1)
 
 eValues, eVectors = np.linalg.eig(p.A)
 
