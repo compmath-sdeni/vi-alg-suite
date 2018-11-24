@@ -2,6 +2,7 @@ import numpy as np
 
 from constraints.convex_set_constraint import ConvexSetConstraints
 from methods.projections.simplex_proj import SimplexProj
+from methods.projections.simplex_projection_prom import euclidean_proj_l1ball
 
 
 class B1BallSurface(ConvexSetConstraints):
@@ -29,15 +30,20 @@ class B1BallSurface(ConvexSetConstraints):
         return res
 
     def project(self, x: np.ndarray) -> np.ndarray:
-        res: np.ndarray = x.copy()
 
-        if not self.isIn(res):
-            neg: np.ndarray = res < 0
-            res[neg] *= -1
-            SimplexProj.doInplace(res, self.b)
-            res[neg] *= -1
+        # using prom algho
+        return euclidean_proj_l1ball(x, s=self.b)
 
-        return res
+        # using self-coded algho
+        # res: np.ndarray = x.copy()
+        #
+        # if not self.isIn(res):
+        #     neg: np.ndarray = res < 0
+        #     res[neg] *= -1
+        #     SimplexProj.doInplace(res, self.b)
+        #     res[neg] *= -1
+        #
+        # return res
 
     def toString(self):
         return "{0}d B1 ball surface scaled to {1}".format(self.n, self.b)
