@@ -12,12 +12,14 @@ class Problem:
                  xtest: Union[np.ndarray, float] = None,
                  x0: Union[np.ndarray, float] = None,
                  hr_name: str = None,
-                 lam_override: float = None):
+                 lam_override: float = None,
+                 lam_override_by_method:dict = None):
 
         self._x0: Union[np.ndarray, float] = x0
         self.xtest: Union[np.ndarray, float] = xtest
         self.hr_name: str = hr_name
         self.lam_override = lam_override
+        self.lam_override_by_method = lam_override_by_method
 
     @property
     def x0(self) -> Union[np.ndarray, float]:

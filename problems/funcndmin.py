@@ -17,8 +17,11 @@ class FuncNDMin(VIProblem):
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, L: float = 10, vis: Sequence[VisualParams] = None,
                  defaultProjection: np.ndarray = None,
-                 xtest: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
-        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override)
+                 xtest: Union[np.ndarray, float] = None, hr_name: str = None,
+                 lam_override: float = None,
+                 lam_override_by_method:dict = None
+                 ):
+        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override, lam_override_by_method=lam_override_by_method)
 
         self.arity = arity
         self.f = f

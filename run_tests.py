@@ -101,9 +101,9 @@ def allAlgsFinished():
 # region default parameters
 do_graph = True
 
-lam = 0.2
+lam = 0.1
 lamInit = 1.0
-eps = 1e-8
+eps = 1e-5
 tet = 0.9
 tau = 0.5
 sigma = 1.0
@@ -112,7 +112,7 @@ N = 2
 
 minIterTime = 0
 printIterEvery = 100
-maxIters = 5000
+maxIters = 1500
 minIters = 0
 
 extraTitle = ''
@@ -242,26 +242,44 @@ else:
 
 C=Hyperrectangle(N, [(-5, 5) for i in range(N)])
 
-lam_override = 0.00005
+lam_override_dic = {
+                "":lam,
+                Korpelevich.__name__:0.0001,
+                SemenovForBack.__name__:0.0001
+              }
 
 problems.append(
     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
-                 hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override)+'$', xtest=testX, lam_override=lam_override)
+                 hr_name='$N='+str(N)+'$',
+                 xtest=testX, lam_override_by_method=lam_override_dic)
 )
+
+
+# problems.append(
+#     MatrixOperVI(A=A, b=A @ testX, x0=x0, C = C,
+#                  hr_name='$Ax=b; N='+str(N)+';\lambda='+str(lam_override_dic)+'$',
+#                  xtest=testX, lam_override_by_method=lam_override_dic)
+# )
 
 # endregion
 
 # region (X1+X2+...+Xn - n/2)^2 -> min; lam = 1/4N
 
-# N = 100
+N = 1000
+lam_override_dic = {
+                "":lam,
+                Korpelevich.__name__:0.00037,
+                SemenovForBack.__name__:0.00022
+              }
+
 # problems.append(
 #     FuncNDMin(N,
 #               lambda x: (np.sum(x) - N/2) ** 2,
 #               lambda x: np.ones(N) * 2 * (np.sum(x) - N/2),
 #               C=Hyperrectangle(N, [(0, 5) for i in range(N)]),
 #               x0=np.array([i+1 for i in range(N)]),
-#               hr_name='$(x + y -1)^2->min, C = [-5,5]x[-5,5]$',
-#               lam_override=1.0/N/4
+#               hr_name='$(x_1 + x_2 + ... + x_n - n/2)^2->min, C = [-5,5]x[-5,5], N = {0}, \lambda = {1}$'.format(N, lam_override_dic),
+#               lam_override_by_method=lam_override_dic
 #               )
 # )
 
@@ -304,8 +322,14 @@ problems.append(
 # problems.append(KoshimaShindo(x0=np.random.rand(4)))
 
 N = 1000
+lam_override_dic = {
+                "":lam,
+                Korpelevich.__name__:0.5,
+                SemenovForBack.__name__:0.5
+              }
+
 ppr = PageRankProblem.CreateRandom(N, 0.01)
-ppr.hr_name = "PageRank, random, {0} nodes".format(N)
+ppr.hr_name = "$PageRank, random, {0} nodes, \lambda = {1}$".format(N, lam_override_dic)
 problems.append(ppr)
 
 # region LinearProgProblems
@@ -343,20 +367,20 @@ problems.append(ppr)
 #                     )
 # )
 
-N = 3
-# (x-1.3)^2 - (y-2.1)^2 + (z-1)^2
-problems.append(
-    FuncSaddlePoint(arity=N, f=lambda x: (x[0]-1.3) ** 2 - (x[1]-2.1) ** 2 + (x[2]-1) ** 2,
-                    gradF=lambda x: np.array([(x[0]-1.3) * 2, -(x[1] - 2.1) * 2, (x[2]-1) * 2]),
-                    convexVarIndices=[0,2], concaveVarIndices=[1],
-                    C=Rn(N),
-                    x0=np.array([1,1,1]),
-                    xtest=np.array([0, 0, 0]),
-                    L=10,
-                    vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
-                    hr_name='$x^2 - y^2 + z^2 -> saddle point, (x,y, z) \in R^3$'
-                    )
-)
+# N = 3
+# # (x-1.3)^2 - (y-2.1)^2 + (z-1)^2
+# problems.append(
+#     FuncSaddlePoint(arity=N, f=lambda x: (x[0]-1.3) ** 2 - (x[1]-2.1) ** 2 + (x[2]-1) ** 2,
+#                     gradF=lambda x: np.array([(x[0]-1.3) * 2, -(x[1] - 2.1) * 2, (x[2]-1) * 2]),
+#                     convexVarIndices=[0,2], concaveVarIndices=[1],
+#                     C=Rn(N),
+#                     x0=np.array([1,1,1]),
+#                     xtest=np.array([0, 0, 0]),
+#                     L=10,
+#                     vis=[VisualParams(xl=-5, xr=5, yb=-5, yt=5, zn=0, zf=56, elev=22, azim=-49)],
+#                     hr_name='$x^2 - y^2 + z^2 -> saddle point, (x,y, z) \in R^3$'
+#                     )
+# )
 
 # endregion
 
@@ -368,11 +392,11 @@ for p in problems:
     grad_desc = GradProj(p, eps, lam, min_iters=minIters)
     popov_subgrad = PopovSubgrad(p, eps, lam, min_iters=minIters)
     popov_subgrad.hr_name = 'Popov'
-    korpele_basic = Korpelevich(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
-    korpele_basic.hr_name = "Korpelevich, $\lambda={0}$, ".format(korpele_basic.lam)
+    korpele_basic = Korpelevich(p, eps, lam, min_iters=minIters)
+    korpele_basic.hr_name = "AdaptiveNew, ".format(korpele_basic.lam)
     korpele_mod = KorpelevichMod(p, eps, lam, min_iters=minIters)
-    semenov_forback = SemenovForBack(p, eps, p.GetLambdaOverride() if p.GetLambdaOverride() else lam, min_iters=minIters)
-    semenov_forback.hr_name = "SVV-for-back, $\lambda={0}$, ".format(semenov_forback.lam)
+    semenov_forback = SemenovForBack(p, eps, lam, min_iters=minIters)
+    semenov_forback.hr_name = "Non-adaptive, $\lambda={0}$, ".format(semenov_forback.lam)
 
     varistepone = VaristepOne(p, eps, lam, min_iters=minIters)
     varistepone.hr_name = 'Alg1'
@@ -403,8 +427,8 @@ for p in problems:
         #,
         korpele_basic
         ,
-        korpele_vari_x_y
-        ,
+        #korpele_vari_x_y
+        #,
         semenov_forback
         #,korpele_mod
         # popov_subgrad
