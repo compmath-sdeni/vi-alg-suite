@@ -74,7 +74,7 @@ class AlgStatGrapher:
         plot_legend: List[str] = legend[:]
 
         graph_colors = self.initParamsArray(algs_count, y_dims,
-                                           ['g-', 'b--', 'r:', 'y-.', 'c-', 'm--', 'k:'])
+                                           ['g-', 'g--', 'b-', 'b--', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-', 'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:
             plot_legend = self.initParamsArray(algs_count, y_dims, ['1', '2', '3', '4', '5'])

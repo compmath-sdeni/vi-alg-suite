@@ -22,8 +22,13 @@ class KorpelevichMod(IterGradTypeMethod):
 
     def doStep(self):
         Ax = self.problem.A(self.x)
+        self.operator_count += 1
+
         self.y: Union[np.ndarray, float] = self.problem.Project(self.x - self.lam * Ax)
+        self.projections_count += 1
+
         Ay = self.problem.A(self.y)
+        self.operator_count += 1
 
         if self.iter > 0 and (linalg.norm(self.x - self.y) >= self.zero_delta):
             t = 0.9 * linalg.norm(self.x - self.y) / linalg.norm(
@@ -33,6 +38,7 @@ class KorpelevichMod(IterGradTypeMethod):
             self.lam = self.maxLam
 
         self.px, self.x = self.x, self.problem.Project(self.x - self.lam * Ay)
+        self.projections_count += 1
 
     def doPostStep(self):
         self.setHistoryData(x=self.x, y=self.y, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
