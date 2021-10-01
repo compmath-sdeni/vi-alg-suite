@@ -41,6 +41,9 @@ class FuncNDMin(VIProblem):
     def GradF(self, x: np.array) -> np.ndarray:
         return self.df(x)
 
+    def A(self, x: np.array) -> np.ndarray:
+        return self.GradF(x)
+
     def Project(self, x: np.array) -> np.array:
         return self.C.project(x)
 

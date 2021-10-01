@@ -38,7 +38,7 @@ from methods.popov_subgrad import PopovSubgrad
 from constraints.hyperrectangle import Hyperrectangle
 from constraints.positive_simplex_area import PositiveSimplexArea
 from problems.funcndmin import FuncNDMin
-from utils.test_alghos import BasicAlghoTests
+from utils.test_alghos import BasicAlgoTests
 from problems.testcases.matrix_grad_fail import getProblem
 
 from utils.print_utils import vectorToString
@@ -434,8 +434,8 @@ for p in problems:
         # popov_subgrad
     ]
 
-    alghoTester = BasicAlghoTests(print_every=printIterEvery, max_iters=maxIters, min_time=minIterTime,
-                                  on_alg_start=onAlgStart, on_alg_finish=onAlgFinish, on_iteration=onIter)
+    alghoTester = BasicAlgoTests(print_every=printIterEvery, max_iters=maxIters, min_time=minIterTime,
+                                 on_alg_start=onAlgStart, on_alg_finish=onAlgFinish, on_iteration=onIter)
 
     res = alghoTester.DoTests(tested_items)
 

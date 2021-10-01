@@ -8,15 +8,13 @@ from scipy import linalg
 
 
 class Korpelevich(IterGradTypeMethod):
-    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, min_iters = 0):
-        super().__init__(problem, eps, lam, min_iters=min_iters)
-        self.x: Union[np.ndarray, float] = self.problem.x0.copy()
+    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, min_iters = 0, max_iters = 5000):
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
         self.px: Union[np.ndarray, float] = self.x.copy()
         self.D: float = 0
         self.y: Union[np.ndarray, float] = self.x.copy()
 
     def __iter__(self):
-        self.x = self.problem.x0.copy()
         self.px = self.x.copy()
         self.D: float = 0
         return super().__iter__()
@@ -24,16 +22,17 @@ class Korpelevich(IterGradTypeMethod):
     def __next__(self):
         #self.D = linalg.norm(self.x - self.px)
         self.D = linalg.norm(self.x - self.y)
-        if self.min_iters > self.iter or self.D >= self.eps or self.iter == 0:
-            self.iter += 1
-            self.y: Union[np.ndarray, float]  = self.problem.Project(self.x - self.lam * self.problem.GradF(self.x))
-            self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.GradF(self.y))
+        return super(Korpelevich, self).__next__()
+    
+    def doStep(self):
+        self.y: Union[np.ndarray, float] = self.problem.Project(self.x - self.lam * self.problem.A(self.x))
+        self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.A(self.y))
 
-            self.iterEndTime = time.process_time()
+    def doPostStep(self):
+        self.setHistoryData(x=self.x, y=self.y, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
 
-            return self.currentState()
-        else:
-            raise StopIteration()
+    def isStopConditionMet(self):
+        return super(Korpelevich, self).isStopConditionMet() or self.D < self.eps
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.x, self.y), D=(self.D, linalg.norm(self.x - self.px)),

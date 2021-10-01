@@ -6,7 +6,7 @@ import numpy as np
 from methods.IterativeAlgorithm import IterativeAlgorithm
 
 
-class BasicAlghoTests:
+class BasicAlgoTests:
     def __init__(self, *, min_time: float = 0, print_every: int = 1, max_iters: int = 1000,
                  on_alg_start: Callable[[IterativeAlgorithm, dict], None] = None, on_alg_finish: Callable[[IterativeAlgorithm, dict], None] = None,
                  on_iteration: Callable[[IterativeAlgorithm, dict, int, float], None] = None,
@@ -99,3 +99,14 @@ class BasicAlghoTests:
             print('All tests finished.')
 
         return True
+
+    @staticmethod
+    def PrintAlgRunStats(alg_object: IterativeAlgorithm):
+        print("{0} finished. \nRes: {1}; \nIters: {2}; \nProjections: {3}; \nOperators calc: {4}; \nExact error: {5}\n".format(
+            alg_object.hr_name,
+            alg_object.x,
+            alg_object.history.iters_count,
+            alg_object.history.projections_count,
+            alg_object.history.operator_count,
+            alg_object.history.real_error[alg_object.history.iters_count - 1]
+        ))

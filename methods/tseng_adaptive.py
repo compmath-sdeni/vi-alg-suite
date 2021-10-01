@@ -7,42 +7,54 @@ from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
 
 
-class KorpelevichMod(IterGradTypeMethod):
+class TsengAdaptive(IterGradTypeMethod):
 
-    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, maxLam: float = 0.9, *,
+    def __init__(self, problem: VIProblem, eps: float = 0.0001,
+                 lam: float = 0.1, tau: float = 0.95, *,
                  min_iters: int = 0, max_iters=5000):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
-        self.maxLam = maxLam
-        self.x = self.px = self.y = self.problem.x0.copy()
+        self.tau = tau
+        self.lam0 = lam
+
+        self.x = self.px = self.problem.x0.copy()
         self.D = 0
 
     def __iter__(self):
         self.x = self.px = self.problem.x0.copy()
+        self.lam = self.lam0
+
         return super().__iter__()
 
     def doStep(self):
         Ax = self.problem.A(self.x)
-        self.y: Union[np.ndarray, float] = self.problem.Project(self.x - self.lam * Ax)
-        Ay = self.problem.A(self.y)
+        self.operator_count += 1
 
-        if self.iter > 0 and (linalg.norm(self.x - self.y) >= self.zero_delta):
-            t = 0.9 * linalg.norm(self.x - self.y) / linalg.norm(
-                Ax - Ay)
-            self.lam = t if t <= self.maxLam else self.maxLam
-        else:
-            self.lam = self.maxLam
+        y = self.problem.Project(self.x - self.lam * Ax)
+        self.projections_count += 1
 
-        self.px, self.x = self.x, self.problem.Project(self.x - self.lam * Ay)
+        self.D = linalg.norm(self.x - y)
+
+        if self.D >= self.eps or self.iter < self.min_iters:
+            delta_A = self.problem.A(y) - Ax
+            self.operator_count += 1
+
+            self.px = self.x
+            self.x = y - self.lam * delta_A
+
+            delta_A_norm = np.linalg.norm(delta_A)
+            if delta_A_norm >= self.zero_delta:
+                t = self.tau * self.D / delta_A_norm
+                if self.lam >= t:
+                    self.lam = t
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, y=self.y, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
+        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
 
     def isStopConditionMet(self):
-        return super(KorpelevichMod, self).isStopConditionMet() or self.D < self.eps
+        return super(TsengAdaptive, self).isStopConditionMet() or self.D < self.eps
 
     def __next__(self):
-        self.D = linalg.norm(self.x - self.y)
-        return super(KorpelevichMod, self).__next__()
+        return super(TsengAdaptive, self).__next__()
 
     def paramsInfoString(self) -> str:
         return super().paramsInfoString() + "; x0: {0}; MaxLam: {1}".format(self.problem.XToString(self.problem.x0),
@@ -50,7 +62,7 @@ class KorpelevichMod(IterGradTypeMethod):
 
     def currentState(self) -> dict:
         # return dict(super().currentState(), x=([*self.x, self.problem.F(self.x)], [*self.y, self.problem.F(self.y)]), lam=self.lam)
-        return dict(super().currentState(), x=(self.x, self.y), F=(self.problem.F(self.x), self.problem.F(self.y)),
+        return dict(super().currentState(), x=(self.x,), F=(self.problem.F(self.x),),
                     D=self.D, lam=self.lam, iterEndTime=self.iterEndTime)
 
     def currentStateString(self) -> str:

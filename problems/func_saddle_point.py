@@ -44,6 +44,9 @@ class FuncSaddlePoint(VIProblem):
         t[self.concaveVarIndices] *= -1
         return t
 
+    def A(self, x: np.array) -> np.ndarray:
+        return self.GradF(x)
+
     def Project(self, x: np.array) -> np.array:
         return self.C.project(x)
 

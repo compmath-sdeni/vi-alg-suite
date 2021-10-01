@@ -31,6 +31,9 @@ class Problem:
     def GradF(self, x: Union[np.ndarray, float]):
         pass
 
+    def A(self, x: Union[np.ndarray, float]):
+        pass
+
     def getSavePath(self, path_prefix: str = None) -> str:
         """
 
