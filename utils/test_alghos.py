@@ -102,23 +102,24 @@ class BasicAlgoTests:
 
     @staticmethod
     def PrintAlgRunStats(alg_object: IterativeAlgorithm):
-        print("{0} finished. \nIters: {1}; \nProjections: {2}; \nOperators calc: {3}; \nTime: {4} sec.; \nExact error: {5}".format(
-            alg_object.hr_name,
-            alg_object.history.iters_count,
-            alg_object.history.projections_count,
-            alg_object.history.operator_count,
-            alg_object.history.iter_time_ns[alg_object.history.iters_count - 1] / 1e+9,
-            alg_object.history.real_error[alg_object.history.iters_count - 1]
-        ))
+        print(f"{alg_object.hr_name} finished. "
+              f"Iters: {alg_object.history.iters_count}; Projections: {alg_object.history.projections_count}; Operators calc: {alg_object.history.operator_count}; Time: {alg_object.history.iter_time_ns[alg_object.history.iters_count - 1] / 1e+9} sec.; "
+              f"\nLast step: {alg_object.history.step_delta_norm[alg_object.history.iters_count - 1]}; "
+              f"Exact error: {alg_object.history.real_error[alg_object.history.iters_count - 1]}; "
+              f"Goal function: {alg_object.history.goal_func_value[alg_object.history.iters_count - 1]}; "
+              f"Lambda: {alg_object.history.lam[alg_object.history.iters_count - 1]}; "
+              )
+
+        if alg_object.problem.C:
+            print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x)}")
 
         print_size = 5
 
         if alg_object.x.shape[0] <= print_size:
-            print("Result: \n{0}".format(alg_object.x))
+            print("Result: {0}".format(alg_object.x))
         else:
             print_len = int(alg_object.x.shape[0] / 2)
             if print_len > print_size:
                 print_len = print_size
 
-            print("Result: \n{0} ... {1}\n".format(alg_object.x[:print_len], alg_object.x[-print_len:]))
-
+            print("Result: {0} ... {1}\n".format(alg_object.x[:print_len], alg_object.x[-print_len:]))

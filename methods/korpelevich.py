@@ -16,22 +16,23 @@ class Korpelevich(IterGradTypeMethod):
 
     def __iter__(self):
         self.px = self.x.copy()
-        self.D: float = 0
+        self.D = 0
         return super().__iter__()
 
     def __next__(self):
-        #self.D = linalg.norm(self.x - self.px)
-        self.D = linalg.norm(self.x - self.y)
         return super(Korpelevich, self).__next__()
     
     def doStep(self):
-        self.y: Union[np.ndarray, float] = self.problem.Project(self.x - self.lam * self.problem.A(self.x))
+        y: np.ndarray = self.problem.Project(self.x - self.lam * self.problem.A(self.x))
         self.projections_count += 1
         self.operator_count += 1
 
-        self.px, self.x = self.x, self.problem.Project(self.x - self.lam * self.problem.A(self.y))
+        self.px = self.x
+        self.x = self.problem.Project(self.x - self.lam * self.problem.A(y))
         self.projections_count += 1
         self.operator_count += 1
+
+        self.D = linalg.norm(self.x - y)
 
     def doPostStep(self):
         self.setHistoryData(x=self.x, y=self.y, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))

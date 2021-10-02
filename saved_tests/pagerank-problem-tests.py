@@ -17,7 +17,7 @@ p = PageRankProblem(adjMatr)
 print("Page rank source matrix:\n", p.A)
 p = PageRankProblem.CreateRandom(100, 0.1)
 
-eValues, eVectors = np.linalg.eig(p.A)
+eValues, eVectors = np.linalg.eig(p.AM)
 
 realAnswer = None
 
@@ -27,7 +27,7 @@ for i, v in enumerate(eValues):
         v /= v.sum()
         realAnswer = np.copy(v)
         print("Eigenvector: ", v)
-        print("Test: ", np.linalg.norm(p.A@v - v))
+        print("Test: ", np.linalg.norm(p.AM @ v - v))
 
 alg = Korpelevich(p, 0.00000001, 0.5, min_iters=10)
 

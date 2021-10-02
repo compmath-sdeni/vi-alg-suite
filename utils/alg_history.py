@@ -3,6 +3,8 @@ import numpy as np
 
 class AlgHistory:
     def __init__(self, dim:int, max_iters: int = 10000):
+        self.alg = None
+
         self.iters_count = 0
         self.projections_count: int = 0
         self.operator_count: int = 0

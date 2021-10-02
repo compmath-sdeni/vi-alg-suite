@@ -62,9 +62,11 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         if self.D_1 > self.zero_delta and self.D > self.zero_delta:
             self.p_lam = self.lam
 
-            t = self.tau * self.D / np.linalg.norm(self.delta_Ax)
-            if self.lam >= t:
-                self.lam = t
+            nr = np.linalg.norm(self.delta_Ax)
+            if nr > self.zero_delta:
+                t = self.tau * self.D / nr
+                if self.lam >= t:
+                    self.lam = t
 
     def doPostStep(self):
         self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))

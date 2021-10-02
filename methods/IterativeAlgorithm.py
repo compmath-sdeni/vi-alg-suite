@@ -18,7 +18,7 @@ class IterativeAlgorithm:
         self.lam: float = lam
         self.iterEndTime = 0
         self.max_iters = max_iters
-        self.zero_delta = 0.000000000000000000001
+        self.zero_delta = 1e-20
 
         self.x: Union[np.ndarray, float] = self.problem.x0.copy()
 
@@ -73,6 +73,7 @@ class IterativeAlgorithm:
         self.operator_count: int = 0
 
         self.history = AlgHistory(self.N)
+        self.history.alg = self
 
         return self
 

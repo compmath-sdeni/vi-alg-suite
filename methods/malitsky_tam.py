@@ -20,13 +20,16 @@ class MalitskyTam(IterGradTypeMethod):
         self.Apx = self.problem.A(self.px)
         self.Ax = self.problem.A(self.x)
 
-        self.D = 0
-        self.D2 = 0
+        self.D:float = 0
+        self.D2:float = 0
 
     def __iter__(self):
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
         self.x = self.x1.copy()
+
+        self.D = 0
+        self.D2 = 0
 
         self.Apx = self.problem.A(self.px)
         self.Ax = self.problem.A(self.x)
@@ -42,7 +45,7 @@ class MalitskyTam(IterGradTypeMethod):
 
         self.Apx = self.Ax
         self.Ax = self.problem.A(self.x)
-        self.projections_count += 1
+        self.operator_count += 1
 
         self.D = np.linalg.norm(self.x - self.px)
         self.D2 = np.linalg.norm(self.px - self.ppx)

@@ -45,7 +45,7 @@ class AlgStatGrapher:
                     label=legend[i] if legend is not None and i < len(legend) else str(i))
 
     def plot_by_history(self, *, alg_history_list: List[np.ndarray], x_axis_type: XAxisType = XAxisType.ITERATION,
-                        plot_step_delta: bool = True, plot_real_error: bool = False,
+                        plot_step_delta: bool = True, plot_real_error: bool = False, plot_residue: bool = False,
                         x_axis_label: str = "Iteration", y_axis_label: str = "Error", plot_title: str = None,
                         legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log', start_iter: int = 2):
         y_dims: int = 0
@@ -69,6 +69,9 @@ class AlgStatGrapher:
         if plot_real_error:
             y_dims += 1
 
+        if plot_residue:
+            y_dims += 1
+
         # plot_data: np.ndarray = np.zeros((algs_count, x_len, y_dims+1), dtype=float)
 
         plot_legend: List[str] = legend[:]
@@ -77,7 +80,19 @@ class AlgStatGrapher:
                                            ['g-', 'g--', 'b-', 'b--', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-', 'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:
-            plot_legend = self.initParamsArray(algs_count, y_dims, ['1', '2', '3', '4', '5'])
+            plot_legend = []
+            for i in range(algs_count):
+                alg_legends = []
+                if plot_step_delta:
+                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+
+                if plot_real_error:
+                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+
+                if plot_residue:
+                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+
+                plot_legend.append(alg_legends)
 
         rc('xtick', labelsize=self.defFont)
         rc('ytick', labelsize=self.defFont)
@@ -99,6 +114,11 @@ class AlgStatGrapher:
 
             if plot_real_error:
                 plot_data[k] = alg_history_list[i].real_error[start_iter:iters_count]
+                yDataIndices.append(k)
+                k += 1
+
+            if plot_residue:
+                plot_data[k] = alg_history_list[i].goal_func_value[start_iter:iters_count]
                 yDataIndices.append(k)
                 k += 1
 

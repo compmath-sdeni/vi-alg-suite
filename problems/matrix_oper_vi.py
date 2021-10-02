@@ -17,7 +17,7 @@ class MatrixOperVI(VIProblem):
             lam_override_by_method=lam_override_by_method)
 
         self.C = C if C is not None else Rn(A.shape[0])
-        self.A = A
+        self.AM = A
         self.b = b
 
         if (A.shape[0] != x0.shape[0]) or (A.shape[0] != b.shape[0]):
@@ -25,10 +25,10 @@ class MatrixOperVI(VIProblem):
                 "Matrix and vector dimentions differs! {0} {1} {2}".format(A.shape[0], x0.shape, b.shape))
 
     def f(self, x: np.ndarray) -> float:
-        return np.linalg.norm(np.dot(self.A, x) - self.b)
+        return np.linalg.norm(np.dot(self.AM, x) - self.b)
 
     def df(self, x: np.ndarray) -> np.ndarray:
-        return np.dot(self.A, x) - self.b
+        return np.dot(self.AM, x) - self.b
         #return np.dot(self.A.T, np.dot(self.A, x) - self.b)
 
 
@@ -36,6 +36,9 @@ class MatrixOperVI(VIProblem):
         return self.f(x)
 
     def GradF(self, x: np.ndarray) -> np.ndarray:
+        return self.df(x)
+
+    def A(self, x: np.ndarray) -> np.ndarray:
         return self.df(x)
 
     def Project(self, x: np.ndarray) -> np.ndarray:

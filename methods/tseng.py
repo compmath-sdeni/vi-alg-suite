@@ -9,15 +9,16 @@ from methods.IterGradTypeMethod import IterGradTypeMethod
 
 class Tseng(IterGradTypeMethod):
 
-    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, maxLam: float = 0.9, *,
+    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
                  min_iters: int = 0, max_iters=5000):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
-        self.maxLam = maxLam
         self.x = self.px = self.problem.x0.copy()
-        self.D = 0
+        self.D: float = 0
 
     def __iter__(self):
-        self.x = self.px = self.problem.x0.copy()
+        self.x = self.problem.x0.copy()
+        self.px = self.problem.x0.copy()
+        self.D: float = 0
         return super().__iter__()
 
     def doStep(self):
