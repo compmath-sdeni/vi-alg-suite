@@ -6,11 +6,14 @@ from constraints.convex_set_constraint import ConvexSetConstraints, ConvexSetCon
 
 
 class ConvexSetsIntersection(ConvexSetConstraints):
-    def __init__(self, sets: List[ConvexSetConstraints], *, max_projection_iters: int = None, projection_eps: float = None):
-        super().__init__()
+    def __init__(self, sets: List[ConvexSetConstraints], *, max_projection_iters: int = None,
+                 projection_eps: float = None):
+
+        super().__init__(
+            max_projection_iters=max_projection_iters if max_projection_iters is not None else len(sets) * 1000
+        )
 
         self.sets = sets
-        self.max_projection_iters: int = len(self.sets) * 1000
         self.projection_eps = projection_eps if projection_eps is not None else self.zero_delta
 
     def isIn(self, x: np.array) -> bool:

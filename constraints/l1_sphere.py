@@ -1,40 +1,38 @@
 import numpy as np
-
 from constraints.convex_set_constraint import ConvexSetConstraints
-from methods.projections.simplex_proj import SimplexProj
 from methods.projections.simplex_projection_prom import euclidean_proj_l1ball
 
 
-class B1BallSurface(ConvexSetConstraints):
-    def __init__(self, n: int, b: float = 1.0, delta: float = 0.000000001):
+class L1Sphere(ConvexSetConstraints):
+    def __init__(self, n: int, b: float = 1.0):
         super().__init__()
         self.n: int = n
         self.b: float = b
-        self.delta = delta
 
     def isIn(self, x: np.ndarray) -> bool:
-        return abs(abs(x).sum() - self.b) < self.delta
+        return np.fabs(np.sum(np.abs(x)) - self.b) < self.zero_delta
 
     def getSomeInteriorPoint(self) -> np.ndarray:
         res = np.zeros(self.n)
+        r: float = 0
         for i in range(self.n - 1):
             r = (self.b - abs(res[:i]).sum())
-            if r > self.delta:
-                res[i] = ((np.random.rand()*2.0 - 1)*self.b) * r
+            if r > self.zero_delta:
+                res[i] = ((np.random.rand() * 2.0 - 1) * self.b) * r
             else:
                 res[i] = 0
 
-        if r > self.delta:
-            res[self.n - 1] = (self.b - abs(res[:self.n - 1]).sum()) * (1 if np.random.rand()>0.5 else -1)
+        if r > self.zero_delta:
+            res[self.n - 1] = (self.b - abs(res[:self.n - 1]).sum()) * (1 if np.random.rand() > 0.5 else -1)
 
         return res
 
     def project(self, x: np.ndarray) -> np.ndarray:
 
-        # using prom algho
+        # using prom algo
         return euclidean_proj_l1ball(x, s=self.b)
 
-        # using self-coded algho
+        # using self-coded algo
         # res: np.ndarray = x.copy()
         #
         # if not self.isIn(res):
@@ -45,5 +43,8 @@ class B1BallSurface(ConvexSetConstraints):
         #
         # return res
 
+    def getDim(self):
+        return self.n
+
     def toString(self):
-        return "{0}d B1 ball surface scaled to {1}".format(self.n, self.b)
+        return "{0}d L1 sphere R={1}".format(self.n, self.b)

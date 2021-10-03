@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 
 from constraints.ConvexSetsIntersection import ConvexSetsIntersection
 from constraints.classic_simplex import ClassicSimplex
+from constraints.halfspace import HalfSpace
 from constraints.hyperplane import Hyperplane
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
@@ -14,6 +15,7 @@ from methods.tseng_adaptive import TsengAdaptive
 from problems.harker_test import HarkerTest
 from problems.matrix_oper_vi import MatrixOperVI
 from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
+from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from utils.graph.alg_stat_grapher import AlgStatGrapher
 
 from constraints.hyperrectangle import Hyperrectangle
@@ -131,26 +133,56 @@ def_eps = 1e-8
 # endregion
 
 # region PseudoMonotone One
-N = 3
+# N = 3
+#
+# x0 = np.array([2., -5., 3.])
+# x1 = np.array([3., -2., -1.])
+# def_lam = 1.0/5.07/4.0
+# #def_lam = 0.01
+# #def_lam = 1.0/5.07
+# def_adapt_lam = 1.
+#
+# real_solution = np.array([0.0 for i in range(N)])
+#
+# hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
+# hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
+#
+# constraints = ConvexSetsIntersection([hr, hp])
+#
+# problem = PseudoMonotoneOperOne(
+#               C=constraints,
+#               x0=x0,
+#               hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
+# endregion
 
-x0 = np.array([2., -5., 3.])
-x1 = np.array([3., -2., -1.])
-def_lam = 0.05
+# region PseudoMonotone Two
+N = 5
+
+x0 = np.array([2., -5., 3., -1., 2.])
+x1 = np.array([2.5, -4., 2., -1.5, 2.5])
+def_lam = 0.013
+#def_lam = 1.0/5.07
 def_adapt_lam = 1.
 
-real_solution = np.array([0.0 for i in range(N)])
+# lam = 0.2 - 0.28484841 -0.60606057 -0.8303029   0.36363633  0.31515152
+# lam= 0.02 - 0.28484809 -0.60606043 -0.83030234  0.3636362   0.31515155
+# lam=0.013 - 0.28484788 -0.60606033 -0.83030195  0.36363612  0.31515158
 
-hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
-hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
+real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
+
+hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
+hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)
 
 constraints = ConvexSetsIntersection([hr, hp])
 
-problem = PseudoMonotoneOperOne(
+problem = PseudoMonotoneOperTwo(
               C=constraints,
               x0=x0,
-              hr_name='$(x_1 + x_2 + +x_3 = 0, C = [-5,5]^3, N = 3$'
+              x_test=real_solution,
+              hr_name='$Ax=f(x)(Mx+p), p \ne 0, M - 5x5 \ matrix, C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
               )
-# endregion
+#endregion
 
 # region HarkerTest
 # N = 5
@@ -229,8 +261,8 @@ malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(), eps=def_eps, 
                                             min_iters=min_iters, max_iters=max_iters)
 
 algs_to_test = [
-    korpele,
-    korpele_adapt,
+#    korpele,
+    # korpele_adapt,
     tseng,
     tseng_adaptive,
     malitsky_tam,

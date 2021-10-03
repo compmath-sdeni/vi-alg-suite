@@ -1,4 +1,4 @@
-from constraints.b1_ball_surface import B1BallSurface
+from constraints.b1_ball_surface import L1BallSurface
 from constraints.positive_simplex_surface import PositiveSimplexSurface
 from problems.viproblem import VIProblem
 import numpy as np
@@ -12,7 +12,7 @@ class PageRankProblem(VIProblem):
         super().__init__(x0=np.concatenate((np.full(self.m, 1.0 / self.m), np.full(self.m, 1.0 / self.m))))
 
         self.simplex = PositiveSimplexSurface(self.m,1)
-        self.sphere = B1BallSurface(self.m, 1)
+        self.sphere = L1BallSurface(self.m, 1)
 
         b = GraphMatr.sum(axis=0)[:, None]
         b[b == 0] = 1

@@ -15,8 +15,9 @@ class ConvexSetConstraintsException(Exception):
 
 
 class ConvexSetConstraints:
-    def __init__(self):
-        self.zero_delta = 1e-12
+    def __init__(self, *, zero_delta: float = 1e-12, max_projection_iters: int = 5000):
+        self.zero_delta = zero_delta
+        self.max_projection_iters = max_projection_iters
 
     def isIn(self, x: np.ndarray) -> bool:
         pass
