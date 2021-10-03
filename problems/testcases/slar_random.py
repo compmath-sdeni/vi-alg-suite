@@ -1,24 +1,26 @@
 import numpy as np
-from scipy import linalg, vectorize
-import random
 
 from problems.matrix_oper_vi import MatrixOperVI
 
-def getProblem(M:int, A:np.array = None):
 
-    #A = np.zeros((M, M), dtype=int)
-    #A = np.identity(M, dtype=int)
+def getSLE(N: int, *, A: np.ndarray = None, x_test: np.ndarray = None):
+    if A is None:
+        A = np.random.rand(N, N) * 2.
+        A = np.around(A @ A.T, 1)
+        print("A:\n", A)
 
-    if(A is None):
-        A = np.fromfunction(vectorize(lambda i,j: random.randint(0,10)), (M,M), dtype=float)
-        A = A@np.transpose(A)
+    if x_test is None:
+        x_test = np.ones(N)
 
-    print("A:\n", A)
+    b = A @ x_test
 
-    x = np.fromfunction(vectorize(lambda i: i), (M,), dtype=float)
+    return A, b, x_test
+
+
+def getProblem(N: int, A: np.ndarray = None):
+    M, b, x = getSLE(N, A=A)
+
     print("Desired x: ", x)
-    #b = np.fromfunction(vectorize(lambda i: random.random()), (M,), dtype=float)
-    b = A @ x
     print("b: ", b)
 
-    return MatrixOperVI(A = A, b = b, x0 = np.ones((M,)))
+    return MatrixOperVI(A=M, b=b, x0=np.ones((N,)))

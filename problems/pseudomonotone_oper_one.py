@@ -33,6 +33,9 @@ class PseudoMonotoneOperOne(VIProblem):
             [-1., 0., 2.]])
 
     def F(self, x: np.ndarray) -> float:
+        # t = self.C.project(x - self.A(x))
+        # return np.linalg.norm(t - x)
+        # solution x = 0, so
         return np.linalg.norm(self.A(x) - x)
 
     def GradF(self, x: np.ndarray) -> np.ndarray:

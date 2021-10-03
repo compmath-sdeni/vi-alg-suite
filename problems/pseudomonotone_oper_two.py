@@ -38,7 +38,7 @@ class PseudoMonotoneOperTwo(VIProblem):
         self.p = np.array([-1., 2., 1., 0., -1.])
 
     def F(self, x: np.ndarray) -> float:
-        t = self.C.project(self.A(x))
+        t = self.C.project(x - self.A(x))
         return np.linalg.norm(t - x)
 
     def GradF(self, x: np.ndarray) -> np.ndarray:

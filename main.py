@@ -7,6 +7,7 @@ from constraints.ConvexSetsIntersection import ConvexSetsIntersection
 from constraints.classic_simplex import ClassicSimplex
 from constraints.halfspace import HalfSpace
 from constraints.hyperplane import Hyperplane
+from constraints.l1_ball import L1Ball
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
@@ -16,6 +17,8 @@ from problems.harker_test import HarkerTest
 from problems.matrix_oper_vi import MatrixOperVI
 from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
 from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
+from problems.sle_direct import SLEDirect
+from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher
 
 from constraints.hyperrectangle import Hyperrectangle
@@ -157,31 +160,31 @@ def_eps = 1e-8
 # endregion
 
 # region PseudoMonotone Two
-N = 5
-
-x0 = np.array([2., -5., 3., -1., 2.])
-x1 = np.array([2.5, -4., 2., -1.5, 2.5])
-def_lam = 0.013
-#def_lam = 1.0/5.07
-def_adapt_lam = 1.
-
-# lam = 0.2 - 0.28484841 -0.60606057 -0.8303029   0.36363633  0.31515152
-# lam= 0.02 - 0.28484809 -0.60606043 -0.83030234  0.3636362   0.31515155
-# lam=0.013 - 0.28484788 -0.60606033 -0.83030195  0.36363612  0.31515158
-
-real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
-
-hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
-hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)
-
-constraints = ConvexSetsIntersection([hr, hp])
-
-problem = PseudoMonotoneOperTwo(
-              C=constraints,
-              x0=x0,
-              x_test=real_solution,
-              hr_name='$Ax=f(x)(Mx+p), p \ne 0, M - 5x5 \ matrix, C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
-              )
+# N = 5
+#
+# x0 = np.array([2., -5., 3., -1., 2.])
+# x1 = np.array([2.5, -4., 2., -1.5, 2.5])
+# def_lam = 0.013
+# #def_lam = 1.0/5.07
+# def_adapt_lam = 1.
+#
+# # lam = 0.2 - 0.28484841 -0.60606057 -0.8303029   0.36363633  0.31515152
+# # lam= 0.02 - 0.28484809 -0.60606043 -0.83030234  0.3636362   0.31515155
+# # lam=0.013 - 0.28484788 -0.60606033 -0.83030195  0.36363612  0.31515158
+#
+# real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
+#
+# hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
+# hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)
+#
+# constraints = ConvexSetsIntersection([hr, hp])
+#
+# problem = PseudoMonotoneOperTwo(
+#               C=constraints,
+#               x0=x0,
+#               x_test=real_solution,
+#               hr_name='$Ax=f(x)(Mx+p), p \ne 0, M - 5x5 \ matrix, C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
 #endregion
 
 # region HarkerTest
@@ -249,6 +252,41 @@ problem = PseudoMonotoneOperTwo(
 #              xtest=projected_test)
 # endregion
 
+# region SLE direct on L1 ball - 3, predefined
+N = 3
+
+M, p, real_solution = getSLE(N, A=np.array([
+          [5, 2,  1]
+        , [2, 13, 4]
+        , [1, 4, 6]
+    ], dtype=float))
+
+norm = np.linalg.norm(M, 2)
+
+c = np.sum(np.abs(real_solution)) * 1.9
+
+x0 = np.array([2. for i in range(N)])
+x1 = np.array([2.5 for i in range(N)])
+def_lam = 0.02/norm
+def_adapt_lam = 1.
+
+constraints = L1Ball(N, c)
+
+projected_solution = constraints.project(real_solution)
+print("M:")
+print(M)
+print(f"P: {p}")
+print(f"test: {projected_solution}; c: {c}")
+print(f"Goal F: {np.linalg.norm(M @ projected_solution - p)}")
+
+problem = SLEDirect(
+              M=M, p=p,
+              C=constraints,
+              x0=x0,
+              x_test=projected_solution,
+              hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+              )
+#endregion
 
 korpele = Korpelevich(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
 korpele_adapt = KorpelevichMod(problem, eps=def_eps, min_iters=min_iters, max_iters=max_iters)
