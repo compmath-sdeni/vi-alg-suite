@@ -19,6 +19,7 @@ from problems.matrix_oper_vi import MatrixOperVI
 from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
 from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
+from problems.sle_saddle import SLESaddle
 from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher
 
@@ -186,7 +187,7 @@ def_eps = 1e-8
 #               x_test=real_solution,
 #               hr_name='$Ax=f(x)(Mx+p), p \ne 0, M - 5x5 \ matrix, C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
 #               )
-#endregion
+# endregion
 
 # region HarkerTest
 # N = 5
@@ -313,7 +314,7 @@ def_eps = 1e-8
 #               hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
 #               )
 #
-#endregion
+# endregion
 
 # region SLE direct on L1 ball - 2x3, predefined
 # n = 2
@@ -367,26 +368,80 @@ def_eps = 1e-8
 #               hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
 #               )
 #
-#endregion
+# endregion
 
 # region SLE direct on L1 ball - nxm, random
-n = 10
-m = 20
+# n = 10
+# m = 20
+#
+# M = np.random.rand(n, m) * 3.
+#
+# norm = np.linalg.norm(M, 2)
+#
+# unconstrained_solution = np.array([i*0.1 for i in range(m)])
+#
+# p = M @ unconstrained_solution
+# c = 2.
+#
+# x0 = np.array([0.2 for i in range(m)])
+# x1 = np.array([0.1 for i in range(m)])
+# #def_lam = 1./norm
+# def_lam = 0.001
+# def_adapt_lam1 = 0.01
+# constraints = L1Ball(m, c)
+#
+# projected_solution = constraints.project(unconstrained_solution)
+# print("M:")
+# print(M)
+# print(f"P: {p}")
+# print(f"Projected solution: {projected_solution}; c: {c}")
+# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+#
+# x = cp.Variable(m)
+# objective = cp.Minimize(cp.sum_squares(M@x - p))
+# constraints_cp = [cp.norm(x, 1) <= c]
+# prob = cp.Problem(objective, constraints_cp)
+# # The optimal objective value is returned by `prob.solve()`.
+# result = prob.solve()
+# # The optimal value for x is stored in `x.value`.
+# test_solution = x.value
+#
+# print("Solved by CP:")
+# print(test_solution)
+# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+# print(f"CP solution distance to C: {constraints.getDistance(test_solution)}")
+#
+# problem = SLEDirect(
+#               M=M, p=p,
+#               C=constraints,
+#               x0=x0,
+#               x_test=test_solution,
+#               hr_name='$rand ||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
 
-M = np.random.rand(n, m) * 3.
+# endregion
+
+# region SLE saddle form on L1 ball - 2x3, predefined
+n = 2
+m = 3
+
+M = np.array([
+    [5, 2, 1]
+    , [2, 13, 4]
+], dtype=float)
 
 norm = np.linalg.norm(M, 2)
 
-unconstrained_solution = np.array([i*0.1 for i in range(m)])
+unconstrained_solution = np.array([-1, 1, 0])
 
 p = M @ unconstrained_solution
-c = 2.
+c = 1.
 
 x0 = np.array([0.2 for i in range(m)])
-x1 = np.array([0.1 for i in range(m)])
-#def_lam = 1./norm
-def_lam = 0.001
-def_adapt_lam1 = 0.01
+x1 = np.array([0.1 for i in range(m + n)])
+# def_lam = 1./norm
+def_lam = 0.0001
+def_adapt_lam1 = 0.2
 constraints = L1Ball(m, c)
 
 projected_solution = constraints.project(unconstrained_solution)
@@ -397,7 +452,7 @@ print(f"Projected solution: {projected_solution}; c: {c}")
 print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
 
 x = cp.Variable(m)
-objective = cp.Minimize(cp.sum_squares(M@x - p))
+objective = cp.Minimize(cp.sum_squares(M @ x - p))
 constraints_cp = [cp.norm(x, 1) <= c]
 prob = cp.Problem(objective, constraints_cp)
 # The optimal objective value is returned by `prob.solve()`.
@@ -408,17 +463,17 @@ test_solution = x.value
 print("Solved by CP:")
 print(test_solution)
 print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
-print(f"CP solution distance to C: {constraints.getDistance(test_solution)}")
+print(f"CP solution is in C: {constraints.isIn(test_solution)}")
 
-problem = SLEDirect(
-              M=M, p=p,
-              C=constraints,
-              x0=x0,
-              x_test=test_solution,
-              hr_name='$rand ||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
-              )
+problem = SLESaddle(
+    M=M, p=p,
+    C=constraints,
+    x0=x0,
+    x_test=test_solution,
+    hr_name='$||Mx - p||_2 \\to min, min-max form, ||x|| <= ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+)
 
-#endregion
+# endregion
 
 korpele = Korpelevich(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
 korpele_adapt = KorpelevichMod(problem, eps=def_eps, min_iters=min_iters, max_iters=max_iters)
@@ -432,7 +487,7 @@ malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(),
                                             min_iters=min_iters, max_iters=max_iters)
 
 algs_to_test = [
-#    korpele,
+    #    korpele,
     # korpele_adapt,
     tseng,
     tseng_adaptive,

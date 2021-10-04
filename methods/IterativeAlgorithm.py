@@ -92,7 +92,7 @@ class IterativeAlgorithm:
             self.history.iter_time_ns[self.iter] = (finish - start) + (
             self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
             self.history.lam[self.iter] = self.lam
-            self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x)
+            self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
 
             self.doPostStep()
 
