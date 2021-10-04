@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+import cvxpy as cp
 from matplotlib import pyplot as plt
 
 from constraints.ConvexSetsIntersection import ConvexSetsIntersection
@@ -252,40 +253,171 @@ def_eps = 1e-8
 #              xtest=projected_test)
 # endregion
 
-# region SLE direct on L1 ball - 3, predefined
-N = 3
+# region SLE direct on L1 ball - 3x3, predefined
+# N = 3
+#
+# M, p, unconstrained_solution = getSLE(N, A=np.array([
+#           [5, 2,  1]
+#         , [2, 13, 4]
+#         , [1, 4, 6]
+#     ], dtype=float), x_test=np.array([1, 2, 3]))
+#
+# norm = np.linalg.norm(M, 2)
+#
+# c = np.sum(np.abs(unconstrained_solution)) * 1.9
+# c = 3.
+#
+# x0 = np.array([0.2 for i in range(N)])
+# x1 = np.array([0.1 for i in range(N)])
+# # def_lam = 1./norm
+# def_lam = 0.0005
+# def_adapt_lam = 0.1
+# constraints = L1Ball(N, c)
+#
+# projected_solution = constraints.project(unconstrained_solution)
+# print("M:")
+# print(M)
+# print(f"P: {p}")
+# print(f"Projected solution: {projected_solution}; c: {c}")
+# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+#
+# # cvx_begin
+# #     variable x(n);
+# #     minimize( norm(A*x-b) );
+# #     subject to
+# #         C*x == d;
+# #         norm(x,Inf) <= 1;
+# # cvx_end
+#
+# x = cp.Variable(N)
+# objective = cp.Minimize(cp.sum_squares(M@x - p))
+# constraints_cp = [cp.norm(x, 1) <= c]
+# print(f"constraints_cp: {constraints_cp[0].is_dcp()}, ")
+#
+# prob = cp.Problem(objective, constraints_cp)
+# # The optimal objective value is returned by `prob.solve()`.
+# result = prob.solve()
+# # The optimal value for x is stored in `x.value`.
+# test_solution = x.value
+#
+# print("Solved by CP:")
+# print(test_solution)
+# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+# print(f"CP solution is in C: {constraints.isIn(test_solution)}")
+#
+# problem = SLEDirect(
+#               M=M, p=p,
+#               C=constraints,
+#               x0=x0,
+#               x_test=test_solution,
+#               hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
+#
+#endregion
 
-M, p, real_solution = getSLE(N, A=np.array([
-          [5, 2,  1]
-        , [2, 13, 4]
-        , [1, 4, 6]
-    ], dtype=float))
+# region SLE direct on L1 ball - 2x3, predefined
+# n = 2
+# m = 3
+#
+# M = np.array([
+#           [5, 2,  1]
+#         , [2, 13, 4]
+#     ], dtype=float)
+#
+# norm = np.linalg.norm(M, 2)
+#
+# unconstrained_solution = np.array([-1, 1, 0])
+#
+# p = M @ unconstrained_solution
+# c = 1.
+#
+# x0 = np.array([0.2 for i in range(m)])
+# x1 = np.array([0.1 for i in range(m)])
+# # def_lam = 1./norm
+# def_lam = 0.0001
+# def_adapt_lam1 = 0.2
+# constraints = L1Ball(m, c)
+#
+# projected_solution = constraints.project(unconstrained_solution)
+# print("M:")
+# print(M)
+# print(f"P: {p}")
+# print(f"Projected solution: {projected_solution}; c: {c}")
+# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+#
+# x = cp.Variable(m)
+# objective = cp.Minimize(cp.sum_squares(M@x - p))
+# constraints_cp = [cp.norm(x, 1) <= c]
+# prob = cp.Problem(objective, constraints_cp)
+# # The optimal objective value is returned by `prob.solve()`.
+# result = prob.solve()
+# # The optimal value for x is stored in `x.value`.
+# test_solution = x.value
+#
+# print("Solved by CP:")
+# print(test_solution)
+# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+# print(f"CP solution is in C: {constraints.isIn(test_solution)}")
+#
+# problem = SLEDirect(
+#               M=M, p=p,
+#               C=constraints,
+#               x0=x0,
+#               x_test=test_solution,
+#               hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
+#
+#endregion
+
+# region SLE direct on L1 ball - nxm, random
+n = 10
+m = 20
+
+M = np.random.rand(n, m) * 3.
 
 norm = np.linalg.norm(M, 2)
 
-c = np.sum(np.abs(real_solution)) * 1.9
+unconstrained_solution = np.array([i*0.1 for i in range(m)])
 
-x0 = np.array([2. for i in range(N)])
-x1 = np.array([2.5 for i in range(N)])
-def_lam = 0.02/norm
-def_adapt_lam = 1.
+p = M @ unconstrained_solution
+c = 2.
 
-constraints = L1Ball(N, c)
+x0 = np.array([0.2 for i in range(m)])
+x1 = np.array([0.1 for i in range(m)])
+#def_lam = 1./norm
+def_lam = 0.001
+def_adapt_lam1 = 0.01
+constraints = L1Ball(m, c)
 
-projected_solution = constraints.project(real_solution)
+projected_solution = constraints.project(unconstrained_solution)
 print("M:")
 print(M)
 print(f"P: {p}")
-print(f"test: {projected_solution}; c: {c}")
-print(f"Goal F: {np.linalg.norm(M @ projected_solution - p)}")
+print(f"Projected solution: {projected_solution}; c: {c}")
+print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+
+x = cp.Variable(m)
+objective = cp.Minimize(cp.sum_squares(M@x - p))
+constraints_cp = [cp.norm(x, 1) <= c]
+prob = cp.Problem(objective, constraints_cp)
+# The optimal objective value is returned by `prob.solve()`.
+result = prob.solve()
+# The optimal value for x is stored in `x.value`.
+test_solution = x.value
+
+print("Solved by CP:")
+print(test_solution)
+print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+print(f"CP solution distance to C: {constraints.getDistance(test_solution)}")
 
 problem = SLEDirect(
               M=M, p=p,
               C=constraints,
               x0=x0,
-              x_test=projected_solution,
-              hr_name='$||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+              x_test=test_solution,
+              hr_name='$rand ||Mx - p||_2 \\to min, ||x|| <= '+ str(c) +' \ \lambda = ' + str(round(def_lam, 3)) + '$'
               )
+
 #endregion
 
 korpele = Korpelevich(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
@@ -295,7 +427,8 @@ tseng = Tseng(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=
 tseng_adaptive = TsengAdaptive(problem, eps=def_eps, lam=def_adapt_lam, min_iters=min_iters, max_iters=max_iters)
 
 malitsky_tam = MalitskyTam(problem, x1=x1.copy(), eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
-malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(), eps=def_eps, lam=def_adapt_lam,
+malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(),
+                                            eps=def_eps, lam=def_adapt_lam, lam1=def_adapt_lam,
                                             min_iters=min_iters, max_iters=max_iters)
 
 algs_to_test = [
