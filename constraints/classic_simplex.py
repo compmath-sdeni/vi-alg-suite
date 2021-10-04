@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from methods.projections.simplex_proj import SimplexProj
@@ -25,6 +27,10 @@ class ClassicSimplex(ConvexSetConstraints):
         res = x.copy()
         SimplexProj.doInplace(res, self.b)
         return res
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n:{self.n}", "\n", f"b:{self.b}"])
 
     def toString(self):
         return "{0}d classic simplex".format(self.n)

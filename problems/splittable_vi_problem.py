@@ -14,7 +14,7 @@ class SplittableVIProblem(VIProblem):
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, vis: Sequence[VisualParams] = None,
                  defaultProjection: np.ndarray = None, xtest: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
-        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override)
+        super().__init__(xtest=xtest, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override)
 
         self.blocks: np.ndarray = None
 
@@ -25,7 +25,7 @@ class SplittableVIProblem(VIProblem):
 
         self.f: List[Callable[[np.ndarray], float]] = None
         self.df: List[Callable[[np.ndarray], np.ndarray]] = None
-        self.C = C
+
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = defaultProjection if defaultProjection is not None else np.zeros(self.M)
         if xtest is not None:

@@ -11,8 +11,8 @@ class TsengAdaptive(IterGradTypeMethod):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001,
                  lam: float = 0.1, tau: float = 0.95, *,
-                 min_iters: int = 0, max_iters=5000):
-        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
+                 min_iters: int = 0, max_iters=5000, hr_name: str = None):
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
         self.tau = tau
         self.lam0 = lam
 

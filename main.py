@@ -14,6 +14,7 @@ from constraints.classic_simplex import ClassicSimplex
 from constraints.halfspace import HalfSpace
 from constraints.hyperplane import Hyperplane
 from constraints.l1_ball import L1Ball
+from methods.algorithm_params import AlgorithmParams
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
@@ -25,6 +26,9 @@ from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
 from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
+
+from problems.testcases import pseudo_mono_3
+
 from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
 
@@ -34,11 +38,13 @@ from methods.korpelevich import Korpelevich
 from problems.funcndmin import FuncNDMin
 from utils.test_alghos import BasicAlgoTests
 
-min_iters = 10
-max_iters = 2000
-def_lam = 0.005
-def_adapt_lam = 0.1
-def_eps = 1e-8
+params = AlgorithmParams(
+    eps=1e-8,
+    min_iters=10,
+    max_iters=2000,
+    lam=0.005,
+    start_adaptive_lam=0.1
+)
 
 captured_io = io.StringIO()
 sys.stdout = captured_io
@@ -146,35 +152,38 @@ sys.stdout = captured_io
 # endregion
 
 # region PseudoMonotone One
-N = 3
-
-x0 = np.array([2., -5., 3.])
-x1 = np.array([3., -2., -1.])
-def_lam = 1.0/5.07/4.0
-#def_lam = 0.01
-#def_lam = 1.0/5.07
-def_adapt_lam = 1.
-
-real_solution = np.array([0.0 for i in range(N)])
-
-hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
-hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
-
-constraints = ConvexSetsIntersection([hr, hp])
-
-problem = PseudoMonotoneOperOne(
-              C=constraints,
-              x0=x0,
-              hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
-              )
+# N = 3
+#
+# x0 = np.array([2., -5., 3.])
+# x1 = np.array([3., -2., -1.])
+# #def_lam = 1.0/5.07/4.0
+# #def_lam = 0.01
+# def_lam = 1.0/5.07
+# def_adapt_lam = 1.
+#
+# real_solution = np.array([0.0 for i in range(N)])
+#
+# hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
+# hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
+#
+# constraints = ConvexSetsIntersection([hr, hp])
+#
+# problem = PseudoMonotoneOperOne(
+#               C=constraints,
+#               x0=x0,
+#               hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
+#               )
 # endregion
+
+
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 
 # region PseudoMonotone Two
 # N = 5
 #
 # x0 = np.array([2., -5., 3., -1., 2.])
 # x1 = np.array([2.5, -4., 2., -1.5, 2.5])
-# def_lam = 0.013
+# def_lam = 0.02
 # #def_lam = 1.0/5.07
 # def_adapt_lam = 1.
 #
@@ -495,11 +504,11 @@ problem = PseudoMonotoneOperOne(
 #
 # norm = np.linalg.norm(M, 2)
 #
-# unconstrained_solution = np.array([i * 0.1 for i in range(m)])
+# unconstrained_solution = np.array([1. for i in range(m)])
 #
 # p = M @ unconstrained_solution
 #
-# c = 1.
+# c = 1.5
 # # c = 1.34
 #
 # x0 = np.array([0.2 for i in range(m)])
@@ -540,19 +549,23 @@ problem = PseudoMonotoneOperOne(
 #     x_test=test_solution,
 #     hr_name='$||Mx - p||_2 \\to min, minimax \ form, ||x||_1 \leq ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
 # )
-#
+
 # endregion
 
-korpele = Korpelevich(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
-korpele_adapt = KorpelevichMod(problem, eps=def_eps, min_iters=min_iters, max_iters=max_iters)
+korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
+korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
 
-tseng = Tseng(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
-tseng_adaptive = TsengAdaptive(problem, eps=def_eps, lam=def_adapt_lam, min_iters=min_iters, max_iters=max_iters)
+tseng = Tseng(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters,
+              hr_name="Tseng")
+tseng_adaptive = TsengAdaptive(problem, eps=params.eps, lam=params.start_adaptive_lam, min_iters=params.min_iters,
+                               max_iters=params.max_iters, hr_name="Tseng adp.")
 
-malitsky_tam = MalitskyTam(problem, x1=x1.copy(), eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
-malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(),
-                                            eps=def_eps, lam=def_adapt_lam,
-                                            min_iters=min_iters, max_iters=max_iters)
+malitsky_tam = MalitskyTam(problem, x1=params.x1.copy(), eps=params.eps, lam=params.lam, min_iters=params.min_iters,
+                           max_iters=params.max_iters, hr_name="Alg 1.")
+malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=params.x1.copy(),
+                                            eps=params.eps, lam=params.start_adaptive_lam,
+                                            lam1=params.start_adaptive_lam1,
+                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2.")
 
 algs_to_test = [
     # korpele,
@@ -568,7 +581,8 @@ test_mneno = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%
 saved_history_dir = os.path.join(saved_history_dir, test_mneno)
 os.makedirs(saved_history_dir, exist_ok=True)
 
-problem.saveToFile(path_to_save=saved_history_dir)
+problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
+params.saveToDir(os.path.join(saved_history_dir, "params"))
 
 writer = pd.ExcelWriter(
     os.path.join(saved_history_dir, f"history-{test_mneno}.xlsx"),
@@ -596,13 +610,16 @@ f.close()
 grapher = AlgStatGrapher()
 grapher.plot_by_history(
     alg_history_list=alg_history_list,
-    x_axis_type=XAxisType.ITERATION, y_axis_type=YAxisType.STEP_DELTA
+    x_axis_type=XAxisType.ITERATION, y_axis_type=YAxisType.REAL_ERROR
 )
 
-plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.pdf"), bbox_inches='tight', dpi=300)
+dpi = 300.
+
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
 plt.title(problem.hr_name, loc='center')
-plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=300)
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=dpi)
 
 plt.show()
 

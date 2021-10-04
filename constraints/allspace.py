@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 
@@ -15,6 +17,10 @@ class Rn(ConvexSetConstraints):
 
     def project(self, x: np.ndarray) -> np.ndarray:
         return x
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.write(f"n:{self.n}")
 
     def toString(self):
         return "n: {0}".format(self.n)

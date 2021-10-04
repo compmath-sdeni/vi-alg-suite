@@ -10,8 +10,8 @@ from methods.IterGradTypeMethod import IterGradTypeMethod
 class MalitskyTam(IterGradTypeMethod):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
-                 min_iters: int = 0, max_iters=5000):
-        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
+                 min_iters: int = 0, max_iters=5000, hr_name: str = None):
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
 
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()

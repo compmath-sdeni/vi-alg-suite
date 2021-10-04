@@ -10,7 +10,7 @@ class HarkerTest(VIProblem):
     def __init__(self, M: int, C: ConvexSetConstraints = None,
                  x0: np.ndarray = None, hr_name: str = None, lam_override: float = None,
                  xtest: np.ndarray = None):
-        super().__init__(x0=x0 if x0 is not None else np.ones(M), hr_name=hr_name, lam_override=lam_override, xtest=xtest)
+        super().__init__(x0=x0 if x0 is not None else np.ones(M), C=C, hr_name=hr_name, lam_override=lam_override, xtest=xtest)
 
         B = np.random.rand(M, M) * 5 - 10
         S = np.random.rand(M, M) * 5 - 10
@@ -26,13 +26,12 @@ class HarkerTest(VIProblem):
             D[i, i] = np.random.randint(0, 1) * 0.3
 
         self.AM = B @ B.T + S + D
-        self.C = C
 
         # self.q = np.random.rand(M) * -500.0
         self.q = np.zeros(M)
 
         self.norm = np.linalg.norm(self.AM, 2)
-        print("Norm: ", self.norm)
+        print("HpHard norm: ", self.norm)
 
         # r = np.linalg.eig(self.A)
         # print("A:\n", self.A)

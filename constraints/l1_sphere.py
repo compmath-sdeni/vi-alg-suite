@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from methods.projections.simplex_projection_prom import euclidean_proj_l1ball
@@ -45,6 +47,10 @@ class L1Sphere(ConvexSetConstraints):
 
     def getDim(self):
         return self.n
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n\t{self.n}", "\n", f"b\t{self.b}"])
 
     def toString(self):
         return "{0}d L1 sphere R={1}".format(self.n, self.b)

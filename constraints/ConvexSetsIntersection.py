@@ -1,4 +1,5 @@
 import math
+import os
 from typing import List
 
 import numpy as np
@@ -102,6 +103,12 @@ class ConvexSetsIntersection(ConvexSetConstraints):
         else:
             raise ConvexSetConstraintsException('ConvexSetsIntersection project',
                                                 'Maximum number of iterations reached!')
+
+    def saveToDir(self, path:str):
+        for i, constr in enumerate(self.sets):
+            ind_path = os.path.join(path, f"c{i}")
+            os.makedirs(ind_path, exist_ok=True)
+            constr.saveToDir(ind_path)
 
     def toString(self):
         return f"ConvexSetIntersection-{len(self.sets)}-{self.getDim()}\n{[str(s) for s in self.sets]}"

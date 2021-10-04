@@ -13,10 +13,12 @@ class MatrixOperVI(VIProblem):
                  x0: np.ndarray = None, hr_name: str= None,
                  xtest: Union[np.ndarray, float] = None, lam_override: float = None, lam_override_by_method:dict = None):
         super().__init__(
-            x0=x0 if x0 is not None else b, hr_name=hr_name, xtest=xtest, lam_override=lam_override,
+            x0=x0 if x0 is not None else b, hr_name=hr_name,  C=C, xtest=xtest, lam_override=lam_override,
             lam_override_by_method=lam_override_by_method)
 
-        self.C = C if C is not None else Rn(A.shape[0])
+        if self.C is None:
+            self.C = Rn(A.shape[0])
+
         self.AM = A
         self.b = b
 

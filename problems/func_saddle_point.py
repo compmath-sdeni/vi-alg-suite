@@ -18,14 +18,13 @@ class FuncSaddlePoint(VIProblem):
                  x0: Union[np.ndarray, float] = None, C: ConvexSetConstraints, L: float = 10,
                  vis: Sequence[VisualParams] = None, defaultProjection: np.ndarray = None,
                  xtest: Union[np.ndarray, float] = None, hr_name: str = None, lam_override: float = None):
-        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override)
+        super().__init__(xtest=xtest, x0=x0,  C=C, hr_name=hr_name, lam_override=lam_override)
 
         self.arity = arity
         self.f = f
         self.gradF = gradF
         self.convexVarIndices = convexVarIndices
         self.concaveVarIndices = concaveVarIndices
-        self.C = C
         self.L = L
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = defaultProjection if defaultProjection is not None else np.zeros(self.arity)

@@ -13,7 +13,7 @@ class FuncSumMinSimple(SplittableVIProblem):
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, vis: Sequence[VisualParams] = None,
                  defaultProjection: np.ndarray = None, xtest: Union[np.ndarray, float] = None, hr_name: str = None):
-        super().__init__(M, xtest=xtest, x0=x0, hr_name=hr_name, C=C, vis=vis, defaultProjection=defaultProjection)
+        super().__init__(M, xtest=xtest, x0=x0, C=C, hr_name=hr_name, vis=vis, defaultProjection=defaultProjection)
 
         self.f: List[Callable[[np.ndarray], float]] = f
         self.df: List[Callable[[np.ndarray], np.ndarray]] = df

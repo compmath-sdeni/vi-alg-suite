@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints, ConvexSetConstraintsException
 from methods.projections.simplex_projection_prom import euclidean_proj_l1ball
@@ -45,6 +47,10 @@ class L1Ball(ConvexSetConstraints):
             #     res[neg] *= -1
             #
             # return res
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n\t{self.n}\n", "\n", f"b\t{self.b}"])
 
     def toString(self):
         return "{0}d L1 ball R={1}".format(self.n, self.b)

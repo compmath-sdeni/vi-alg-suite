@@ -1,3 +1,4 @@
+import os
 from typing import Union
 from typing import Callable, Sequence
 
@@ -18,11 +19,10 @@ class PseudoMonotoneOperOne(VIProblem):
                  lam_override: float = None,
                  lam_override_by_method: dict = None
                  ):
-        super().__init__(xtest=np.array([0, 0, 0]), x0=x0, hr_name=hr_name, lam_override=lam_override,
+        super().__init__(xtest=np.array([0, 0, 0]), x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method)
 
         self.arity = 3
-        self.C = C
         self.L = 5.068
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = np.zeros(self.arity)
@@ -42,7 +42,7 @@ class PseudoMonotoneOperOne(VIProblem):
         return self.A(x)
 
     def A(self, x: np.ndarray) -> np.ndarray:
-        t: float = (np.exp( -(np.linalg.norm(x)**2) ) + 0.2)
+        t: float = (np.exp(-(np.linalg.norm(x) ** 2)) + 0.2)
 
         return np.dot((t * self.M), x)
 
@@ -85,3 +85,17 @@ class PseudoMonotoneOperOne(VIProblem):
         # self.ax.plot_wireframe(x, y, z, rstride=10, cstride=10)
 
         return res
+
+    def saveToDir(self, *, path_to_save: str = None):
+        path_to_save = super().saveToDir(path_to_save=path_to_save)
+
+        np.savetxt(os.path.join(path_to_save, 'M.txt'), self.M)
+        np.savetxt(os.path.join(path_to_save, 'x0.txt'), self.x0)
+
+        if self.x0 is not None:
+            np.savetxt(os.path.join(path_to_save, 'x0.txt'), self.x0)
+
+        if self.xtest is not None:
+            np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
+
+        return path_to_save

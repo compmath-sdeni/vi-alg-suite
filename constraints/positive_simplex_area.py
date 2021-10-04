@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
 from methods.projections.simplex_proj import SimplexProj
@@ -29,6 +31,10 @@ class PositiveSimplexArea(ConvexSetConstraints):
             SimplexProj.doInplace(res, self.b)
 
         return res
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n\t{self.n}", "\n", f"b\t{self.b}"])
 
     def toString(self):
         return "{0}d positive simplex area scaled to {1}".format(self.n, self.b)

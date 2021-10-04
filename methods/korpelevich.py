@@ -8,8 +8,9 @@ from scipy import linalg
 
 
 class Korpelevich(IterGradTypeMethod):
-    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, min_iters = 0, max_iters = 5000):
-        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters)
+    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, min_iters=0, max_iters=5000,
+                 hr_name: str = None):
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
         self.px: Union[np.ndarray, float] = self.x.copy()
         self.D: float = 0
         self.y: Union[np.ndarray, float] = self.x.copy()
@@ -21,7 +22,7 @@ class Korpelevich(IterGradTypeMethod):
 
     def __next__(self):
         return super(Korpelevich, self).__next__()
-    
+
     def doStep(self):
         y: np.ndarray = self.problem.Project(self.x - self.lam * self.problem.A(self.x))
         self.projections_count += 1
@@ -42,7 +43,7 @@ class Korpelevich(IterGradTypeMethod):
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.x, self.y), D=(self.D, linalg.norm(self.x - self.px)),
-                    F=(self.problem.F(self.x), self.problem.F(self.y)), iterEndTime = self.iterEndTime)
+                    F=(self.problem.F(self.x), self.problem.F(self.y)), iterEndTime=self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: D: {1}; x: {2}; y: {3}; F: {4}".format(
@@ -50,4 +51,4 @@ class Korpelevich(IterGradTypeMethod):
             self.problem.XToString(self.y), self.problem.FValToString(self.problem.F(self.x)))
 
     def paramsInfoString(self) -> str:
-        return super().paramsInfoString()+"; x0: {0}".format(self.problem.XToString(self.problem.x0))
+        return super().paramsInfoString() + "; x0: {0}".format(self.problem.XToString(self.problem.x0))

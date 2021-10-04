@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Union
 
+from constraints.convex_set_constraint import ConvexSetConstraints
 from utils.print_utils import *
 
 
@@ -11,12 +12,14 @@ class Problem:
     def __init__(self, *,
                  xtest: Union[np.ndarray, float] = None,
                  x0: Union[np.ndarray, float] = None,
+                 C: ConvexSetConstraints,
                  hr_name: str = None,
                  x_dim: int = None,
                  lam_override: float = None,
                  lam_override_by_method:dict = None):
 
         self._x0: Union[np.ndarray, float] = x0
+        self.C = C
         self.xtest: Union[np.ndarray, float] = xtest
         self.hr_name: str = hr_name
         self.lam_override = lam_override
@@ -51,8 +54,16 @@ class Problem:
 
         return base_path
 
-    def saveToFile(self, *, path_to_save: str = None):
-        pass
+    def saveToDir(self, *, path_to_save: str = None):
+        if path_to_save is None:
+            path_to_save = self.getSavePath()
+
+        if self.C is not None:
+            constr_path = os.path.join(path_to_save, 'constraints')
+            os.makedirs(constr_path, exist_ok=True)
+            self.C.saveToDir(constr_path)
+
+        return path_to_save
 
     def XToString(self, x: np.array):
         return vectorToString(x)

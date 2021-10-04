@@ -32,7 +32,7 @@ class DefaultLabels:
 
 class AlgStatGrapher:
     defFont = 18
-    defLineWidth = 3
+    defLineWidth = 3.
 
     def checkDataDims(self, dims: int, lst: list) -> bool:
         return dims == 2 if isinstance(lst[0], list) else dims == 1

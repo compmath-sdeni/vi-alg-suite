@@ -34,6 +34,9 @@ class ConvexSetConstraints:
     def getDim(self):
         raise ConvexSetConstraintsException('getDim', 'Not implemented!')
 
+    def saveToDir(self, path: str):
+        pass
+
     def toString(self):
         return "ConvexSet"
 

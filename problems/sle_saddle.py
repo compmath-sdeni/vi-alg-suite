@@ -1,3 +1,4 @@
+import os
 from typing import Union
 from typing import Sequence
 
@@ -19,7 +20,7 @@ class SLESaddle(VIProblem):
                  lam_override: float = None,
                  lam_override_by_method: dict = None
                  ):
-        super().__init__(xtest=x_test, x0=x0, hr_name=hr_name, lam_override=lam_override,
+        super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method)
 
         self.n = M.shape[0]
@@ -57,13 +58,18 @@ class SLESaddle(VIProblem):
 
         return np.concatenate((p1, p2))
 
-    def saveToFile(self, *, path_to_save: str = None):
-        if not path_to_save:
-            path_to_save = super().getSavePath()
+    def saveToDir(self, *, path_to_save: str = None):
+        path_to_save = super().saveToDir(path_to_save=path_to_save)
 
         np.savetxt("{0}/{1}".format(path_to_save, 'M.txt'), self.M)
         np.savetxt("{0}/{1}".format(path_to_save, 'p.txt'), self.p)
-        np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
+
+        if self.xtest is not None:
+            np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
+
+        if self.x0 is not None:
+            np.savetxt(os.path.join(path_to_save, 'x0.txt'), self.x0)
+
         return path_to_save
 
     def loadFromFile(self, path: str):

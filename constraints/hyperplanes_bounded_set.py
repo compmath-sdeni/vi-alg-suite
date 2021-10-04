@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from constraints.convex_set_constraint import ConvexSetConstraints, ConvexSetConstraintsException
@@ -102,6 +104,10 @@ class HyperplanesBoundedSet(ConvexSetConstraints):
             + ((str(abs(xi)) if (abs(xi) > eps and abs(xi - 1) > eps and abs(xi + 1) > eps) else ''))
             + (('x' + str(i)) if abs(xi) > eps else ' ')
             for i, xi in enumerate(c)]) + (' <= ' if c[0] >= 0 else ' >= ') + str(b * (-1 if c[0] < 0 else 1))
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n:{self.spaceDim}", "\n", self.toString()])
 
     def toString(self):
         # boundsStr = "\n".join(["".join([((('+' if i>0 else ' ') if b>0 else '-') if i>0 and xi>0 else ('-' if b>0 else ('+' if i>0 else ' ')) if xi<0 else ' ') + (str(abs(xi)) if abs(xi) != 1 and xi!=0 else '') + 'x' + str(i) for i, xi in enumerate(c)]) + ('<=' if b>0 else '>=') + str(abs(b)) for c, b in [bound for bound in self.constraints]])

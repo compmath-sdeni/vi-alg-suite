@@ -158,16 +158,16 @@ class ClusteringByFeaturesProblem(Problem):
                 i += 1
             k += 1
 
-    def saveToFile(self, pathPrefix: str = None) -> str:
-        basePath = super().getSavePath(pathPrefix)
+    def saveToDir(self, *, path_to_save: str = None):
+        path_to_save = super().saveToDir(path_to_save=path_to_save)
 
-        np.savetxt("{0}/{1}".format(basePath, 'Y.txt'), self.Y)
-        np.savetxt("{0}/{1}".format(basePath, 'k-m.txt'), np.array([self.K, self.m]))
-        np.savetxt("{0}/{1}".format(basePath, 'u0.txt'), self.u0)
-        np.savetxt("{0}/{1}".format(basePath, 'v0.txt'), self.v0)
-        np.savetxt("{0}/{1}".format(basePath, 'uTest.txt'), self.uTest)
-        np.savetxt("{0}/{1}".format(basePath, 'vTest.txt'), self.vTest)
-        return basePath
+        np.savetxt("{0}/{1}".format(path_to_save, 'Y.txt'), self.Y)
+        np.savetxt("{0}/{1}".format(path_to_save, 'k-m.txt'), np.array([self.K, self.m]))
+        np.savetxt("{0}/{1}".format(path_to_save, 'u0.txt'), self.u0)
+        np.savetxt("{0}/{1}".format(path_to_save, 'v0.txt'), self.v0)
+        np.savetxt("{0}/{1}".format(path_to_save, 'uTest.txt'), self.uTest)
+        np.savetxt("{0}/{1}".format(path_to_save, 'vTest.txt'), self.vTest)
+        return path_to_save
 
     @classmethod
     def loadFromFile(self, path: str):

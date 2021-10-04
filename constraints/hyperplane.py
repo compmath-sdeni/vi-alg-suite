@@ -1,4 +1,5 @@
 import math
+import os
 
 import numpy as np
 
@@ -44,6 +45,10 @@ class Hyperplane(ConvexSetConstraints):
             return x
         else:
             return x + ((self.b - np.dot(self.a, x)) * self.a) / np.dot(self.a, self.a)
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([str(self.b), "\n", np.array2string(self.a, max_line_width=100000)])
 
     def toString(self):
         return "Hyperplane-{0} ({1},x)={2}".format(self.a.shape[0], self.a, self.b)

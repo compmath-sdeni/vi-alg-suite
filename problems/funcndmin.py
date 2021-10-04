@@ -21,12 +21,11 @@ class FuncNDMin(VIProblem):
                  lam_override: float = None,
                  lam_override_by_method:dict = None
                  ):
-        super().__init__(xtest=xtest, x0=x0, hr_name=hr_name, lam_override=lam_override, lam_override_by_method=lam_override_by_method)
+        super().__init__(xtest=xtest, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override, lam_override_by_method=lam_override_by_method)
 
         self.arity = arity
         self.f = f
         self.df = df
-        self.C = C
         self.L = L
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = defaultProjection if defaultProjection is not None else np.zeros(self.arity)

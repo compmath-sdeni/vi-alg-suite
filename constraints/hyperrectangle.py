@@ -1,4 +1,5 @@
 import math
+import os
 
 import numpy as np
 import itertools
@@ -43,6 +44,11 @@ class Hyperrectangle(ConvexSetConstraints):
         return np.array(list(
             itertools.starmap(lambda x, bounds: bounds[0] if x <= bounds[0] else (bounds[1] if x >= bounds[1] else x),
                               zip(x, self.bounds))))
+
+    def saveToDir(self, path: str):
+        with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
+            file.writelines([f"n\t{self.n}", "\n"])
+            file.writelines([f"{bnd[0]}:{bnd[1]}\n" for bnd in self.bounds])
 
     def toString(self):
         bstr = (str(["[{0}, {1}]".format(v[0], v[1]) for v in (
