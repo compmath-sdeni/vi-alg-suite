@@ -38,13 +38,14 @@ class SLESaddle(VIProblem):
 
     def F(self, x: np.ndarray) -> float:
         return np.linalg.norm(self.M @ x[:self.m] - self.p)
+        # return np.linalg.norm(np.concatenate((self.M @ x[:self.m] - self.p, self.M.T @ x[self.m:] )))
 
     def GradF(self, x: np.ndarray) -> np.ndarray:
         return self.A(x)
 
     def A(self, x: np.ndarray) -> np.ndarray:
-        p1 = np.dot(self.M.transpose(), x[self.m:])
-        p2 = self.p - np.dot(self.M, x[:self.m])
+        p1 = self.M.T @ x[self.m:]
+        p2 = self.p - self.M @ x[:self.m]
         return np.concatenate((p1, p2))
 
     def Project(self, x: np.array) -> np.array:
@@ -55,3 +56,17 @@ class SLESaddle(VIProblem):
             p2 /= nr
 
         return np.concatenate((p1, p2))
+
+    def saveToFile(self, *, path_to_save: str = None):
+        if not path_to_save:
+            path_to_save = super().getSavePath()
+
+        np.savetxt("{0}/{1}".format(path_to_save, 'M.txt'), self.M)
+        np.savetxt("{0}/{1}".format(path_to_save, 'p.txt'), self.p)
+        np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
+        return path_to_save
+
+    def loadFromFile(self, path: str):
+        self.M = np.loadtxt("{0}/{1}".format(path, 'M.txt'))
+        self.p = np.loadtxt("{0}/{1}".format(path, 'p.txt'))
+        self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))

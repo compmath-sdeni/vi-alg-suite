@@ -1,7 +1,12 @@
 import math
+import datetime
+import os
+import io
+import sys
 
 import numpy as np
 import cvxpy as cp
+import pandas as pd
 from matplotlib import pyplot as plt
 
 from constraints.ConvexSetsIntersection import ConvexSetsIntersection
@@ -21,7 +26,7 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 from problems.testcases.slar_random import getSLE
-from utils.graph.alg_stat_grapher import AlgStatGrapher
+from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
 
 from constraints.hyperrectangle import Hyperrectangle
 
@@ -34,6 +39,9 @@ max_iters = 2000
 def_lam = 0.005
 def_adapt_lam = 0.1
 def_eps = 1e-8
+
+captured_io = io.StringIO()
+sys.stdout = captured_io
 
 # region Simple 2d func min
 
@@ -138,27 +146,27 @@ def_eps = 1e-8
 # endregion
 
 # region PseudoMonotone One
-# N = 3
-#
-# x0 = np.array([2., -5., 3.])
-# x1 = np.array([3., -2., -1.])
-# def_lam = 1.0/5.07/4.0
-# #def_lam = 0.01
-# #def_lam = 1.0/5.07
-# def_adapt_lam = 1.
-#
-# real_solution = np.array([0.0 for i in range(N)])
-#
-# hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
-# hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
-#
-# constraints = ConvexSetsIntersection([hr, hp])
-#
-# problem = PseudoMonotoneOperOne(
-#               C=constraints,
-#               x0=x0,
-#               hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
-#               )
+N = 3
+
+x0 = np.array([2., -5., 3.])
+x1 = np.array([3., -2., -1.])
+def_lam = 1.0/5.07/4.0
+#def_lam = 0.01
+#def_lam = 1.0/5.07
+def_adapt_lam = 1.
+
+real_solution = np.array([0.0 for i in range(N)])
+
+hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
+hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
+
+constraints = ConvexSetsIntersection([hr, hp])
+
+problem = PseudoMonotoneOperOne(
+              C=constraints,
+              x0=x0,
+              hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
+              )
 # endregion
 
 # region PseudoMonotone Two
@@ -422,57 +430,117 @@ def_eps = 1e-8
 # endregion
 
 # region SLE saddle form on L1 ball - 2x3, predefined
-n = 2
-m = 3
+# n = 2
+# m = 3
+#
+# M = np.array([
+#     [5, 2, 1]
+#     , [2, 13, 4]
+# ], dtype=float)
+#
+# norm = np.linalg.norm(M, 2)
+#
+# unconstrained_solution = np.array([1, 1, 1])
+#
+# p = M @ unconstrained_solution
+# c = 1.
+# # c = 1.34
+#
+# x0 = np.array([0.2 for i in range(m)])
+# x1 = np.array([0.1 for i in range(m + n)])
+# # def_lam = 1./norm
+# def_lam = 0.01
+# def_adapt_lam1 = 0.5
+# max_iters = 25
+# constraints = L1Ball(m, c)
+#
+# projected_solution = constraints.project(unconstrained_solution)
+# print("M:")
+# print(M)
+# print(f"P: {p}")
+# print(f"Projected solution: {projected_solution}; c: {c}")
+# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+# print()
+#
+# x = cp.Variable(m)
+# objective = cp.Minimize(cp.sum_squares(M @ x - p))
+# constraints_cp = [cp.norm(x, 1) <= c]
+# prob = cp.Problem(objective, constraints_cp)
+# # The optimal objective value is returned by `prob.solve()`.
+# result = prob.solve()
+# # The optimal value for x is stored in `x.value`.
+# test_solution = x.value
+#
+# print("Solved by CP:")
+# print(test_solution)
+# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+# print(f"CP solution is in C: {constraints.isIn(test_solution)}")
+# print()
+#
+# problem = SLESaddle(
+#     M=M, p=p,
+#     C=constraints,
+#     x0=x0,
+#     x_test=test_solution,
+#     hr_name='$||Mx - p||_2 \\to min, min-max form, ||x|| <= ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+# )
 
-M = np.array([
-    [5, 2, 1]
-    , [2, 13, 4]
-], dtype=float)
+# endregion
 
-norm = np.linalg.norm(M, 2)
-
-unconstrained_solution = np.array([-1, 1, 0])
-
-p = M @ unconstrained_solution
-c = 1.
-
-x0 = np.array([0.2 for i in range(m)])
-x1 = np.array([0.1 for i in range(m + n)])
-# def_lam = 1./norm
-def_lam = 0.0001
-def_adapt_lam1 = 0.2
-constraints = L1Ball(m, c)
-
-projected_solution = constraints.project(unconstrained_solution)
-print("M:")
-print(M)
-print(f"P: {p}")
-print(f"Projected solution: {projected_solution}; c: {c}")
-print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
-
-x = cp.Variable(m)
-objective = cp.Minimize(cp.sum_squares(M @ x - p))
-constraints_cp = [cp.norm(x, 1) <= c]
-prob = cp.Problem(objective, constraints_cp)
-# The optimal objective value is returned by `prob.solve()`.
-result = prob.solve()
-# The optimal value for x is stored in `x.value`.
-test_solution = x.value
-
-print("Solved by CP:")
-print(test_solution)
-print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
-print(f"CP solution is in C: {constraints.isIn(test_solution)}")
-
-problem = SLESaddle(
-    M=M, p=p,
-    C=constraints,
-    x0=x0,
-    x_test=test_solution,
-    hr_name='$||Mx - p||_2 \\to min, min-max form, ||x|| <= ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
-)
-
+# region SLE saddle form on L1 ball - nxm, random
+# n = 5
+# m = 10
+#
+# M = np.random.rand(n, m) * 3.
+#
+# norm = np.linalg.norm(M, 2)
+#
+# unconstrained_solution = np.array([i * 0.1 for i in range(m)])
+#
+# p = M @ unconstrained_solution
+#
+# c = 1.
+# # c = 1.34
+#
+# x0 = np.array([0.2 for i in range(m)])
+# x1 = np.array([0.1 for i in range(m + n)])
+# # def_lam = 1./norm
+# def_lam = 0.01
+# def_adapt_lam1 = 0.5
+# max_iters = 2000
+# constraints = L1Ball(m, c)
+#
+# projected_solution = constraints.project(unconstrained_solution)
+# print("M:")
+# print(M)
+# print(f"P: {p}")
+# print(f"Projected solution: {projected_solution}; c: {c}")
+# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
+# print()
+#
+# x = cp.Variable(m)
+# objective = cp.Minimize(cp.sum_squares(M @ x - p))
+# constraints_cp = [cp.norm(x, 1) <= c]
+# prob = cp.Problem(objective, constraints_cp)
+# # The optimal objective value is returned by `prob.solve()`.
+# result = prob.solve()
+# # The optimal value for x is stored in `x.value`.
+# test_solution = x.value
+#
+# print("Solved by CP:")
+# print(test_solution)
+# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
+# print(f"CP solution is in C: {constraints.isIn(test_solution)}")
+# print()
+#
+# problem = SLESaddle(
+#     M=M, p=p,
+#     C=constraints,
+#     x0=x0,
+#     x_test=test_solution,
+#     hr_name='$||Mx - p||_2 \\to min, minimax \ form, ||x||_1 \leq ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
+# )
+#
 # endregion
 
 korpele = Korpelevich(problem, eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
@@ -483,11 +551,11 @@ tseng_adaptive = TsengAdaptive(problem, eps=def_eps, lam=def_adapt_lam, min_iter
 
 malitsky_tam = MalitskyTam(problem, x1=x1.copy(), eps=def_eps, lam=def_lam, min_iters=min_iters, max_iters=max_iters)
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=x1.copy(),
-                                            eps=def_eps, lam=def_adapt_lam, lam1=def_adapt_lam,
+                                            eps=def_eps, lam=def_adapt_lam,
                                             min_iters=min_iters, max_iters=max_iters)
 
 algs_to_test = [
-    #    korpele,
+    # korpele,
     # korpele_adapt,
     tseng,
     tseng_adaptive,
@@ -495,19 +563,46 @@ algs_to_test = [
     malitsky_tam_adaptive
 ]
 
+saved_history_dir = "storage/stats2021-10"
+test_mneno = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+saved_history_dir = os.path.join(saved_history_dir, test_mneno)
+os.makedirs(saved_history_dir, exist_ok=True)
+
+problem.saveToFile(path_to_save=saved_history_dir)
+
+writer = pd.ExcelWriter(
+    os.path.join(saved_history_dir, f"history-{test_mneno}.xlsx"),
+    engine='openpyxl')
+
 alg_history_list = []
 for alg in algs_to_test:
     alg.do()
     BasicAlgoTests.PrintAlgRunStats(alg)
     alg_history_list.append(alg.history)
+    df = alg.history.toPandasDF()
+    df.to_excel(writer, sheet_name=alg.hr_name, index=False)
     print('')
+
+writer.save()
+writer.close()
+
+sys.stdout = sys.__stdout__
+print(captured_io.getvalue())
+
+f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
+f.write(captured_io.getvalue())
+f.close()
 
 grapher = AlgStatGrapher()
 grapher.plot_by_history(
     alg_history_list=alg_history_list,
-    plot_step_delta=False, plot_real_error=True,
-    x_axis_label='Iterations', y_axis_label='Real error', plot_title=problem.hr_name
+    x_axis_type=XAxisType.ITERATION, y_axis_type=YAxisType.STEP_DELTA
 )
+
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.pdf"), bbox_inches='tight', dpi=300)
+
+plt.title(problem.hr_name, loc='center')
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=300)
 
 plt.show()
 

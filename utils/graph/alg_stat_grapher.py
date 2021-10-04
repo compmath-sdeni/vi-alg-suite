@@ -5,13 +5,34 @@ from matplotlib import rc
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 @unique
 class XAxisType(Enum):
     ITERATION = 1
     TIME = 2
 
+
+class YAxisType(Enum):
+    REAL_ERROR = 1,
+    GOAL_FUNCTION = 2,
+    STEP_DELTA = 3
+
+
+class DefaultLabels:
+    X_AXIS = {
+        XAxisType.ITERATION: "Iterations",
+        XAxisType.TIME: "Time"
+    }
+    Y_AXIS = {
+        YAxisType.REAL_ERROR: "Real error",
+        YAxisType.STEP_DELTA: "Error",
+        YAxisType.GOAL_FUNCTION: "Residue"
+    }
+
+
 class AlgStatGrapher:
     defFont = 18
+    defLineWidth = 3
 
     def checkDataDims(self, dims: int, lst: list) -> bool:
         return dims == 2 if isinstance(lst[0], list) else dims == 1
@@ -42,11 +63,13 @@ class AlgStatGrapher:
     def plotSingleDim(self, *, data: np.ndarray, xDataIndex: int, yDataIndices: list, graphColors, legend, ax):
         for i in range(len(yDataIndices)):
             ax.plot(data[:, xDataIndex], data[:, yDataIndices[i]], graphColors[i % len(graphColors)],
-                    label=legend[i] if legend is not None and i < len(legend) else str(i))
+                    label=legend[i] if legend is not None and i < len(legend) else str(i), linewidth=self.defLineWidth)
 
-    def plot_by_history(self, *, alg_history_list: List[np.ndarray], x_axis_type: XAxisType = XAxisType.ITERATION,
-                        plot_step_delta: bool = True, plot_real_error: bool = False, plot_residue: bool = False,
-                        x_axis_label: str = "Iteration", y_axis_label: str = "Error", plot_title: str = None,
+    def plot_by_history(self, *, alg_history_list: List[np.ndarray],
+                        x_axis_type: XAxisType = XAxisType.ITERATION,
+                        y_axis_type: YAxisType = YAxisType.REAL_ERROR,
+                        plot_step_delta: bool = False, plot_real_error: bool = False, plot_residue: bool = False,
+                        x_axis_label: str = None, y_axis_label: str = None, plot_title: str = None,
                         legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log', start_iter: int = 2):
         y_dims: int = 0
         x_len: int = 0
@@ -63,6 +86,13 @@ class AlgStatGrapher:
                 if x_len < alg_history.iters_count - start_iter - 1:
                     x_len = alg_history.iters_count - start_iter - 1
 
+        if y_axis_type == YAxisType.STEP_DELTA:
+            plot_step_delta = True
+        if y_axis_type == YAxisType.REAL_ERROR:
+            plot_real_error = True
+        if y_axis_type == YAxisType.GOAL_FUNCTION:
+            plot_residue = True
+
         if plot_step_delta:
             y_dims += 1
 
@@ -74,10 +104,17 @@ class AlgStatGrapher:
 
         # plot_data: np.ndarray = np.zeros((algs_count, x_len, y_dims+1), dtype=float)
 
+        if x_axis_label is None:
+            x_axis_label = DefaultLabels.X_AXIS[x_axis_type]
+
+        if y_axis_label is None:
+            y_axis_label = DefaultLabels.Y_AXIS[y_axis_type]
+
         plot_legend: List[str] = legend[:]
 
         graph_colors = self.initParamsArray(algs_count, y_dims,
-                                           ['g-', 'g--', 'b-', 'b--', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-', 'k--'])
+                                            ['g-', 'g--', 'b-', 'b--', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
+                                             'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:
             plot_legend = []
@@ -102,7 +139,7 @@ class AlgStatGrapher:
         for i in range(algs_count):
             iters_count = alg_history_list[i].iters_count
 
-            plot_data: np.ndarray = np.zeros((y_dims+1, iters_count - start_iter), dtype=float)
+            plot_data: np.ndarray = np.zeros((y_dims + 1, iters_count - start_iter), dtype=float)
             plot_data[0] = np.arange(0, iters_count - start_iter)
 
             yDataIndices = []
@@ -123,14 +160,15 @@ class AlgStatGrapher:
                 k += 1
 
             self.plotSingleDim(
-                data=plot_data.transpose(), xDataIndex=0, yDataIndices=yDataIndices, graphColors=graph_colors[i], legend=plot_legend[i], ax=ax
+                data=plot_data.transpose(), xDataIndex=0, yDataIndices=yDataIndices, graphColors=graph_colors[i],
+                legend=plot_legend[i], ax=ax
             )
 
         ax.set_xscale(xScale)
         ax.set_yscale(yScale)
 
         plt.legend(loc="upper right", bbox_to_anchor=[1, 1],
-                    ncol=2, shadow=False, title="", fancybox=False, fontsize=self.defFont)
+                   ncol=2, shadow=False, title="", fancybox=False, fontsize=self.defFont)
 
         plt.xlabel(x_axis_label, fontsize=self.defFont + 2)
         plt.ylabel(y_axis_label, fontsize=self.defFont + 2)

@@ -12,6 +12,7 @@ class Problem:
                  xtest: Union[np.ndarray, float] = None,
                  x0: Union[np.ndarray, float] = None,
                  hr_name: str = None,
+                 x_dim: int = None,
                  lam_override: float = None,
                  lam_override_by_method:dict = None):
 
@@ -20,6 +21,7 @@ class Problem:
         self.hr_name: str = hr_name
         self.lam_override = lam_override
         self.lam_override_by_method = lam_override_by_method
+        self.x_dim = x_dim if x_dim is not None else x0.shape[0]
 
     @property
     def x0(self) -> Union[np.ndarray, float]:
@@ -48,6 +50,9 @@ class Problem:
         os.makedirs(base_path, exist_ok=True)
 
         return base_path
+
+    def saveToFile(self, *, path_to_save: str = None):
+        pass
 
     def XToString(self, x: np.array):
         return vectorToString(x)

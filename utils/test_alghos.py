@@ -111,7 +111,7 @@ class BasicAlgoTests:
               )
 
         if alg_object.problem.C:
-            print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x)}")
+            print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x[:alg_object.problem.x_dim])}")
 
         print_size = 5
 
