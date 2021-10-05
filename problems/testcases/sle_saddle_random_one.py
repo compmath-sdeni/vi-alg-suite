@@ -8,37 +8,30 @@ from utils.graph.alg_stat_grapher import YAxisType
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
-    n = 2  # rows (observations)
-    m = 3  # columns (variables)
+    n = 5
+    m = 10
 
-    M = np.array([
-        [5, 2, 1]
-        , [2, 13, 4]
-    ], dtype=float)
+    M = np.random.rand(n, m) * 3.
 
+    unconstrained_solution = np.array([1. for i in range(m)])
 
-    unconstrained_solution = np.array([1, 1, 1])
+    p = M @ unconstrained_solution
 
     algorithm_params.x0 = np.array([0.2 for i in range(m)])
     algorithm_params.x1 = np.array([0.1 for i in range(m + n)])
 
-    # set p by wanted solution
-    p = M @ unconstrained_solution
-
-    norm = np.linalg.norm(M, 2)  # Can be used to get L constant
+    # norm = np.linalg.norm(M, 2)
     # algorithm_params.lam = 1./norm
-    algorithm_params.lam = 0.01
+    algorithm_params.lam = 0.02
 
     algorithm_params.start_adaptive_lam = 0.5
     algorithm_params.start_adaptive_lam1 = 0.5
 
-    algorithm_params.adaptive_tau = 0.4
-
-    algorithm_params.max_iters = 500
-
+    algorithm_params.max_iters = 2000
     algorithm_params.y_axis_type = YAxisType.STEP_DELTA
 
-    c = 1. # L1 ball radius
+    # L1 ball radius
+    c = 1.5
     # c = 1.34
     constraints = L1Ball(m, c)
 
@@ -70,6 +63,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         C=constraints,
         x0=algorithm_params.x0,
         x_test=test_solution,
-        hr_name='$||Mx - p||_2 \\to min, M_{2x3}, predefined, min-max \ form, \ ||x|| \\leq ' + str(c) + ' \ \lambda = ' +
-                str(round(algorithm_params.lam, 3)) + ', \ \\tau = ' + str(algorithm_params.adaptive_tau) + '$'
+        hr_name=f"$||Mx - p||_2 \\to min, M_{{ {n}x{m} }}, random, min-max \ form, \ ||x|| \\leq {c} \ \lambda = " +
+                str(round(algorithm_params.lam, 3)) + f", \ \\tau = {algorithm_params.adaptive_tau}$"
     )

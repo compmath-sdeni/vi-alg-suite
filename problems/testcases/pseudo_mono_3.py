@@ -5,6 +5,7 @@ from constraints.hyperplane import Hyperplane
 from constraints.hyperrectangle import Hyperrectangle
 from methods.algorithm_params import AlgorithmParams
 from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
+from utils.graph.alg_stat_grapher import YAxisType
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
@@ -21,6 +22,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau = 0.25
 
     # real_solution = np.array([0.0 for i in range(N)])
+    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 
     hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
     hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)

@@ -25,7 +25,7 @@ class DefaultLabels:
     }
     Y_AXIS = {
         YAxisType.REAL_ERROR: "$||x_n - x^*||_2$",
-        YAxisType.STEP_DELTA: "$||x_n - y_n||_2$",
+        YAxisType.STEP_DELTA: "$||x_{n} - x_{n-1}||_2$",
         YAxisType.GOAL_FUNCTION: "$||P_C(x_n - \lambda Ax_n)||_2$"
     }
 

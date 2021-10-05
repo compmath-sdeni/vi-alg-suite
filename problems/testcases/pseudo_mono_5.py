@@ -5,6 +5,7 @@ from constraints.halfspace import HalfSpace
 from constraints.hyperrectangle import Hyperrectangle
 from methods.algorithm_params import AlgorithmParams
 from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
+from utils.graph.alg_stat_grapher import YAxisType
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
@@ -22,6 +23,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau = 0.49
 
     algorithm_params.real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
+    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
+
 
     hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
     hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)

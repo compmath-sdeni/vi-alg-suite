@@ -27,7 +27,7 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
-from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded
+from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test
 
 from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
@@ -44,7 +44,8 @@ params = AlgorithmParams(
     max_iters=2000,
     lam=0.005,
     start_adaptive_lam=0.1,
-    adaptive_tau=0.25
+    adaptive_tau=0.45,
+    adaptive_tau_large=0.95
 )
 
 captured_io = io.StringIO()
@@ -153,25 +154,18 @@ sys.stdout = captured_io
 # endregion
 
 
-# Test problem
-problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
-# problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
-# problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
+# region Test problem initialization
 
-# region HarkerTest
-# N = 5
-#
-# x0 = np.array([0.5 for i in range(N)])
-# x1 = np.array([0.25 for i in range(N)])
-#
-# real_solution = np.array([0.0 for i in range(N)])
-#
-# #ht = HarkerTest(N, C=ClassicSimplex(N, N), hr_name='HarkerTest', x0=x0, xtest=real_solution)
-# ht = HarkerTest(N, C=Hyperrectangle(N, [(-5,5) for i in range(N)]), hr_name='HarkerTest', x0=x0, xtest=real_solution)
-#
-# problem = ht
-# def_lam = 0.4/ht.norm
+# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
+
+problem = harker_test.prepareProblem(algorithm_params=params)
+
+# problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
+#problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
+
 # endregion
+
 
 # region SLAE with HR and HP projection
 # def_lam = 0.005
@@ -390,64 +384,6 @@ problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 
 # endregion
 
-# region SLE saddle form on L1 ball - 2x3, predefined
-# n = 2
-# m = 3
-#
-# M = np.array([
-#     [5, 2, 1]
-#     , [2, 13, 4]
-# ], dtype=float)
-#
-# norm = np.linalg.norm(M, 2)
-#
-# unconstrained_solution = np.array([1, 1, 1])
-#
-# p = M @ unconstrained_solution
-# c = 1.
-# # c = 1.34
-#
-# x0 = np.array([0.2 for i in range(m)])
-# x1 = np.array([0.1 for i in range(m + n)])
-# # def_lam = 1./norm
-# def_lam = 0.01
-# def_adapt_lam1 = 0.5
-# max_iters = 25
-# constraints = L1Ball(m, c)
-#
-# projected_solution = constraints.project(unconstrained_solution)
-# print("M:")
-# print(M)
-# print(f"P: {p}")
-# print(f"Projected solution: {projected_solution}; c: {c}")
-# print(f"Goal F on proj. sol.: {np.linalg.norm(M @ projected_solution - p)}")
-# print()
-#
-# x = cp.Variable(m)
-# objective = cp.Minimize(cp.sum_squares(M @ x - p))
-# constraints_cp = [cp.norm(x, 1) <= c]
-# prob = cp.Problem(objective, constraints_cp)
-# # The optimal objective value is returned by `prob.solve()`.
-# result = prob.solve()
-# # The optimal value for x is stored in `x.value`.
-# test_solution = x.value
-#
-# print("Solved by CP:")
-# print(test_solution)
-# print(f"Goal F on CP solution: {np.linalg.norm(M @ test_solution - p)}")
-# print(f"CP solution is in C: {constraints.isIn(test_solution)}")
-# print()
-#
-# problem = SLESaddle(
-#     M=M, p=p,
-#     C=constraints,
-#     x0=x0,
-#     x_test=test_solution,
-#     hr_name='$||Mx - p||_2 \\to min, min-max form, ||x|| <= ' + str(c) + ' \ \lambda = ' + str(round(def_lam, 3)) + '$'
-# )
-
-# endregion
-
 # region SLE saddle form on L1 ball - nxm, random
 # n = 5
 # m = 10
@@ -504,13 +440,15 @@ problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 
 # endregion
 
+# region Init all algs
+
 korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
 korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
 
 tseng = Tseng(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters,
               hr_name="Tseng")
 tseng_adaptive = TsengAdaptive(problem, eps=params.eps,
-                               lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                               lam=params.start_adaptive_lam, tau=params.adaptive_tau_large,
                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng adp.")
 
 malitsky_tam = MalitskyTam(problem, x1=params.x1.copy(), eps=params.eps, lam=params.lam, min_iters=params.min_iters,
@@ -529,7 +467,9 @@ algs_to_test = [
     malitsky_tam,
     malitsky_tam_adaptive
 ]
+# endregion
 
+# region Run all algs and save data and results
 saved_history_dir = "storage/stats2021-10"
 test_mneno = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mneno)
@@ -561,10 +501,13 @@ f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
 f.write(captured_io.getvalue())
 f.close()
 
+# endregion
+
+# region Plot and save graphs
 grapher = AlgStatGrapher()
 grapher.plot_by_history(
     alg_history_list=alg_history_list,
-    x_axis_type=XAxisType.ITERATION, y_axis_type=YAxisType.REAL_ERROR
+    x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type
 )
 
 dpi = 300.
@@ -576,6 +519,8 @@ plt.title(problem.hr_name, loc='center')
 plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=dpi)
 
 plt.show()
+
+# endregion
 
 exit()
 
