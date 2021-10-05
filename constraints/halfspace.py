@@ -45,7 +45,7 @@ class HalfSpace(ConvexSetConstraints):
 
     def saveToDir(self, path: str):
         with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:
-            file.writelines([str(self.b), "\n", np.arrray2string(self.a, max_line_width=100000)])
+            file.writelines([str(self.b), "\n", np.array2string(self.a, max_line_width=100000)])
 
     def toString(self):
         return "Halfspace-{0} ({1},x) <= {2}".format(self.a.shape[0], self.a, self.b)

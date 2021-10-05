@@ -27,7 +27,7 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
-from problems.testcases import pseudo_mono_3
+from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded
 
 from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
@@ -43,7 +43,8 @@ params = AlgorithmParams(
     min_iters=10,
     max_iters=2000,
     lam=0.005,
-    start_adaptive_lam=0.1
+    start_adaptive_lam=0.1,
+    adaptive_tau=0.25
 )
 
 captured_io = io.StringIO()
@@ -151,60 +152,11 @@ sys.stdout = captured_io
 
 # endregion
 
-# region PseudoMonotone One
-# N = 3
-#
-# x0 = np.array([2., -5., 3.])
-# x1 = np.array([3., -2., -1.])
-# #def_lam = 1.0/5.07/4.0
-# #def_lam = 0.01
-# def_lam = 1.0/5.07
-# def_adapt_lam = 1.
-#
-# real_solution = np.array([0.0 for i in range(N)])
-#
-# hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
-# hp = Hyperplane(a=np.array([1., 1., 1.]), b=0.)
-#
-# constraints = ConvexSetsIntersection([hr, hp])
-#
-# problem = PseudoMonotoneOperOne(
-#               C=constraints,
-#               x0=x0,
-#               hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
-#               )
-# endregion
 
-
+# Test problem
 problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
-
-# region PseudoMonotone Two
-# N = 5
-#
-# x0 = np.array([2., -5., 3., -1., 2.])
-# x1 = np.array([2.5, -4., 2., -1.5, 2.5])
-# def_lam = 0.02
-# #def_lam = 1.0/5.07
-# def_adapt_lam = 1.
-#
-# # lam = 0.2 - 0.28484841 -0.60606057 -0.8303029   0.36363633  0.31515152
-# # lam= 0.02 - 0.28484809 -0.60606043 -0.83030234  0.3636362   0.31515155
-# # lam=0.013 - 0.28484788 -0.60606033 -0.83030195  0.36363612  0.31515158
-#
-# real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
-#
-# hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
-# hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)
-#
-# constraints = ConvexSetsIntersection([hr, hp])
-#
-# problem = PseudoMonotoneOperTwo(
-#               C=constraints,
-#               x0=x0,
-#               x_test=real_solution,
-#               hr_name='$Ax=f(x)(Mx+p), p \ne 0, M - 5x5 \ matrix, C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\}, \ \lambda = ' + str(round(def_lam, 3)) + '$'
-#               )
-# endregion
+# problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
+# problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
 
 # region HarkerTest
 # N = 5
@@ -557,14 +509,16 @@ korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_ite
 
 tseng = Tseng(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters,
               hr_name="Tseng")
-tseng_adaptive = TsengAdaptive(problem, eps=params.eps, lam=params.start_adaptive_lam, min_iters=params.min_iters,
-                               max_iters=params.max_iters, hr_name="Tseng adp.")
+tseng_adaptive = TsengAdaptive(problem, eps=params.eps,
+                               lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng adp.")
 
 malitsky_tam = MalitskyTam(problem, x1=params.x1.copy(), eps=params.eps, lam=params.lam, min_iters=params.min_iters,
                            max_iters=params.max_iters, hr_name="Alg 1.")
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=params.x1.copy(),
-                                            eps=params.eps, lam=params.start_adaptive_lam,
-                                            lam1=params.start_adaptive_lam1,
+                                            eps=params.eps,
+                                            lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam1,
+                                            tau=params.adaptive_tau,
                                             min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2.")
 
 algs_to_test = [

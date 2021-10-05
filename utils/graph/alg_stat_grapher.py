@@ -24,9 +24,9 @@ class DefaultLabels:
         XAxisType.TIME: "Time"
     }
     Y_AXIS = {
-        YAxisType.REAL_ERROR: "Real error",
-        YAxisType.STEP_DELTA: "Error",
-        YAxisType.GOAL_FUNCTION: "Residue"
+        YAxisType.REAL_ERROR: "$||x_n - x^*||_2$",
+        YAxisType.STEP_DELTA: "$||x_n - y_n||_2$",
+        YAxisType.GOAL_FUNCTION: "$||P_C(x_n - \lambda Ax_n)||_2$"
     }
 
 

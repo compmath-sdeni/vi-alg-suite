@@ -11,6 +11,8 @@ class AlgorithmParams:
                  lam: float = None,
                  start_adaptive_lam: float = None,
                  start_adaptive_lam1: float = None,
+                 adaptive_tau: float = None,
+
                  min_iters: int = None,
                  max_iters: int = None
                  ):
@@ -22,6 +24,7 @@ class AlgorithmParams:
         self.lam = lam
         self.start_adaptive_lam = start_adaptive_lam
         self.start_adaptive_lam1 = start_adaptive_lam1
+        self.adaptive_tau = adaptive_tau
 
         self.max_iters = max_iters
 
@@ -36,9 +39,9 @@ class AlgorithmParams:
                 f"lam:{self.lam}\n",
                 f"start_adaptive_lam:{self.start_adaptive_lam}\n",
                 f"start_adaptive_lam1:{self.start_adaptive_lam1}\n",
+                f"adaptive_tau:{self.adaptive_tau}\n",
                 f"max_iters:{self.max_iters}\n",
                 f"min_iters:{self.min_iters}\n"
                 f"x0:{np.array2string(self.x0, max_line_width=100000)}\n",
                 f"x1:{np.array2string(self.x1, max_line_width=100000)}\n"
             ])
-
