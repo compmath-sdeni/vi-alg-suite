@@ -27,18 +27,18 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     norm = np.linalg.norm(M, 2)  # Can be used to get L constant
     # algorithm_params.lam = 1./norm
-    algorithm_params.lam = 0.01
+    algorithm_params.lam = 0.02
 
     algorithm_params.start_adaptive_lam = 0.5
     algorithm_params.start_adaptive_lam1 = 0.5
 
     algorithm_params.adaptive_tau = 0.4
 
-    algorithm_params.max_iters = 500
+    algorithm_params.max_iters = 10000
 
     algorithm_params.y_axis_type = YAxisType.STEP_DELTA
 
-    c = 1. # L1 ball radius
+    c = 10. # L1 ball radius
     # c = 1.34
     constraints = L1Ball(m, c)
 

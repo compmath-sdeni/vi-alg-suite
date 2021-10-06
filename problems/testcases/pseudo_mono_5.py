@@ -20,7 +20,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = 1.
     algorithm_params.start_adaptive_lam1 = 1.
 
-    algorithm_params.adaptive_tau = 0.49
+    algorithm_params.adaptive_tau = 0.25
+    algorithm_params.adaptive_tau_large = 0.5
 
     algorithm_params.real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR

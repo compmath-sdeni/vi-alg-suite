@@ -32,7 +32,7 @@ class SLESaddle(VIProblem):
         self.p = p
 
         if self._x0.shape[0] == self.m:
-            self._x0 = np.concatenate((self._x0, np.ones(self.n)))
+            self._x0 = np.concatenate((self._x0, np.ones(self.n, dtype=float)))
 
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = np.zeros(self.m)
@@ -61,14 +61,14 @@ class SLESaddle(VIProblem):
     def saveToDir(self, *, path_to_save: str = None):
         path_to_save = super().saveToDir(path_to_save=path_to_save)
 
-        np.savetxt("{0}/{1}".format(path_to_save, 'M.txt'), self.M)
-        np.savetxt("{0}/{1}".format(path_to_save, 'p.txt'), self.p)
+        np.savetxt("{0}/{1}".format(path_to_save, 'M.txt'), self.M, delimiter=',', newline="],\n[")
+        np.savetxt("{0}/{1}".format(path_to_save, 'p.txt'), self.p, delimiter=',')
 
         if self.xtest is not None:
-            np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
+            np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest, delimiter=',')
 
         if self.x0 is not None:
-            np.savetxt(os.path.join(path_to_save, 'x0.txt'), self.x0)
+            np.savetxt(os.path.join(path_to_save, 'x0.txt'), self.x0, delimiter=',')
 
         return path_to_save
 

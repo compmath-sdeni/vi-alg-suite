@@ -18,7 +18,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     # for saddle point, there are should also be n dual variables - their initial values can be added here
     # or they will be auto-added inside the problem constructor
-    algorithm_params.x0 = unconstrained_solution + np.random.rand(m)*0.00001
+    algorithm_params.x0 = unconstrained_solution + np.random.normal(0, 5., unconstrained_solution.shape)
 
     # This var is not passed to the problem - so we need to add initial values for dual variables manually.
     # If skipped here, it will be done below - after the problem initialization
@@ -33,7 +33,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau = 0.45
     algorithm_params.adaptive_tau_large = 0.95
 
-    algorithm_params.max_iters = 10000
+    algorithm_params.max_iters = 1000
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 
     # L1 ball radius

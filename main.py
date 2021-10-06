@@ -42,14 +42,16 @@ params = AlgorithmParams(
     eps=1e-8,
     min_iters=10,
     max_iters=2000,
-    lam=0.005,
-    start_adaptive_lam=0.1,
+    lam=0.01,
+    lam_small=0.005,
+    start_adaptive_lam=0.5,
+    start_adaptive_lam1=0.5,
     adaptive_tau=0.45,
-    adaptive_tau_large=0.95
+    adaptive_tau_large=0.75
 )
 
-captured_io = io.StringIO()
-sys.stdout = captured_io
+# captured_io = io.StringIO()
+# sys.stdout = captured_io
 
 # region Simple 2d func min
 
@@ -156,13 +158,13 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-problem = harker_test.prepareProblem(algorithm_params=params)
+# problem = harker_test.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
-#problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
+# problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
 
 # endregion
 
@@ -445,27 +447,31 @@ problem = harker_test.prepareProblem(algorithm_params=params)
 korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
 korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
 
-tseng = Tseng(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters,
-              hr_name="Tseng")
-tseng_adaptive = TsengAdaptive(problem, eps=params.eps,
-                               lam=params.start_adaptive_lam, tau=params.adaptive_tau_large,
+tseng = Tseng(problem,
+              eps=params.eps, lam=params.lam,
+              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng")
+
+tseng_adaptive = TsengAdaptive(problem,
+                               eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau_large,
                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng adp.")
 
-malitsky_tam = MalitskyTam(problem, x1=params.x1.copy(), eps=params.eps, lam=params.lam, min_iters=params.min_iters,
-                           max_iters=params.max_iters, hr_name="Alg 1.")
-malitsky_tam_adaptive = MalitskyTamAdaptive(problem, x1=params.x1.copy(),
-                                            eps=params.eps,
+malitsky_tam = MalitskyTam(problem,
+                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2.")
+
+malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
+                                            x1=params.x1.copy(), eps=params.eps,
                                             lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam1,
                                             tau=params.adaptive_tau,
-                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2.")
+                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1.")
 
 algs_to_test = [
     # korpele,
     # korpele_adapt,
-    tseng,
     tseng_adaptive,
+    tseng,
+    malitsky_tam_adaptive,
     malitsky_tam,
-    malitsky_tam_adaptive
 ]
 # endregion
 
@@ -494,12 +500,12 @@ for alg in algs_to_test:
 writer.save()
 writer.close()
 
-sys.stdout = sys.__stdout__
-print(captured_io.getvalue())
+# sys.stdout = sys.__stdout__
+# print(captured_io.getvalue())
 
-f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
-f.write(captured_io.getvalue())
-f.close()
+# f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
+# f.write(captured_io.getvalue())
+# f.close()
 
 # endregion
 

@@ -21,7 +21,7 @@ class YAxisType(Enum):
 class DefaultLabels:
     X_AXIS = {
         XAxisType.ITERATION: "Iterations",
-        XAxisType.TIME: "Time"
+        XAxisType.TIME: "Time, ms."
     }
     Y_AXIS = {
         YAxisType.REAL_ERROR: "$||x_n - x^*||_2$",
@@ -78,13 +78,12 @@ class AlgStatGrapher:
         xDataIndices = []
         yDataIndices = []
 
-        if x_axis_type == XAxisType.ITERATION:
-            for alg_history in alg_history_list:
-                xDataIndices.append([0])
-                yDataIndices.append([1])
+        for alg_history in alg_history_list:
+            xDataIndices.append([0])
+            yDataIndices.append([1])
 
-                if x_len < alg_history.iters_count - start_iter - 1:
-                    x_len = alg_history.iters_count - start_iter - 1
+            if x_len < alg_history.iters_count - start_iter - 1:
+                x_len = alg_history.iters_count - start_iter - 1
 
         if y_axis_type == YAxisType.STEP_DELTA:
             plot_step_delta = True
@@ -140,7 +139,11 @@ class AlgStatGrapher:
             iters_count = alg_history_list[i].iters_count
 
             plot_data: np.ndarray = np.zeros((y_dims + 1, iters_count - start_iter), dtype=float)
-            plot_data[0] = np.arange(0, iters_count - start_iter)
+
+            if x_axis_type == XAxisType.ITERATION:
+                plot_data[0] = np.arange(0, iters_count - start_iter)
+            elif x_axis_type == XAxisType.TIME:
+                plot_data[0] = alg_history_list[i].iter_time_ns[start_iter:iters_count]/(1e+6)
 
             yDataIndices = []
             k = 1
