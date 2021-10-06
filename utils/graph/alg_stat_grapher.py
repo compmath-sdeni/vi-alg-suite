@@ -31,8 +31,11 @@ class DefaultLabels:
 
 
 class AlgStatGrapher:
-    defFont = 18
+    defFont = 16
     defLineWidth = 3.
+    dpi = 80
+    figureWidth = 8
+    figureHeight = 8
 
     def checkDataDims(self, dims: int, lst: list) -> bool:
         return dims == 2 if isinstance(lst[0], list) else dims == 1
@@ -133,10 +136,10 @@ class AlgStatGrapher:
         rc('xtick', labelsize=self.defFont)
         rc('ytick', labelsize=self.defFont)
 
-        fig, ax = plt.subplots(figsize=(16, 8), dpi=80)
+        fig, ax = plt.subplots(figsize=(self.figureWidth, self.figureHeight), dpi=self.dpi)
 
         for i in range(algs_count):
-            iters_count = alg_history_list[i].iters_count
+            iters_count = alg_history_list[i].iters_count-1
 
             plot_data: np.ndarray = np.zeros((y_dims + 1, iters_count - start_iter), dtype=float)
 

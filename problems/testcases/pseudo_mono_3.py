@@ -9,7 +9,9 @@ from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
-    algorithm_params.x0 = np.array([10., -10., 10.])
+
+    algorithm_params.x0 = np.array([-10., 10., -10.])
+    # algorithm_params.x0 = np.array([-1., -1., -1.])
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.lam = 0.9 / 5.07
@@ -20,15 +22,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = 1.
     algorithm_params.start_adaptive_lam1 = 1.
 
-    algorithm_params.adaptive_tau = 0.325
-    algorithm_params.adaptive_tau_large = 0.65
+    # algorithm_params.adaptive_tau = 0.35
+    # algorithm_params.adaptive_tau_large = 0.6
 
-    # algorithm_params.adaptive_tau = 0.45
-    # algorithm_params.adaptive_tau_large = 0.9
+    algorithm_params.adaptive_tau = 0.45
+    algorithm_params.adaptive_tau_large = 0.9
 
     # real_solution = np.array([0.0 for i in range(N)])
 
-    algorithm_params.x_axis_type = XAxisType.TIME
+    algorithm_params.x_axis_type = XAxisType.ITERATION
 
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 

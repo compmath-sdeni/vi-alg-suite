@@ -51,10 +51,10 @@ class MalitskyTam(IterGradTypeMethod):
         self.D2 = np.linalg.norm(self.px - self.ppx)
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
+        self.setHistoryData(x=self.x, step_delta_norm=self.D + self.D2, goal_func_value=self.problem.F(self.x))
 
     def isStopConditionMet(self):
-        return super(MalitskyTam, self).isStopConditionMet() or (self.D < self.eps and self.D2 < self.eps)
+        return super(MalitskyTam, self).isStopConditionMet() or (self.D + self.D2 < self.eps)
 
     def __next__(self):
         return super(MalitskyTam, self).__next__()

@@ -97,7 +97,7 @@ class IterativeAlgorithm:
             self.doPostStep()
 
             self.iter += 1
-            return self.currentState()
+            # return self.currentState()
         else:
             raise StopIteration()
 

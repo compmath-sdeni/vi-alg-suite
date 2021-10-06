@@ -69,10 +69,10 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
                     self.lam = t
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
+        self.setHistoryData(x=self.x, step_delta_norm=self.D+self.D_1, goal_func_value=self.problem.F(self.x))
 
     def isStopConditionMet(self):
-        return super(MalitskyTamAdaptive, self).isStopConditionMet() or (self.D < self.eps and self.D_1 < self.eps)
+        return super(MalitskyTamAdaptive, self).isStopConditionMet() or (self.D + self.D_1 < self.eps)
 
     def __next__(self):
         return super(MalitskyTamAdaptive, self).__next__()
