@@ -158,10 +158,10 @@ params = AlgorithmParams(
 
 # region Test problem initialization
 
-problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-# problem = harker_test.prepareProblem(algorithm_params=params)
+problem = harker_test.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)

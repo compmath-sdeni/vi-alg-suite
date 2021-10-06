@@ -31,7 +31,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 
     hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
