@@ -27,7 +27,8 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
-from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test
+from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
+    sle_saddle_regression_100_100000
 
 from problems.testcases.slar_random import getSLE
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
@@ -50,8 +51,8 @@ params = AlgorithmParams(
     adaptive_tau_large=0.75
 )
 
-# captured_io = io.StringIO()
-# sys.stdout = captured_io
+captured_io = io.StringIO()
+sys.stdout = captured_io
 
 # region Simple 2d func min
 
@@ -161,7 +162,9 @@ params = AlgorithmParams(
 # problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-problem = harker_test.prepareProblem(algorithm_params=params)
+#problem = harker_test.prepareProblem(algorithm_params=params)
+
+problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
@@ -461,7 +464,7 @@ malitsky_tam = MalitskyTam(problem,
 
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             x1=params.x1.copy(), eps=params.eps,
-                                            lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam1,
+                                            lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                             tau=params.adaptive_tau,
                                             min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1.")
 
@@ -500,12 +503,12 @@ for alg in algs_to_test:
 writer.save()
 writer.close()
 
-# sys.stdout = sys.__stdout__
-# print(captured_io.getvalue())
+sys.stdout = sys.__stdout__
+print(captured_io.getvalue())
 
-# f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
-# f.write(captured_io.getvalue())
-# f.close()
+f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
+f.write(captured_io.getvalue())
+f.close()
 
 # endregion
 
