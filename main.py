@@ -15,6 +15,8 @@ from constraints.halfspace import HalfSpace
 from constraints.hyperplane import Hyperplane
 from constraints.l1_ball import L1Ball
 from methods.algorithm_params import AlgorithmParams
+from methods.extrapol_from_past import ExtrapolationFromPast
+from methods.extrapol_from_past_adaptive import ExtrapolationFromPastAdapt
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
@@ -159,12 +161,12 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-#problem = harker_test.prepareProblem(algorithm_params=params)
+# problem = harker_test.prepareProblem(algorithm_params=params)
 
-problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
+# problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
@@ -468,13 +470,25 @@ malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             tau=params.adaptive_tau,
                                             min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1.")
 
+extrapol_from_past = ExtrapolationFromPast(problem,
+                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam_small,
+                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="EFP")
+
+extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
+                                                         y0=params.x1.copy(), eps=params.eps,
+                                                         lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
+                                                         min_iters=params.min_iters, max_iters=params.max_iters,
+                                                         hr_name="EFP-ADAPT")
+
 algs_to_test = [
     # korpele,
     # korpele_adapt,
-    tseng_adaptive,
-    tseng,
+    # tseng_adaptive,
+    # tseng,
     malitsky_tam_adaptive,
     malitsky_tam,
+    extrapol_from_past_adaptive,
+    extrapol_from_past,
 ]
 # endregion
 
