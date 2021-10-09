@@ -25,7 +25,9 @@ class AlgorithmParams:
                  x_label: str = None,
                  time_scale_divider: int = 1e+6,  # time is in nanoseconds - 1e+6 for ms, 1e+9 for sec.
                  styles: List[str] = None,
-                 plot_start_iter: int = 2
+                 plot_start_iter: int = 2,
+                 show_plots: bool = True,
+                 save_history: bool = True
                  ):
         self.eps = eps
 
@@ -48,7 +50,9 @@ class AlgorithmParams:
         self.x_label = x_label
         self.time_scale_divider = time_scale_divider
         self.styles = styles
+        self.show_plots = show_plots
         self.plot_start_iter = plot_start_iter
+        self.save_history = save_history
 
     def saveToDir(self, path: str):
         os.makedirs(path, exist_ok=True)
@@ -73,4 +77,6 @@ class AlgorithmParams:
                 f"time_scale_divider:{self.time_scale_divider}\n",
                 f"styles:{self.styles}\n",
                 f"plot_start_iter:{self.plot_start_iter}\n",
+                f"show_plots:{self.show_plots}\n",
+                f"save_history:{self.save_history}\n",
             ])

@@ -165,8 +165,8 @@ sys.stdout = captured_io
 #problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 #problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-#problem = harker_test.prepareProblem(algorithm_params=params)
-problem = minmax_game_1.prepareProblem(algorithm_params=params)
+problem = harker_test.prepareProblem(algorithm_params=params)
+# problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -503,21 +503,25 @@ os.makedirs(saved_history_dir, exist_ok=True)
 problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
 params.saveToDir(os.path.join(saved_history_dir, "params"))
 
-writer = pd.ExcelWriter(
-    os.path.join(saved_history_dir, f"history-{test_mneno}.xlsx"),
-    engine='openpyxl')
+if params.save_history:
+    writer = pd.ExcelWriter(
+        os.path.join(saved_history_dir, f"history-{test_mneno}.xlsx"),
+        engine='openpyxl')
 
 alg_history_list = []
 for alg in algs_to_test:
     alg.do()
     BasicAlgoTests.PrintAlgRunStats(alg)
     alg_history_list.append(alg.history)
-    df = alg.history.toPandasDF()
-    df.to_excel(writer, sheet_name=alg.hr_name, index=False)
+
+    if params.save_history:
+        df = alg.history.toPandasDF()
+        df.to_excel(writer, sheet_name=alg.hr_name, index=False)
     print('')
 
-writer.save()
-writer.close()
+if params.save_history:
+    writer.save()
+    writer.close()
 
 sys.stdout = sys.__stdout__
 print(captured_io.getvalue())
@@ -551,11 +555,13 @@ plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.eps"), bbox_inc
 plt.title(problem.hr_name, loc='center')
 plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=dpi)
 
-plt.show()
+if params.show_plots:
+    plt.show()
+    exit()
 
 # endregion
 
-exit()
+
 
 # table - time for getting to epsilon error
 # for 1 and 2 - "real error"

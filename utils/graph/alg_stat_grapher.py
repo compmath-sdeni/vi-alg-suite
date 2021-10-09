@@ -24,10 +24,9 @@ class DefaultLabels:
         XAxisType.TIME: "Time, ms."
     }
     Y_AXIS = {
-        YAxisType.REAL_ERROR: "$||x_n - x^*||_2$",
-        # YAxisType.STEP_DELTA: "$||x_{n} - x_{n-1}||_2$",
-        YAxisType.STEP_DELTA: "$D_n$",
-        YAxisType.GOAL_FUNCTION: "$||P_C(x_n - \lambda Ax_n)||_2$"
+        YAxisType.REAL_ERROR: "$D_n$",  # "$||x_n - x^*||_2$",
+        YAxisType.STEP_DELTA: "$D_n$",  # "$||x_{n} - x_{n-1}||_2$",
+        YAxisType.GOAL_FUNCTION: "$G(z)$"  # "$||P_C(x_n - \lambda Ax_n)||_2$"
     }
 
 
@@ -120,7 +119,7 @@ class AlgStatGrapher:
             graph_styles = styles
         else:
             graph_styles = self.initParamsArray(algs_count, y_dims,
-                                            ['b-', 'b--', 'g-', 'c-', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
+                                            ['b-', 'b--', 'g--', 'g-', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
                                              'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:
