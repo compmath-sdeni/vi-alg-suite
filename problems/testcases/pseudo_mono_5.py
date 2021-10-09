@@ -9,7 +9,8 @@ from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
-    algorithm_params.x0 = np.array([-10., 10., -10., 10., -10.])
+    # algorithm_params.x0 = np.array([-10., 10., -10., 10., -10.])
+    algorithm_params.x0 = np.array([5., 5., 5., 5., 5.])
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     # algorithm_params.lam = 0.2
@@ -21,15 +22,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = 1.
     algorithm_params.start_adaptive_lam1 = 1.
 
-    # algorithm_params.adaptive_tau = 0.35
-    # algorithm_params.adaptive_tau_large = 0.65
+    # algorithm_params.adaptive_tau = 0.65
+    # algorithm_params.adaptive_tau_small = 0.35
 
-    algorithm_params.adaptive_tau = 0.45
-    algorithm_params.adaptive_tau_large = 0.9
+    algorithm_params.adaptive_tau = 0.9
+    algorithm_params.adaptive_tau_small = 0.3
 
     algorithm_params.real_solution = np.array([0.28484841, -0.60606057, -0.8303029, 0.36363633, 0.31515152])
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.STEP_DELTA
+    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 
     hr = Hyperrectangle(5, [[-5, 5], [-5, 5], [-5, 5], [-5, 5], [-5, 5]])
     hp = HalfSpace(a=np.array([1., 1., 1., 1., 1.]), b=5.)
@@ -44,6 +45,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
                 f", \ \\lambda = {round(algorithm_params.lam, 3)}" +
                 f", \ \\lambda_2 = {round(algorithm_params.lam_small, 3)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
-                f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_large, 3)}" +
+                f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'
     )

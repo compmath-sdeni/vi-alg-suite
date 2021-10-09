@@ -30,9 +30,10 @@ from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000
+    sle_saddle_regression_100_100000, minmax_game_1
 
 from problems.testcases.slar_random import getSLE
+from utils.alg_history import AlgHistory
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
 
 from constraints.hyperrectangle import Hyperrectangle
@@ -42,15 +43,15 @@ from problems.funcndmin import FuncNDMin
 from utils.test_alghos import BasicAlgoTests
 
 params = AlgorithmParams(
-    eps=1e-8,
+    eps=1e-5,
     min_iters=10,
     max_iters=2000,
     lam=0.01,
     lam_small=0.005,
     start_adaptive_lam=0.5,
     start_adaptive_lam1=0.5,
-    adaptive_tau=0.45,
-    adaptive_tau_large=0.75
+    adaptive_tau=0.75,
+    adaptive_tau_small=0.45
 )
 
 captured_io = io.StringIO()
@@ -161,10 +162,11 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
-# problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
+#problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+#problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-# problem = harker_test.prepareProblem(algorithm_params=params)
+#problem = harker_test.prepareProblem(algorithm_params=params)
+problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -454,11 +456,11 @@ korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_ite
 
 tseng = Tseng(problem,
               eps=params.eps, lam=params.lam,
-              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng")
+              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3")
 
 tseng_adaptive = TsengAdaptive(problem,
-                               eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau_large,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng adp.")
+                               eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4")
 
 malitsky_tam = MalitskyTam(problem,
                            x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
@@ -467,7 +469,7 @@ malitsky_tam = MalitskyTam(problem,
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             x1=params.x1.copy(), eps=params.eps,
                                             lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
-                                            tau=params.adaptive_tau,
+                                            tau=params.adaptive_tau_small,
                                             min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1.")
 
 extrapol_from_past = ExtrapolationFromPast(problem,
@@ -476,19 +478,19 @@ extrapol_from_past = ExtrapolationFromPast(problem,
 
 extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
                                                          y0=params.x1.copy(), eps=params.eps,
-                                                         lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
+                                                         lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                          min_iters=params.min_iters, max_iters=params.max_iters,
                                                          hr_name="EFP-ADAPT")
 
 algs_to_test = [
     # korpele,
     # korpele_adapt,
-    # tseng_adaptive,
-    # tseng,
     malitsky_tam_adaptive,
     malitsky_tam,
-    extrapol_from_past_adaptive,
-    extrapol_from_past,
+    tseng,
+    tseng_adaptive,
+#    extrapol_from_past_adaptive,
+#    extrapol_from_past,
 ]
 # endregion
 
@@ -524,13 +526,21 @@ f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
 f.write(captured_io.getvalue())
 f.close()
 
+# save history - takes too much space for big matrices!
+# for idx, h in enumerate(alg_history_list):
+#     hp = os.path.join(saved_history_dir, 'history', str(idx))
+#     h.saveToDir(hp)
+
 # endregion
+
 
 # region Plot and save graphs
 grapher = AlgStatGrapher()
 grapher.plot_by_history(
     alg_history_list=alg_history_list,
-    x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type
+    x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
+    styles=params.styles, start_iter=params.plot_start_iter,
+    x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
 )
 
 dpi = 300.

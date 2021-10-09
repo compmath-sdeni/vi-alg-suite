@@ -42,11 +42,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = 0.001
     algorithm_params.start_adaptive_lam1 = 0.0005
 
-    # algorithm_params.adaptive_tau = 0.45
-    # algorithm_params.adaptive_tau_large = 0.75
+    # algorithm_params.adaptive_tau = 0.75
+    # algorithm_params.adaptive_tau_small = 0.45
 
-    algorithm_params.adaptive_tau = 0.45
-    algorithm_params.adaptive_tau_large = 0.9
+    algorithm_params.adaptive_tau = 0.9
+    algorithm_params.adaptive_tau_small = 0.45
 
     algorithm_params.max_iters = 1000
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
@@ -92,7 +92,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
                 f", \ \\lambda = {round(algorithm_params.lam, 3)}" +
                 f", \ \\lambda_2 = {round(algorithm_params.lam_small, 3)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
-                f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_large, 3)}" +
+                f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'
     )
 

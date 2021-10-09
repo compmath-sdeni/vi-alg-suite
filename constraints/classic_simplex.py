@@ -2,7 +2,9 @@ import os
 
 import numpy as np
 from constraints.convex_set_constraint import ConvexSetConstraints
+from methods.projections.simplex_and_ball_proj_inet import euclidean_proj_simplex
 from methods.projections.simplex_proj import SimplexProj
+from methods.projections.simplex_projection_prom import vec2simplexV2
 
 
 class ClassicSimplex(ConvexSetConstraints):
@@ -24,9 +26,13 @@ class ClassicSimplex(ConvexSetConstraints):
         return res
 
     def project(self, x: np.ndarray) -> np.ndarray:
-        res = x.copy()
-        SimplexProj.doInplace(res, self.b)
-        return res
+        return vec2simplexV2(x, self.b)
+
+        # return euclidean_proj_simplex(x, s=self.b)
+
+        # res = x.copy()
+        # SimplexProj.doInplace(res, self.b)
+        # return res
 
     def saveToDir(self, path: str):
         with open(os.path.join(path, self.__class__.__name__.lower() + ".txt"), "w") as file:

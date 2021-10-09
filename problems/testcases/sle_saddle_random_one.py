@@ -30,8 +30,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = .5
     algorithm_params.start_adaptive_lam1 = .5
 
-    algorithm_params.adaptive_tau = 0.45
-    algorithm_params.adaptive_tau_large = 0.95
+    algorithm_params.adaptive_tau = 0.95
+    algorithm_params.adaptive_tau_small = 0.45
 
     algorithm_params.max_iters = 10000
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR

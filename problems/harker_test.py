@@ -29,10 +29,10 @@ class HarkerTest(VIProblem):
 
         self.AM = self.B @ self.B.T + self.S + self.DM
 
-        # self.q = np.random.rand(M) * -500.0
-        self.q = np.zeros(M)
+        self.q = np.random.rand(M) * 5.0
+        #self.q = np.zeros(M)
 
-        self.norm = np.linalg.norm(self.AM, 2)
+        self.norm = np.linalg.norm(self.AM)
         print("HpHard norm: ", self.norm)
 
         # r = np.linalg.eig(self.A)
@@ -67,6 +67,7 @@ class HarkerTest(VIProblem):
         np.savetxt("{0}/{1}".format(path_to_save, 'DM.txt'), self.DM, delimiter=',', newline="],\n[")
         np.savetxt("{0}/{1}".format(path_to_save, 'S.txt'), self.S, delimiter=',', newline="],\n[")
         np.savetxt("{0}/{1}".format(path_to_save, 'B.txt'), self.B, delimiter=',', newline="],\n[")
+        np.savetxt("{0}/{1}".format(path_to_save, 'q.txt'), self.q, delimiter=',', newline="],\n[")
 
         if self.xtest is not None:
             np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest, delimiter=',')

@@ -10,7 +10,7 @@ class SimplexProj(IterativeAlgorithm):
         self.maxiters = maxiters
         self.n = self.problem.n
         self.z = self.problem.z
-        self.b = b;
+        self.b = b
 
     def __iter__(self):
         lam = (self.b - np.sum(self.z)) / self.n

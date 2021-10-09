@@ -25,7 +25,8 @@ class DefaultLabels:
     }
     Y_AXIS = {
         YAxisType.REAL_ERROR: "$||x_n - x^*||_2$",
-        YAxisType.STEP_DELTA: "$||x_{n} - x_{n-1}||_2$",
+        # YAxisType.STEP_DELTA: "$||x_{n} - x_{n-1}||_2$",
+        YAxisType.STEP_DELTA: "$D_n$",
         YAxisType.GOAL_FUNCTION: "$||P_C(x_n - \lambda Ax_n)||_2$"
     }
 
@@ -73,7 +74,8 @@ class AlgStatGrapher:
                         y_axis_type: YAxisType = YAxisType.REAL_ERROR,
                         plot_step_delta: bool = False, plot_real_error: bool = False, plot_residue: bool = False,
                         x_axis_label: str = None, y_axis_label: str = None, plot_title: str = None,
-                        legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log', start_iter: int = 2):
+                        legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log',
+                        start_iter: int = 2, styles: List[str] = None, time_scale_divider: int = 1e+6):
         y_dims: int = 0
         x_len: int = 0
         algs_count: int = len(alg_history_list)
@@ -114,8 +116,11 @@ class AlgStatGrapher:
 
         plot_legend: List[str] = legend[:]
 
-        graph_colors = self.initParamsArray(algs_count, y_dims,
-                                            ['g-', 'g--', 'b-', 'b--', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
+        if styles is not None:
+            graph_styles = styles
+        else:
+            graph_styles = self.initParamsArray(algs_count, y_dims,
+                                            ['b-', 'b--', 'g-', 'c-', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
                                              'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:
@@ -123,13 +128,13 @@ class AlgStatGrapher:
             for i in range(algs_count):
                 alg_legends = []
                 if plot_step_delta:
-                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+                    alg_legends.append(f"{alg_history_list[i].alg_name}")
 
                 if plot_real_error:
-                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+                    alg_legends.append(f"{alg_history_list[i].alg_name}")
 
                 if plot_residue:
-                    alg_legends.append(f"{alg_history_list[i].alg.GetHRName()}")
+                    alg_legends.append(f"{alg_history_list[i].alg_name}")
 
                 plot_legend.append(alg_legends)
 
@@ -146,7 +151,7 @@ class AlgStatGrapher:
             if x_axis_type == XAxisType.ITERATION:
                 plot_data[0] = np.arange(0, iters_count - start_iter)
             elif x_axis_type == XAxisType.TIME:
-                plot_data[0] = alg_history_list[i].iter_time_ns[start_iter:iters_count]/(1e+6)
+                plot_data[0] = alg_history_list[i].iter_time_ns[start_iter:iters_count]/time_scale_divider
 
             yDataIndices = []
             k = 1
@@ -166,7 +171,7 @@ class AlgStatGrapher:
                 k += 1
 
             self.plotSingleDim(
-                data=plot_data.transpose(), xDataIndex=0, yDataIndices=yDataIndices, graphColors=graph_colors[i],
+                data=plot_data.transpose(), xDataIndex=0, yDataIndices=yDataIndices, graphColors=graph_styles[i],
                 legend=plot_legend[i], ax=ax
             )
 

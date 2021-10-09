@@ -29,17 +29,17 @@ class TsengAdaptive(IterGradTypeMethod):
         Ax = self.problem.A(self.x)
         self.operator_count += 1
 
-        y = self.problem.Project(self.x - self.lam * Ax)
+        self.y = self.problem.Project(self.x - self.lam * Ax)
         self.projections_count += 1
 
-        self.D = linalg.norm(self.x - y)
+        self.D = linalg.norm(self.x - self.y)
 
         if self.D >= self.eps or self.iter < self.min_iters:
-            delta_A = self.problem.A(y) - Ax
+            delta_A = self.problem.A(self.y) - Ax
             self.operator_count += 1
 
             self.px = self.x
-            self.x = y - self.lam * delta_A
+            self.x = self.y - self.lam * delta_A
 
             delta_A_norm = np.linalg.norm(delta_A)
             if delta_A_norm >= self.zero_delta:
@@ -48,7 +48,7 @@ class TsengAdaptive(IterGradTypeMethod):
                     self.lam = t
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
+        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.y))
 
     def isStopConditionMet(self):
         return super(TsengAdaptive, self).isStopConditionMet() or self.D < self.eps

@@ -73,7 +73,8 @@ class IterativeAlgorithm:
         self.operator_count: int = 0
 
         self.history = AlgHistory(self.N)
-        self.history.alg = self
+        self.history.alg_name = self.hr_name
+        self.history.alg_class = self.__class__.__name__
 
         return self
 
@@ -92,7 +93,9 @@ class IterativeAlgorithm:
             self.history.iter_time_ns[self.iter] = (finish - start) + (
             self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
             self.history.lam[self.iter] = self.lam
-            self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+
+            if self.problem.xtest is not None:
+                self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
 
             self.doPostStep()
 
