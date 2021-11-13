@@ -17,7 +17,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     real_solution = np.array([0.0 for i in range(n)])
 
-    algorithm_params.x_axis_type = XAxisType.TIME
+    algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.STEP_DELTA
 
     # constraints = Hyperrectangle(n, [(-1, 1) for i in range(n)])
@@ -33,7 +33,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 #    np.save(f"hphard_M_{n}", ht.AM)
 #    np.save(f"hphard_q_{n}", ht.q)
 
-    algorithm_params.save_history = False
+    algorithm_params.save_history = True
     algorithm_params.show_plots = True
 
     P = np.load(f'hphard_M_{n}.npy')

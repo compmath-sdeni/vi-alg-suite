@@ -119,7 +119,7 @@ class AlgStatGrapher:
             graph_styles = styles
         else:
             graph_styles = self.initParamsArray(algs_count, y_dims,
-                                            ['b-', 'b--', 'g--', 'g-', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
+                                            ['k-', 'k--', 'y--', 'y-', 'r-', 'r--', 'c-', 'c--', 'm-', 'm--', 'k-',
                                              'k--'])
 
         if plot_legend is None or len(plot_legend) == 0:

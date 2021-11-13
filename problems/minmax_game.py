@@ -39,8 +39,13 @@ class MinMaxGame(VIProblem):
         self.defaultProjection = np.zeros(self.m + self.n)
 
     def F(self, x: np.ndarray) -> float:
-        return np.max(self.P @ x[:self.m]) - np.min(self.P.T @ x[self.m:])
+        # GAP
+        # return np.max(self.P @ x[:self.m]) - np.min(self.P.T @ x[self.m:])
+        # ???
         # return np.dot(self.P.T @ x[self.m:], x[:self.m]) - np.dot(self.P @ x[:self.m], x[self.m:])
+
+        # Game value
+        return np.dot(self.P @ x[:self.m], x[self.m:])
 
     def GradF(self, x: np.ndarray) -> np.ndarray:
         return self.A(x)

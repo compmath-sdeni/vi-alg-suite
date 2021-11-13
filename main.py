@@ -165,8 +165,8 @@ sys.stdout = captured_io
 #problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 #problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-problem = harker_test.prepareProblem(algorithm_params=params)
-# problem = minmax_game_1.prepareProblem(algorithm_params=params)
+#problem = harker_test.prepareProblem(algorithm_params=params)
+problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -495,7 +495,7 @@ algs_to_test = [
 # endregion
 
 # region Run all algs and save data and results
-saved_history_dir = "storage/stats2021-10"
+saved_history_dir = "storage/stats2021-11"
 test_mneno = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mneno)
 os.makedirs(saved_history_dir, exist_ok=True)

@@ -26,14 +26,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # algorithm_params.adaptive_tau = 0.6
     # algorithm_params.adaptive_tau_small = 0.35
 
-    algorithm_params.adaptive_tau = 0.65
+    algorithm_params.adaptive_tau = 0.9
     algorithm_params.adaptive_tau_small = 0.45
 
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.eps = 1e-8
 
-    algorithm_params.x_axis_type = XAxisType.TIME
+    algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
 
     hr = Hyperrectangle(3, [[-5, 5], [-5, 5], [-5, 5]])
