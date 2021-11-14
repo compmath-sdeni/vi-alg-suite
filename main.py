@@ -20,6 +20,7 @@ from methods.extrapol_from_past_adaptive import ExtrapolationFromPastAdapt
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
+from methods.malitsky_tam_bregman import MalitskyTamBregman
 from methods.tseng import Tseng
 from methods.tseng_adaptive import TsengAdaptive
 from problems.harker_test import HarkerTest
@@ -463,8 +464,12 @@ tseng_adaptive = TsengAdaptive(problem,
                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4 (tseng-A)")
 
 malitsky_tam = MalitskyTam(problem,
+                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_medium,
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 3. (MT)")
+
+malitsky_tam_bregproj = MalitskyTamBregman(problem,
                            x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2. (MT)")
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 4. (MT+BP)")
 
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             x1=params.x1.copy(), eps=params.eps,
@@ -485,10 +490,11 @@ extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
 algs_to_test = [
     # korpele,
     # korpele_adapt,
-    malitsky_tam_adaptive,
+    #malitsky_tam_adaptive,
     malitsky_tam,
-    tseng,
-    tseng_adaptive,
+    malitsky_tam_bregproj,
+    #    tseng,
+#    tseng_adaptive,
 #    extrapol_from_past_adaptive,
 #    extrapol_from_past,
 ]

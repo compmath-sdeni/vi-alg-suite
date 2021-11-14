@@ -1,5 +1,6 @@
 import numpy as np
 import nashpy as nash
+from numpy import inf
 
 from constraints.allspace import Rn
 from constraints.ConvexSetsIntersection import ConvexSetsIntersection
@@ -124,19 +125,20 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region Test random fully defined game with known solution
-    n = 30
-    m = 50
+    n = 200
+    m = 300
     eq_row = 2
-    eq_col = n-2
-    game_val = 11
+    eq_col = n-3
+    game_val = 0
 
-    A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-50, b=50,
-                                                                game_value=game_val, eq_row=eq_row, eq_col=eq_col)
-    print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; P:\n{A}")
-    P = -A.transpose()
+    # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-50, b=50,
+    #                                                             game_value=game_val, eq_row=eq_row, eq_col=eq_col)
+    # P = -A.transpose()
+    # np.save(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
 
-    np.save(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
-    # P = np.load(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
+    P = np.load(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
+
+    print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
 
     real_solution = np.zeros(m + n)
     real_solution[eq_row] = 1.
@@ -175,10 +177,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     #    print(real_solution)
 
     algorithm_params.eps = 1e-5
-    algorithm_params.max_iters = 5000
+    algorithm_params.max_iters = 1500
 
     algorithm_params.lam = 0.9 / np.linalg.norm(P, 2)
-    algorithm_params.lam_small = 0.45 / np.linalg.norm(P, 2)
+    algorithm_params.lam_medium = 0.001 # 0.45 / np.linalg.norm(P, 2)
+    algorithm_params.lam_small = 0.1
 
     algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = 1.0
@@ -189,7 +192,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     # algorithm_params.y_label = "duality gap"
 
     algorithm_params.time_scale_divider = 1e+9

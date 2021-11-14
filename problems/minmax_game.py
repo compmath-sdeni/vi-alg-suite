@@ -64,6 +64,17 @@ class MinMaxGame(VIProblem):
 
         return np.concatenate((p1, p2))
 
+    def bregmanProject(self, x: np.ndarray, a: np.ndarray) -> np.ndarray:
+        res = np.empty_like(x)
+
+        t = x[:self.m] * np.exp(a[:self.m])
+        res[:self.m] = t / t.sum(0, keepdims=True)
+
+        t = x[self.m:] * np.exp(a[self.m:])
+        res[self.m:] = t / t.sum(0, keepdims=True)
+
+        return res
+
     def saveToDir(self, *, path_to_save: str = None):
         path_to_save = super().saveToDir(path_to_save=path_to_save)
 

@@ -7,6 +7,9 @@ class VIProblem(Problem):
     def Project(self, x: Union[np.ndarray, float]):
         pass
 
+    def bregmanProject(self, x:np.ndarray, a: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()
+
     def Fcut1D(self, defx: Union[np.ndarray, float], x: Union[np.ndarray, float], dim: int):
         defx[dim] = x
         return self.F(defx)

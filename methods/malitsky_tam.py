@@ -60,8 +60,7 @@ class MalitskyTam(IterGradTypeMethod):
         return super(MalitskyTam, self).__next__()
 
     def paramsInfoString(self) -> str:
-        return super().paramsInfoString() + "; x0: {0}; MaxLam: {1}".format(self.problem.XToString(self.problem.x0),
-                                                                            self.maxLam)
+        return super().paramsInfoString() + "; x0: {0}".format(self.problem.XToString(self.problem.x0))
 
     def currentState(self) -> dict:
         # return dict(super().currentState(), x=([*self.x, self.problem.F(self.x)], [*self.y, self.problem.F(self.y)]), lam=self.lam)
