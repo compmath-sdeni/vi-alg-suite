@@ -48,23 +48,23 @@ class AlgHistory:
 
     def toPandasDF(self, *, labels: dict = None):
         x_res = []
-        for i in range(self.iters_count):
+        for i in range(self.iters_count+1):
             x_res.append(np.array2string(self.x[i], precision=5, separator=',', suppress_small=True))
 
         y_res = []
         if self.y is not None:
-            for i in range(self.iters_count):
+            for i in range(self.iters_count+1):
                 y_res.append(np.array2string(self.y[i], precision=5, separator=',', suppress_small=True))
 
         frame_columns = {
-            AlgHistFieldNames.ITERS_COUNT: range(self.iters_count),
+            AlgHistFieldNames.ITERS_COUNT: range(self.iters_count+1),
             AlgHistFieldNames.X: x_res,
             AlgHistFieldNames.Y: y_res,
-            AlgHistFieldNames.LAM: self.lam[:self.iters_count],
-            AlgHistFieldNames.STEP_DELTA_NORM: self.step_delta_norm[:self.iters_count],
-            AlgHistFieldNames.GOAL_FUNC_VALUE: self.goal_func_value[:self.iters_count],
-            AlgHistFieldNames.ITER_TIME_NS: self.iter_time_ns[:self.iters_count],
-            AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count],
+            AlgHistFieldNames.LAM: self.lam[:self.iters_count+1],
+            AlgHistFieldNames.STEP_DELTA_NORM: self.step_delta_norm[:self.iters_count+1],
+            AlgHistFieldNames.GOAL_FUNC_VALUE: self.goal_func_value[:self.iters_count+1],
+            AlgHistFieldNames.ITER_TIME_NS: self.iter_time_ns[:self.iters_count+1],
+            AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count+1],
         }
 
         if len(self.extra_indicators) > 0:

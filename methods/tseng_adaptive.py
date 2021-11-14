@@ -16,7 +16,7 @@ class TsengAdaptive(IterGradTypeMethod):
         self.tau = tau
         self.lam0 = lam
 
-        self.x = self.px = self.problem.x0.copy()
+        self.y = self.x = self.px = self.problem.x0.copy()
         self.D = 0
 
     def __iter__(self):

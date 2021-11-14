@@ -27,8 +27,6 @@ class IterativeAlgorithm:
         else:
             self.N = 1
 
-        self.history = AlgHistory(self.N)
-
         if hasattr(self.problem, 'lam_override_by_method') and self.problem.lam_override_by_method is not None:
             if type(self).__name__ in self.problem.lam_override_by_method:
                 self.lam = self.problem.lam_override_by_method[type(self).__name__]
@@ -38,6 +36,10 @@ class IterativeAlgorithm:
 
         self.min_iters: int = min_iters
         self.hr_name = hr_name if hr_name else type(self).__name__
+
+        self.history = AlgHistory(self.N)
+        self.history.alg_name = self.hr_name
+        self.history.alg_class = self.__class__.__name__
 
     def isStopConditionMet(self) -> float:
         return self.iter >= self.max_iters
@@ -72,15 +74,25 @@ class IterativeAlgorithm:
         self.projections_count: int = 0
         self.operator_count: int = 0
 
-        self.history = AlgHistory(self.N)
-        self.history.alg_name = self.hr_name
-        self.history.alg_class = self.__class__.__name__
+        self.history.iter_time_ns[self.iter] = 0
+        self.history.lam[self.iter] = self.lam
+
+        if self.problem.xtest is not None:
+            self.history.real_error[self.iter] = np.linalg.norm(
+                self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+
+        self.doPostStep()
+
+        extra = self.problem.GetExtraIndicators(self.x)
+        if extra:
+            self.history.extra_indicators.append(extra)
 
         return self
 
     def __next__(self) -> dict:
-        if self.iter <= self.min_iters or (not self.isStopConditionMet()):
 
+        if self.iter <= self.min_iters or (not self.isStopConditionMet()):
+            self.iter += 1
             start = time.process_time_ns()
             self.doStep()
             finish = time.process_time_ns()
@@ -89,7 +101,7 @@ class IterativeAlgorithm:
             self.history.projections_count = self.projections_count
             self.history.operator_count = self.operator_count
 
-            self.history.iters_count = self.iter + 1
+            self.history.iters_count = self.iter
             self.history.iter_time_ns[self.iter] = (finish - start) + (
             self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
             self.history.lam[self.iter] = self.lam
@@ -103,7 +115,6 @@ class IterativeAlgorithm:
 
             self.doPostStep()
 
-            self.iter += 1
             # return self.currentState()
         else:
             raise StopIteration()

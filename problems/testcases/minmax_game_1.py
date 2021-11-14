@@ -99,15 +99,15 @@ def generateRandomFloatDefiniteGame(m: int, n: int, *, a: float = -10, b: float 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # region Random problem nxm
-    # n = 1000
-    # m = 1000
-    # #P = np.random.randint(-3, 4, size=(m,n)).astype(float)
+    # n = 50
+    # m = 50
+    # # P = np.random.randint(-3, 4, size=(m,n)).astype(float)
     # # P = np.random.rand(m, n)
-    # # P = np.random.normal(0., 10., (m, n))
+    # P = np.random.normal(-10., 10., (m, n))
     # real_solution = None
     #
     # #np.save('minmax_P_1000_symmetric_-3_3', P)
-    # P = np.load('minmax_P_1000_symmetric_-3_3.npy')
+    # #P = np.load('minmax_P_1000_symmetric_-3_3.npy')
     #
     # algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
     # algorithm_params.x1 = algorithm_params.x0.copy()
@@ -124,11 +124,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region Test random fully defined game with known solution
-    n = 3
-    m = 5
+    n = 30
+    m = 50
     eq_row = 2
     eq_col = n-2
-    game_val = 0
+    game_val = 11
 
     A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-50, b=50,
                                                                 game_value=game_val, eq_row=eq_row, eq_col=eq_col)
@@ -180,20 +180,22 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.lam = 0.9 / np.linalg.norm(P, 2)
     algorithm_params.lam_small = 0.45 / np.linalg.norm(P, 2)
 
-    algorithm_params.start_adaptive_lam = 1.
-    algorithm_params.start_adaptive_lam1 = 1.
+    algorithm_params.start_adaptive_lam = 1.0
+    algorithm_params.start_adaptive_lam1 = 1.0
 
-    algorithm_params.adaptive_tau = 0.95
+    algorithm_params.adaptive_tau = 0.9
     algorithm_params.adaptive_tau_small = 0.45
 
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
-    algorithm_params.y_label = "duality gap"
+    # algorithm_params.y_label = "duality gap"
 
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
+
+    algorithm_params.plot_start_iter = 0
 
     return MinMaxGame(
         P=P, C=Rn(n + m),

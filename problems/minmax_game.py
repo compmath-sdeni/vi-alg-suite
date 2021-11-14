@@ -84,6 +84,6 @@ class MinMaxGame(VIProblem):
     def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
         return {
             'Game value': self.getGameValue(x),
-            'x norm': np.linalg.norm(x[:self.m]),
-            'y norm': np.linalg.norm(x[self.m:])
+            'x compsum': np.sum(x[:self.m]),
+            'y compsum': np.sum(x[self.m:])
         }

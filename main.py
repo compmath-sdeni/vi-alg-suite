@@ -162,11 +162,11 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+#problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 #problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 #problem = harker_test.prepareProblem(algorithm_params=params)
-# problem = minmax_game_1.prepareProblem(algorithm_params=params)
+problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -456,21 +456,21 @@ korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_ite
 
 tseng = Tseng(problem,
               eps=params.eps, lam=params.lam,
-              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3")
+              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3 (tseng)")
 
 tseng_adaptive = TsengAdaptive(problem,
                                eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4")
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4 (tseng-A)")
 
 malitsky_tam = MalitskyTam(problem,
                            x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2.")
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 2. (MT)")
 
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             x1=params.x1.copy(), eps=params.eps,
                                             lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                             tau=params.adaptive_tau_small,
-                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1.")
+                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1. (MT-A)")
 
 extrapol_from_past = ExtrapolationFromPast(problem,
                                            y0=params.x1.copy(), eps=params.eps, lam=params.lam_small,
@@ -480,7 +480,7 @@ extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
                                                          y0=params.x1.copy(), eps=params.eps,
                                                          lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                          min_iters=params.min_iters, max_iters=params.max_iters,
-                                                         hr_name="EFP-ADAPT")
+                                                         hr_name="EFP-A")
 
 algs_to_test = [
     # korpele,
