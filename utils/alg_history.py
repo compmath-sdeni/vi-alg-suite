@@ -1,11 +1,11 @@
 import os
-from enum import Enum, auto
+from enum import Enum, unique
 
 import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 
-
+@unique
 class AlgHistFieldNames(Enum):
     ALG_NAME = 'alg_name',
     ALG_CLASS = 'alg_class',
@@ -18,7 +18,11 @@ class AlgHistFieldNames(Enum):
     STEP_DELTA_NORM = 'step_delta_norm',
     GOAL_FUNC_VALUE = 'goal_func_value',
     ITER_TIME_NS = 'iter_time_ns',
-    REAL_ERROR = 'real_error'
+    REAL_ERROR = 'real_error',
+    EXTRA_INDICATORS = 'extra_indicators'
+
+    def __str__(self):
+        return str(self.value[0])
 
 
 class AlgHistory:
@@ -40,6 +44,7 @@ class AlgHistory:
 
         self.iter_time_ns = np.ndarray(max_iters, dtype=int)
         self.real_error = np.ndarray(max_iters, dtype=float)
+        self.extra_indicators = []
 
     def toPandasDF(self, *, labels: dict = None):
         x_res = []
@@ -51,7 +56,7 @@ class AlgHistory:
             for i in range(self.iters_count):
                 y_res.append(np.array2string(self.y[i], precision=5, separator=',', suppress_small=True))
 
-        df = pd.DataFrame({
+        frame_columns = {
             AlgHistFieldNames.ITERS_COUNT: range(self.iters_count),
             AlgHistFieldNames.X: x_res,
             AlgHistFieldNames.Y: y_res,
@@ -59,8 +64,13 @@ class AlgHistory:
             AlgHistFieldNames.STEP_DELTA_NORM: self.step_delta_norm[:self.iters_count],
             AlgHistFieldNames.GOAL_FUNC_VALUE: self.goal_func_value[:self.iters_count],
             AlgHistFieldNames.ITER_TIME_NS: self.iter_time_ns[:self.iters_count],
-            AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count]
-        }, copy=True)
+            AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count],
+        }
+
+        if len(self.extra_indicators) > 0:
+            frame_columns[AlgHistFieldNames.EXTRA_INDICATORS] = self.extra_indicators
+
+        df = pd.DataFrame(frame_columns, copy=True)
         return df
 
     def saveToDir(self, path: str):

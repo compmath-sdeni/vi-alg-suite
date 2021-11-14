@@ -8,7 +8,8 @@ from methods.IterativeAlgorithm import IterativeAlgorithm
 
 class BasicAlgoTests:
     def __init__(self, *, min_time: float = 0, print_every: int = 1, max_iters: int = 1000,
-                 on_alg_start: Callable[[IterativeAlgorithm, dict], None] = None, on_alg_finish: Callable[[IterativeAlgorithm, dict], None] = None,
+                 on_alg_start: Callable[[IterativeAlgorithm, dict], None] = None,
+                 on_alg_finish: Callable[[IterativeAlgorithm, dict], None] = None,
                  on_iteration: Callable[[IterativeAlgorithm, dict, int, float], None] = None,
                  on_all_finished: Callable[..., None] = None):
         self.print_every: int = print_every
@@ -31,15 +32,15 @@ class BasicAlgoTests:
             stats[alg_name]['problem'] = probl_name
 
             if self.on_alg_start is not None:
-                self.on_alg_start(alg, alg.currentState()) # dict()
+                self.on_alg_start(alg, alg.currentState())  # dict()
 
-            prev_time: float = 0 # used only to ensure min iteration time if needed
+            prev_time: float = 0  # used only to ensure min iteration time if needed
             # noinspection PyBroadException
             if self.min_time > 0:
                 prev_time = time.process_time()
 
             totalAlghoTime: float = 0
-            referenceTime:float = time.process_time() # used to count pure algho time, without output etc
+            referenceTime: float = time.process_time()  # used to count pure algho time, without output etc
 
             for curState in alg:
                 totalAlghoTime += (curState['iterEndTime'] - referenceTime)
@@ -49,7 +50,7 @@ class BasicAlgoTests:
                         return True
 
                 if (iter_num == 1 and self.print_every > 0) or (
-                                self.print_every > 0 and iter_num % self.print_every == 0):
+                        self.print_every > 0 and iter_num % self.print_every == 0):
                     print("{0:.3f}s. {1}".format(totalAlghoTime, alg.currentStateString()))
                     # print("{0}: {1} -> {2}; err: {3}; {4}".format(iter, alg.problem.XToString(curState['x']),
                     # alg.problem.FValToString(v), scalartostring(alg.problem.GetErrorByTestX(curState['x'])),
@@ -115,7 +116,7 @@ class BasicAlgoTests:
 
         print_size = 5
 
-        if alg_object.x.shape[0] <= print_size:
+        if alg_object.x.shape[0] <= print_size * 2:
             print("Result: {0}".format(alg_object.x))
         else:
             print_len = int(alg_object.x.shape[0] / 2)
@@ -123,3 +124,11 @@ class BasicAlgoTests:
                 print_len = print_size
 
             print("Result: {0} ... {1}\n".format(alg_object.x[:print_len], alg_object.x[-print_len:]))
+
+        extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x)
+        if extra_indicators:
+            extra_strings = []
+            for name, value in extra_indicators.items():
+                extra_strings.append(f'{name}: {value}')
+
+            print('; '.join(extra_strings))

@@ -1,5 +1,5 @@
 import time
-from typing import Union
+from typing import Union, Dict
 
 import numpy as np
 
@@ -96,6 +96,10 @@ class IterativeAlgorithm:
 
             if self.problem.xtest is not None:
                 self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+
+            extra = self.problem.GetExtraIndicators(self.x)
+            if extra:
+                self.history.extra_indicators.append(extra)
 
             self.doPostStep()
 

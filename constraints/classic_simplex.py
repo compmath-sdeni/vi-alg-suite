@@ -14,7 +14,7 @@ class ClassicSimplex(ConvexSetConstraints):
         print("ClassicSimplex created. {0}".format(self.toString()))
 
     def isIn(self, x: np.ndarray) -> bool:
-        return abs(x.sum() - self.b) < 0.000000001
+        return abs(x.sum() - self.b) < self.zero_delta
 
     def getSomeInteriorPoint(self) -> np.ndarray:
         res = np.zeros(self.n)

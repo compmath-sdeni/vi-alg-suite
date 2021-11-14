@@ -124,9 +124,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region Test random fully defined game with known solution
-    n = 100
-    m = 150
-    eq_row = 3
+    n = 3
+    m = 5
+    eq_row = 2
     eq_col = n-2
     game_val = 0
 

@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Dict, Optional
 from typing import Sequence
 
 import numpy as np
@@ -45,7 +45,10 @@ class MinMaxGame(VIProblem):
         # return np.dot(self.P.T @ x[self.m:], x[:self.m]) - np.dot(self.P @ x[:self.m], x[self.m:])
 
         # Game value
-        # return np.dot(self.P @ x[:self.m], x[self.m:])
+        # return self.getGameValue(x)
+
+    def getGameValue(self, x: np.ndarray) -> float:
+        return np.dot(self.P @ x[:self.m], x[self.m:])
 
     def GradF(self, x: np.ndarray) -> np.ndarray:
         return self.A(x)
@@ -77,3 +80,10 @@ class MinMaxGame(VIProblem):
     def loadFromFile(self, path: str):
         self.P = np.loadtxt("{0}/{1}".format(path, 'P.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
+
+    def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
+        return {
+            'Game value': self.getGameValue(x),
+            'x norm': np.linalg.norm(x[:self.m]),
+            'y norm': np.linalg.norm(x[self.m:])
+        }

@@ -162,11 +162,11 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-#problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 #problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 #problem = harker_test.prepareProblem(algorithm_params=params)
-problem = minmax_game_1.prepareProblem(algorithm_params=params)
+# problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -496,8 +496,8 @@ algs_to_test = [
 
 # region Run all algs and save data and results
 saved_history_dir = "storage/stats2021-11"
-test_mneno = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-saved_history_dir = os.path.join(saved_history_dir, test_mneno)
+test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)
 
 problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
@@ -505,7 +505,7 @@ params.saveToDir(os.path.join(saved_history_dir, "params"))
 
 if params.save_history:
     writer = pd.ExcelWriter(
-        os.path.join(saved_history_dir, f"history-{test_mneno}.xlsx"),
+        os.path.join(saved_history_dir, f"history-{test_mnemo}.xlsx"),
         engine='openpyxl')
 
 alg_history_list = []
@@ -526,7 +526,7 @@ if params.save_history:
 sys.stdout = sys.__stdout__
 print(captured_io.getvalue())
 
-f = open(os.path.join(saved_history_dir, f"log-{test_mneno}.txt"), "w")
+f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "w")
 f.write(captured_io.getvalue())
 f.close()
 
@@ -549,11 +549,11 @@ grapher.plot_by_history(
 
 dpi = 300.
 
-plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
-plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
 plt.title(problem.hr_name, loc='center')
-plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mneno}.png"), bbox_inches='tight', dpi=dpi)
+plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
 
 if params.show_plots:
     plt.show()

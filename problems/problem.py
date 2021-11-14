@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Union
+from typing import Union, Dict, Optional
 
 from constraints.convex_set_constraint import ConvexSetConstraints
 from utils.print_utils import *
@@ -16,7 +16,7 @@ class Problem:
                  hr_name: str = None,
                  x_dim: int = None,
                  lam_override: float = None,
-                 lam_override_by_method:dict = None):
+                 lam_override_by_method: dict = None):
 
         self._x0: Union[np.ndarray, float] = x0
         self.C = C
@@ -79,3 +79,6 @@ class Problem:
 
     def GetLambdaOverride(self):
         return self.lam_override
+
+    def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
+        pass
