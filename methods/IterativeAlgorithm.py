@@ -48,7 +48,7 @@ class IterativeAlgorithm:
         pass
 
     def setHistoryData(self, *, x: np.ndarray = None, y: np.ndarray = None,
-                       step_delta_norm: float = None, goal_func_value: float = None):
+                       step_delta_norm: float = None, goal_func_value: float = None, goal_func_from_average: float = None):
         if x is not None:
             self.history.x[self.iter] = x
 
@@ -64,6 +64,15 @@ class IterativeAlgorithm:
 
         if goal_func_value is not None:
             self.history.goal_func_value[self.iter] = goal_func_value
+
+        if goal_func_from_average is not None:
+            self.history.goal_func_from_average[self.iter] = goal_func_from_average
+
+            if self.iter == 3:
+                self.history.goal_func_from_average[2] = goal_func_from_average
+                self.history.goal_func_from_average[1] = goal_func_from_average
+                self.history.goal_func_from_average[0] = goal_func_from_average
+
 
     def doPostStep(self):
         pass

@@ -4,14 +4,18 @@ from typing import Union
 import numpy as np
 from scipy import linalg
 from problems.viproblem import VIProblem
-from methods.IterGradTypeMethod import IterGradTypeMethod
+from methods.IterGradTypeMethod import IterGradTypeMethod, ProjectionType
 
 
 class Tseng(IterGradTypeMethod):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
-                 min_iters: int = 0, max_iters=5000, hr_name: str = None):
-        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
+                 min_iters: int = 0, max_iters=5000,
+                 hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID):
+
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
+                         hr_name=hr_name, projection_type=projection_type)
+
         self.x = self.px = self.problem.x0.copy()
         self.y = np.zeros_like(self.x)
         self.D: float = 0
@@ -27,22 +31,35 @@ class Tseng(IterGradTypeMethod):
         Ax = self.problem.A(self.x)
         self.operator_count += 1
 
-        self.y = self.problem.Project(self.x - self.lam * Ax)
+        if self.projection_type == ProjectionType.BREGMAN:
+            self.y = self.problem.bregmanProject(self.x, -self.lam * Ax)
+        else:
+            self.y = self.problem.Project(self.x - self.lam * Ax)
+
         self.projections_count += 1
 
         self.cum_y += self.y
 
-        self.D = np.linalg.norm(self.y - self.x)
+        if self.projection_type == ProjectionType.BREGMAN:
+            self.D = np.linalg.norm(self.y - self.x, 1)
+        else:
+            self.D = np.linalg.norm(self.y - self.x)
 
         if self.D >= self.eps or self.iter < self.min_iters:
             self.px = self.x
-            self.x = self.y - self.lam * (self.problem.A(self.y) - Ax)
+
+            if self.projection_type == ProjectionType.BREGMAN:
+                self.x = np.exp(((np.log(self.y) + 1) - self.lam * (self.problem.A(self.y) - Ax))-1)
+            else:
+                self.x = self.y - self.lam * (self.problem.A(self.y) - Ax)
+
             self.operator_count += 1
 
     def doPostStep(self):
         val_for_gap = self.cum_y/(self.iter+1)
-        # val_for_gap = self.y
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(val_for_gap))
+        # t = self.problem.F(val_for_gap)
+        self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D,
+                            goal_func_value=self.problem.F(self.y), goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         return super(Tseng, self).isStopConditionMet() or self.D < self.eps

@@ -9,7 +9,7 @@ from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod
 
 
-class MalitskyTamBregman(MalitskyTam):
+class MalitskyTamBregman_NoNeed(MalitskyTam):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
                  min_iters: int = 0, max_iters=5000, hr_name: str = None):
@@ -24,6 +24,7 @@ class MalitskyTamBregman(MalitskyTam):
     def doStep(self):
         self.ppx = self.px
         self.px = self.x
+
         self.x = self.problem.bregmanProject(self.x, - (self.lam * self.Ax + self.lam * (self.Ax - self.Apx)))
 
         self.cum_x += self.x

@@ -14,13 +14,13 @@ from constraints.classic_simplex import ClassicSimplex
 from constraints.halfspace import HalfSpace
 from constraints.hyperplane import Hyperplane
 from constraints.l1_ball import L1Ball
+from methods.IterGradTypeMethod import ProjectionType
 from methods.algorithm_params import AlgorithmParams
 from methods.extrapol_from_past import ExtrapolationFromPast
 from methods.extrapol_from_past_adaptive import ExtrapolationFromPastAdapt
 from methods.korpele_mod import KorpelevichMod
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
-from methods.malitsky_tam_bregman import MalitskyTamBregman
 from methods.tseng import Tseng
 from methods.tseng_adaptive import TsengAdaptive
 from problems.harker_test import HarkerTest
@@ -461,19 +461,34 @@ tseng_adaptive = TsengAdaptive(problem,
 
 tseng = Tseng(problem,
               eps=params.eps, lam=params.lam,
-              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 (Tseng)")
+              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1")
+
+tseng_bregproj = Tseng(problem,
+              eps=params.eps, lam=params.lam_small,
+              min_iters=params.min_iters, max_iters=params.max_iters,
+                       hr_name="Alg. 1*", projection_type=ProjectionType.BREGMAN)
 
 extrapol_from_past = ExtrapolationFromPast(problem,
                                            y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
-                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 (EFP)")
+                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2")
+
+extrapol_from_past_bregproj = ExtrapolationFromPast(problem,
+                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam_small*(math.sqrt(2.)-1),
+                                           min_iters=params.min_iters, max_iters=params.max_iters,
+                                                    hr_name="Alg. 2*", projection_type=ProjectionType.BREGMAN)
 
 malitsky_tam = MalitskyTam(problem,
                            x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 3. (FRB)")
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3")
 
-malitsky_tam_bregproj = MalitskyTamBregman(problem,
-                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 4. (FRB-B)")
+malitsky_tam_bregproj = MalitskyTam(problem,
+                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_small/2.,
+                           min_iters=params.min_iters, max_iters=params.max_iters,
+                           hr_name="Alg. 3*", projection_type=ProjectionType.BREGMAN)
+
+# malitsky_tam_bregproj = MalitskyTamBregman(problem,
+#                            x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
+#                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 4. (FRB-B)")
 
 
 
@@ -493,10 +508,12 @@ extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
 algs_to_test = [
     # korpele,
     # korpele_adapt,
-    #malitsky_tam_adaptive,
+    # malitsky_tam_adaptive,
     tseng,
     extrapol_from_past,
     malitsky_tam,
+    tseng_bregproj,
+    extrapol_from_past_bregproj,
     malitsky_tam_bregproj,
 #    tseng_adaptive,
 #    extrapol_from_past_adaptive,
@@ -525,7 +542,7 @@ for alg in algs_to_test:
 
     if params.save_history:
         df = alg.history.toPandasDF()
-        df.to_excel(writer, sheet_name=alg.hr_name, index=False)
+        df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
     print('')
 
 if params.save_history:
@@ -555,6 +572,12 @@ grapher.plot_by_history(
     styles=params.styles, start_iter=params.plot_start_iter,
     x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
 )
+
+if params.x_limits is not None:
+    plt.ylim(params.x_limits)
+
+if params.y_limits is not None:
+    plt.ylim(params.y_limits)
 
 dpi = 300.
 

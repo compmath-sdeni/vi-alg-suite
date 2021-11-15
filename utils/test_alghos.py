@@ -108,6 +108,7 @@ class BasicAlgoTests:
               f"\nLast step: {alg_object.history.step_delta_norm[alg_object.history.iters_count - 1]}; "
               f"Exact error: {alg_object.history.real_error[alg_object.history.iters_count - 1]}; "
               f"Goal function: {alg_object.history.goal_func_value[alg_object.history.iters_count - 1]}; "
+              f"Goal function form avg: {alg_object.history.goal_func_from_average[alg_object.history.iters_count - 1]}; "
               f"Lambda: {alg_object.history.lam[alg_object.history.iters_count - 1]}; "
               )
 
@@ -116,14 +117,29 @@ class BasicAlgoTests:
 
         print_size = 5
 
+        cum_res:np.ndarray = None
+        try:
+            if alg_object.cum_x  is not None:
+                cum_res = alg_object.cum_x/alg_object.iter
+        except:
+            try:
+                if alg_object.cum_y is not None:
+                    cum_res = alg_object.cum_y / alg_object.iter
+            except:
+                pass
+
         if alg_object.x.shape[0] <= print_size * 2:
             print("Result: {0}".format(alg_object.x))
+            if cum_res is not None:
+                print("Result AVG: {0}".format(cum_res))
         else:
             print_len = int(alg_object.x.shape[0] / 2)
             if print_len > print_size:
                 print_len = print_size
 
             print("Result: {0} ... {1}\n".format(alg_object.x[:print_len], alg_object.x[-print_len:]))
+            if cum_res is not None:
+                print("Result AVG: {0} ... {1}\n".format(cum_res[:print_len], cum_res[-print_len:]))
 
         extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x)
         if extra_indicators:

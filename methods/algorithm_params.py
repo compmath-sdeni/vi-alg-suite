@@ -24,6 +24,8 @@ class AlgorithmParams:
                  y_axis_type: YAxisType = YAxisType.STEP_DELTA,
                  y_label: str = None,
                  x_label: str = None,
+                 x_limits: list = None,
+                 y_limits: list = None,
                  time_scale_divider: int = 1e+6,  # time is in nanoseconds - 1e+6 for ms, 1e+9 for sec.
                  styles: List[str] = None,
                  plot_start_iter: int = 2,
@@ -50,6 +52,8 @@ class AlgorithmParams:
         self.x_axis_type = x_axis_type
         self.y_label = y_label
         self.x_label = x_label
+        self.x_limits = x_limits
+        self.y_limits = y_limits
         self.time_scale_divider = time_scale_divider
         self.styles = styles
         self.show_plots = show_plots

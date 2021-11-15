@@ -17,6 +17,7 @@ class AlgHistFieldNames(Enum):
     LAM = 'lam',
     STEP_DELTA_NORM = 'step_delta_norm',
     GOAL_FUNC_VALUE = 'goal_func_value',
+    GOAL_FUNC_FROM_AVERAGE = 'goal_func_from_average',
     ITER_TIME_NS = 'iter_time_ns',
     REAL_ERROR = 'real_error',
     EXTRA_INDICATORS = 'extra_indicators'
@@ -41,6 +42,7 @@ class AlgHistory:
 
         self.step_delta_norm = np.ndarray(max_iters, dtype=float)
         self.goal_func_value = np.ndarray(max_iters, dtype=float)
+        self.goal_func_from_average = np.ndarray(max_iters, dtype=float)
 
         self.iter_time_ns = np.ndarray(max_iters, dtype=int)
         self.real_error = np.ndarray(max_iters, dtype=float)
@@ -63,6 +65,7 @@ class AlgHistory:
             AlgHistFieldNames.LAM: self.lam[:self.iters_count+1],
             AlgHistFieldNames.STEP_DELTA_NORM: self.step_delta_norm[:self.iters_count+1],
             AlgHistFieldNames.GOAL_FUNC_VALUE: self.goal_func_value[:self.iters_count+1],
+            AlgHistFieldNames.GOAL_FUNC_FROM_AVERAGE: self.goal_func_from_average[:self.iters_count + 1],
             AlgHistFieldNames.ITER_TIME_NS: self.iter_time_ns[:self.iters_count+1],
             AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count+1],
         }
@@ -92,6 +95,7 @@ class AlgHistory:
         np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.LAM)), self.lam)
         np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.STEP_DELTA_NORM)), self.step_delta_norm)
         np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.GOAL_FUNC_VALUE)), self.goal_func_value)
+        np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.GOAL_FUNC_FROM_AVERAGE)), self.goal_func_from_average)
         np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.ITER_TIME_NS)), self.iter_time_ns)
         np.save("{0}/{1}".format(dir, str(AlgHistFieldNames.REAL_ERROR)), self.real_error)
 
