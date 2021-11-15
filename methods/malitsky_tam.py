@@ -16,6 +16,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
         self.x = self.x1 = x1
+        self.cum_x = self.x
 
         self.Apx = self.problem.A(self.px)
         self.Ax = self.problem.A(self.x)
@@ -27,6 +28,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
         self.x = self.x1.copy()
+        self.cum_x += self.x
 
         self.D = 0
         self.D2 = 0
@@ -43,6 +45,8 @@ class MalitskyTam(IterGradTypeMethod):
         self.x = self.problem.Project(self.x - self.lam * self.Ax - self.lam * (self.Ax - self.Apx))
         self.projections_count += 1
 
+        self.cum_x += self.x
+
         self.Apx = self.Ax
         self.Ax = self.problem.A(self.x)
         self.operator_count += 1
@@ -51,7 +55,9 @@ class MalitskyTam(IterGradTypeMethod):
         self.D2 = np.linalg.norm(self.px - self.ppx)
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D + self.D2, goal_func_value=self.problem.F(self.x))
+        val_for_gap = self.cum_x / (self.iter + 1)
+        # val_for_gap = self.x
+        self.setHistoryData(x=self.x, step_delta_norm=self.D + self.D2, goal_func_value=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         return super(MalitskyTam, self).isStopConditionMet() or (self.D + self.D2 < self.eps)

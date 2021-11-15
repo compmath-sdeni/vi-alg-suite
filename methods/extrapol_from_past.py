@@ -11,9 +11,12 @@ class ExtrapolationFromPast(IterGradTypeMethod):
 
         self.x0 = self.problem.x0
         self.y0 = y0
+        self.y = self.y0
 
         self.x: np.ndarray = self.problem.x0
         self.Ay: np.ndarray = self.problem.A(self.y0)
+
+        self.cum_y = np.zeros_like(self.x)
 
         self.D: float = 0
         self.D2: float = 0
@@ -33,19 +36,23 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         return super().__iter__()
 
     def doStep(self):
-        y = self.problem.Project(self.x - self.lam * self.Ay)
-        self.Ay = self.problem.A(y)
+        self.y = self.problem.Project(self.x - self.lam * self.Ay)
+        self.cum_y += self.y
+
+        self.Ay = self.problem.A(self.y)
         px = self.x
         self.x = self.problem.Project(self.x - self.lam * self.Ay)
 
-        self.D = np.linalg.norm(px - y)
+        self.D = np.linalg.norm(px - self.y)
         self.D2 = np.linalg.norm(self.x - px)
 
         self.projections_count += 2
         self.operator_count += 1
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D + self.D2, goal_func_value=self.problem.F(self.x))
+        val_for_gap = self.cum_y / (self.iter + 1)
+        # val_for_gap = self.y
+        self.setHistoryData(x=self.x, step_delta_norm=self.D + self.D2, goal_func_value=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         return super().isStopConditionMet() or (self.D + self.D2 < self.eps)

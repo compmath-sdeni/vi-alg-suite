@@ -26,6 +26,8 @@ class MalitskyTamBregman(MalitskyTam):
         self.px = self.x
         self.x = self.problem.bregmanProject(self.x, - (self.lam * self.Ax + self.lam * (self.Ax - self.Apx)))
 
+        self.cum_x += self.x
+
         self.projections_count += 1
 
         self.Apx = self.Ax

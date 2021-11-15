@@ -455,21 +455,27 @@ problem = minmax_game_1.prepareProblem(algorithm_params=params)
 korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
 korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
 
-tseng = Tseng(problem,
-              eps=params.eps, lam=params.lam,
-              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3 (tseng)")
-
 tseng_adaptive = TsengAdaptive(problem,
                                eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4 (tseng-A)")
 
+tseng = Tseng(problem,
+              eps=params.eps, lam=params.lam,
+              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 (Tseng)")
+
+extrapol_from_past = ExtrapolationFromPast(problem,
+                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
+                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 (EFP)")
+
 malitsky_tam = MalitskyTam(problem,
-                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_medium,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 3. (MT)")
+                           x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 3. (FRB)")
 
 malitsky_tam_bregproj = MalitskyTamBregman(problem,
                            x1=params.x1.copy(), eps=params.eps, lam=params.lam_small,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 4. (MT+BP)")
+                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 4. (FRB-B)")
+
+
 
 malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             x1=params.x1.copy(), eps=params.eps,
@@ -477,9 +483,6 @@ malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                             tau=params.adaptive_tau_small,
                                             min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg 1. (MT-A)")
 
-extrapol_from_past = ExtrapolationFromPast(problem,
-                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam_small,
-                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="EFP")
 
 extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem,
                                                          y0=params.x1.copy(), eps=params.eps,
@@ -491,12 +494,12 @@ algs_to_test = [
     # korpele,
     # korpele_adapt,
     #malitsky_tam_adaptive,
+    tseng,
+    extrapol_from_past,
     malitsky_tam,
     malitsky_tam_bregproj,
-    #    tseng,
 #    tseng_adaptive,
 #    extrapol_from_past_adaptive,
-#    extrapol_from_past,
 ]
 # endregion
 

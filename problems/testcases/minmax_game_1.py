@@ -100,18 +100,18 @@ def generateRandomFloatDefiniteGame(m: int, n: int, *, a: float = -10, b: float 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # region Random problem nxm
-    # n = 50
-    # m = 50
-    # # P = np.random.randint(-3, 4, size=(m,n)).astype(float)
-    # # P = np.random.rand(m, n)
+    n = 13
+    m = 17
+    #P = np.random.randint(-5, 5, size=(m,n)).astype(float)
+    # P = np.random.rand(m, n)
     # P = np.random.normal(-10., 10., (m, n))
-    # real_solution = None
-    #
-    # #np.save('minmax_P_1000_symmetric_-3_3', P)
-    # #P = np.load('minmax_P_1000_symmetric_-3_3.npy')
-    #
-    # algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
-    # algorithm_params.x1 = algorithm_params.x0.copy()
+    real_solution = None
+
+    #np.save(f'minmax_P_{m}x{n}', P)
+    P = np.load(f'minmax_P_{m}x{n}.npy')
+
+    algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
+    algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
     # region Test problem one - 3x3
@@ -125,27 +125,29 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region Test random fully defined game with known solution
-    n = 200
-    m = 300
-    eq_row = 2
-    eq_col = n-3
-    game_val = 0
-
-    # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-50, b=50,
+    # n = 3
+    # m = 5
+    # n = 13
+    # m = 17
+    # eq_row = 3
+    # eq_col = n-2
+    # game_val = 0
+    #
+    # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-25, b=25,
     #                                                             game_value=game_val, eq_row=eq_row, eq_col=eq_col)
     # P = -A.transpose()
     # np.save(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
-
-    P = np.load(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
-
-    print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
-
-    real_solution = np.zeros(m + n)
-    real_solution[eq_row] = 1.
-    real_solution[m + eq_col] = 1.
-
-    algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
-    algorithm_params.x1 = algorithm_params.x0.copy()
+    #
+    # # P = np.load(f'matrix_game_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
+    #
+    # print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
+    #
+    # real_solution = np.zeros(m + n)
+    # real_solution[eq_row] = 1.
+    # real_solution[m + eq_col] = 1.
+    #
+    # algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
+    # algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
 
@@ -177,11 +179,13 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     #    print(real_solution)
 
     algorithm_params.eps = 1e-5
-    algorithm_params.max_iters = 1500
+    algorithm_params.max_iters = 5000
 
-    algorithm_params.lam = 0.9 / np.linalg.norm(P, 2)
+    algorithm_params.lam = 0.05  # 0.45 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.001 # 0.45 / np.linalg.norm(P, 2)
-    algorithm_params.lam_small = 0.1
+    algorithm_params.lam_small = 0.2  # 0.5/np.linalg.norm(P, inf)
+
+    algorithm_params.min_iters = 4500
 
     algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = 1.0
@@ -193,21 +197,21 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    # algorithm_params.y_label = "duality gap"
+    algorithm_params.y_label = "Duality gap"
 
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
 
-    algorithm_params.plot_start_iter = 0
+    algorithm_params.plot_start_iter = 3
 
     return MinMaxGame(
         P=P, C=Rn(n + m),
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ min max (Px,y) ' +
-                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
-                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" +
-                f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
-                f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" +
+#                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
+#                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" +
+#                f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
+#                f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'
     )

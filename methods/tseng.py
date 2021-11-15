@@ -13,7 +13,9 @@ class Tseng(IterGradTypeMethod):
                  min_iters: int = 0, max_iters=5000, hr_name: str = None):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
         self.x = self.px = self.problem.x0.copy()
+        self.y = np.zeros_like(self.x)
         self.D: float = 0
+        self.cum_y = np.zeros_like(self.x)
 
     def __iter__(self):
         self.x = self.problem.x0.copy()
@@ -25,18 +27,22 @@ class Tseng(IterGradTypeMethod):
         Ax = self.problem.A(self.x)
         self.operator_count += 1
 
-        y = self.problem.Project(self.x - self.lam * Ax)
+        self.y = self.problem.Project(self.x - self.lam * Ax)
         self.projections_count += 1
 
-        self.D = np.linalg.norm(y - self.x)
+        self.cum_y += self.y
+
+        self.D = np.linalg.norm(self.y - self.x)
 
         if self.D >= self.eps or self.iter < self.min_iters:
             self.px = self.x
-            self.x = y - self.lam * (self.problem.A(y) - Ax)
+            self.x = self.y - self.lam * (self.problem.A(self.y) - Ax)
             self.operator_count += 1
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.x))
+        val_for_gap = self.cum_y/(self.iter+1)
+        # val_for_gap = self.y
+        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         return super(Tseng, self).isStopConditionMet() or self.D < self.eps
