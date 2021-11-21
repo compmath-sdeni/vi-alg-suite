@@ -1,1 +1,3 @@
 /storage/
+/*.npy
+/test*.txt
