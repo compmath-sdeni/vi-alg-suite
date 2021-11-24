@@ -1,5 +1,5 @@
 import os
-from typing import Union, Dict, Optional, Callable
+from typing import Union, Dict, Optional, Callable, List
 
 import numpy as np
 
@@ -14,7 +14,7 @@ class TrafficEquilibrium(VIProblem):
     def __init__(self, *,
                  Gf: Callable[[np.ndarray], np.ndarray],  # Cost function for paths, dependent on traffic
                  d: np.ndarray,  # demands for source-destination pairs
-                 W: np.ndarray,  # paths to source-destination pairs incidence matrix
+                 W: List[np.ndarray],  # paths to demands incidence matrix
                  x0: Union[np.ndarray] = None,
                  C: ConvexSetConstraints,
                  hr_name: str = None,
@@ -29,7 +29,7 @@ class TrafficEquilibrium(VIProblem):
         self.d = d
         self.W = W
 
-        self.n: int = W.shape[0]  # paths count
+        self.n: int = len(W)  # paths count
 
     def F(self, x: np.ndarray) -> float:
         # GAP
@@ -57,7 +57,8 @@ class TrafficEquilibrium(VIProblem):
     def saveToDir(self, *, path_to_save: str = None):
         path_to_save = super().saveToDir(path_to_save=path_to_save)
 
-        np.savetxt("{0}/{1}".format(path_to_save, 'W.txt'), self.W, delimiter=',', newline="],\n[")
+        # TODO!
+        # np.savetxt("{0}/{1}".format(path_to_save, 'W.txt'), self.W, delimiter=',', newline="],\n[")
         np.savetxt("{0}/{1}".format(path_to_save, 'd.txt'), self.d, delimiter=',', newline="],\n[")
 
         if self.xtest is not None:
@@ -69,7 +70,8 @@ class TrafficEquilibrium(VIProblem):
         return path_to_save
 
     def loadFromFile(self, path: str):
-        self.W = np.loadtxt("{0}/{1}".format(path, 'W.txt'))
+        # TODO!
+        # self.W = np.loadtxt("{0}/{1}".format(path, 'W.txt'))
         self.d = np.loadtxt("{0}/{1}".format(path, 'd.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
