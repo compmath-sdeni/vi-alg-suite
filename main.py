@@ -178,8 +178,9 @@ sys.stdout = captured_io
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
+# sys.stdout = sys.__stdout__
 problem = load_file_sample.prepareProblem(algorithm_params=params)
-
+# exit(0)
 # endregion
 
 

@@ -4,46 +4,92 @@ from constraints.allspace import Rn
 from methods.algorithm_params import AlgorithmParams
 from problems.traffic_equilibrium import TrafficEquilibrium
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
+from problems.testcases.transport.transportation_network import TransportationNetwork
+from matplotlib import pyplot as plt
 
 
-def prepareProblem(*,  algorithm_params: AlgorithmParams = AlgorithmParams()):
-    n = 3
-    W = [
-        np.array([0, 1, 2])
-    ]
+def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
+    tnet = TransportationNetwork(
+        edges_list=[
+            (1, 3, {'frf': 0.00000001, 'k': 1000000000., 'cap': 1., 'pow': 1.}),
+            (1, 4, {'frf': 50., 'k': 0.02, 'cap': 1., 'pow': 1.}),
+            (3, 2, {'frf': 50., 'k': 0.02, 'cap': 1., 'pow': 1.}),
+            (3, 4, {'frf': 10., 'k': 0.1, 'cap': 1., 'pow': 1.}),
+            (4, 2, {'frf': 0.00000001, 'k': 1000000000., 'cap': 1., 'pow': 1.}),
+        ],
+        demand=[(1, 2, 6.)]
+    )
+
+    tnet.calc_paths()
+    tnet.show()
+
+    # tnet.draw()
+    # plt.show()
+
+    d = tnet.get_demands_vector()
+    print("Demands: ")
+    print(d)
+
+    Q: np.ndarray = tnet.Q
+    print("Edges to paths incidence: ")
+    print(Q)
+
+    Gf = tnet.get_cost_function()
+
+    W = tnet.get_paths_to_demands_incidence()
+    print("Path to demands:")
+    print(W)
+
+    real_solution = np.array([2., 2., 2.])
+
+    print(f"Cost from real solution (from {real_solution})")
+    print(Gf(real_solution))
+
+    algorithm_params.x0 = np.array([6., 0., 0.])
+    algorithm_params.x1 = algorithm_params.x0.copy()
+
+
+    # region Braess example - hardcoded
+    # n = 3
+
+    # paths to demands incidence matrix
+    # Have a row for each demand (source-destination pair)
+    # And the row contains vector of path indices which should satisfy corresponding demand
+    # W = [
+    #     np.array([0, 1, 2])
+    # ]
 
     # edges to paths incidence matrix
-    Q = np.array([
-        [1, 0, 1],
-        [0, 1, 0],
-        [0, 1, 1],
-        [1, 0, 0],
-        [0, 0, 1]
-    ], dtype=float)
-
+    # Q = np.array([
+    #     [1, 0, 1],
+    #     [0, 1, 0],
+    #     [0, 1, 1],
+    #     [1, 0, 0],
+    #     [0, 0, 1]
+    # ], dtype=float)
 
     # affine edges cost function - cost(y) = Ay+b
-    A = np.array([
-        [10, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0],
-        [0, 0, 10, 0, 0],
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 1],
-    ], dtype=float)
-    b = np.array([0, 50, 0, 50, 10])
+    # A = np.array([
+    #     [10, 0, 0, 0, 0],
+    #     [0, 1, 0, 0, 0],
+    #     [0, 0, 10, 0, 0],
+    #     [0, 0, 0, 1, 0],
+    #     [0, 0, 0, 0, 1],
+    # ], dtype=float)
+    # b = np.array([0, 50, 0, 50, 10])
 
     # Affine cost function - with edges <-> paths relation using incidence matrix
     # 1. get edges flow by paths flow;
     # 2. Calculate edges cost by affine cost function;
     # 3. Transform edges cost to paths cost
-    Ge = lambda x: Q.T @ (A @ (Q @ x) + b)
+    # Ge = lambda x: Q.T @ (A @ (Q @ x) + b)
 
-    d = np.array([6.])
+    # d = np.array([6.])
 
-    real_solution = np.array([2., 2., 2.])
-
-    algorithm_params.x0 = np.array([0., 0., 6.])
-    algorithm_params.x1 = algorithm_params.x0.copy()
+    # real_solution = np.array([2., 2., 2.])
+    #
+    # algorithm_params.x0 = np.array([0., 0., 6.])
+    # algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
     algorithm_params.eps = 1e-5
@@ -72,7 +118,7 @@ def prepareProblem(*,  algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.plot_start_iter = 3
 
     return TrafficEquilibrium(
-        Gf=Ge, d=d, W=W, C=Rn(n),
+        Gf=Gf, d=d, W=W, C=Rn(len(W)),
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ traffic equilibrium ' +
