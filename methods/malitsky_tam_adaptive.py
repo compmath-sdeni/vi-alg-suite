@@ -1,22 +1,32 @@
 import numpy as np
+from numpy import inf
 
-from methods.IterGradTypeMethod import IterGradTypeMethod
+from methods.IterGradTypeMethod import IterGradTypeMethod, ProjectionType
 from problems.viproblem import VIProblem
 
 
 class MalitskyTamAdaptive(IterGradTypeMethod):
 
-    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
-                 x1: np.ndarray, lam1: float = 0.1, tau: float = 0.25,
-                 min_iters: int = 0, max_iters=5000, hr_name: str = None):
-        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters, hr_name=hr_name)
+    def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
+                 min_iters: int = 0, max_iters=5000, hr_name: str = None,
+                 projection_type: ProjectionType = ProjectionType.EUCLID,
+                 lam1: float = 0.1, tau: float = 0.25):
+        super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
+                         hr_name=hr_name, projection_type=projection_type)
 
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
-        self.x1 = x1.copy()
+        self.x = x1.copy()
+        self.x1 = self.x.copy()
 
-        self.Ax = None
-        self.Apx = None
+        self.cum_x = np.zeros_like(self.x)
+
+        self.Apx = self.problem.A(self.px)
+        self.Ax = self.problem.A(self.x)
+
+        self.D: float = 0.
+        self.D_1: float = 0.
+
         self.delta_Ax = None
 
         self.p_lam = self.lam0 = lam
@@ -24,31 +34,38 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
 
         self.tau = tau
 
-        self.D = 0
-        self.D_1 = 0
-
     def __iter__(self):
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
         self.x = self.x1.copy()
-
-        self.p_lam = self.lam0
-        self.lam = self.lam1
-
-        self.Apx = self.problem.A(self.px)
-        self.Ax = self.problem.A(self.x)
-        self.delta_Ax = self.Ax - self.Apx
+        # self.cum_x = self.x
 
         self.D = np.linalg.norm(self.x - self.px)
         self.D_1 = 0
+
+        self.Apx = self.problem.A(self.px)
+        self.Ax = self.problem.A(self.x)
+        self.operator_count += 2
+
+        self.delta_Ax = self.Ax - self.Apx
+
+        self.p_lam = self.lam0
+        self.lam = self.lam1
 
         return super().__iter__()
 
     def doStep(self):
         self.ppx = self.px
         self.px = self.x.copy()
-        self.x = self.problem.Project(self.x - self.lam * self.Ax - self.p_lam * self.delta_Ax)
+
+        if self.projection_type == ProjectionType.BREGMAN:
+            self.x = self.problem.bregmanProject(self.x, - self.lam * self.Ax - self.p_lam * self.delta_Ax)
+        else:
+            self.x = self.problem.Project(self.x - self.lam * self.Ax - self.p_lam * self.delta_Ax)
+
         self.projections_count += 1
+
+        self.cum_x += self.x
 
         self.Apx = self.Ax
         self.Ax = self.problem.A(self.x)
@@ -56,23 +73,33 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
 
         self.operator_count += 1
 
-        self.D_1 = self.D
-        self.D = np.linalg.norm(self.x - self.px)
+        if self.projection_type == ProjectionType.BREGMAN:
+            self.D_1 = self.D
+            self.D = np.linalg.norm(self.x - self.px, 1)
+        else:
+            self.D_1 = self.D
+            self.D = np.linalg.norm(self.x - self.px, 2)
 
-        if self.D_1 > self.zero_delta and self.D > self.zero_delta:
+        if self.D_1 + self.D > self.zero_delta:
             self.p_lam = self.lam
 
-            nr = np.linalg.norm(self.delta_Ax)
+            if self.projection_type == ProjectionType.BREGMAN:
+                nr = np.linalg.norm(self.delta_Ax, inf)
+            else:
+                nr = np.linalg.norm(self.delta_Ax, 2)
+
             if nr > self.zero_delta:
                 t = self.tau * self.D / nr
                 if self.lam >= t:
                     self.lam = t
 
     def doPostStep(self):
-        self.setHistoryData(x=self.x, step_delta_norm=max(self.D, self.D_1), goal_func_value=self.problem.F(self.x))
+        val_for_gap = self.cum_x / (self.iter + 1)
+        self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D + self.D_1,
+                            goal_func_value=self.problem.F(self.x), goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
-        return super(MalitskyTamAdaptive, self).isStopConditionMet() or (self.D < self.eps and self.D_1 < self.eps)
+        return super(MalitskyTamAdaptive, self).isStopConditionMet() or (self.D + self.D_1 < self.eps)
 
     def __next__(self):
         return super(MalitskyTamAdaptive, self).__next__()

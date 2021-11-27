@@ -65,7 +65,7 @@ class MinMaxGame(VIProblem):
         return np.concatenate((p1, p2))
 
     def bregmanProject(self, x: np.ndarray, a: np.ndarray) -> np.ndarray:
-        res = np.empty_like(x)
+        res = np.empty_like(x, dtype=float)
 
         t = x[:self.m] * np.exp(a[:self.m])
         res[:self.m] = t / t.sum(0, keepdims=True)
