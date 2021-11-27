@@ -27,7 +27,7 @@ class AlgHistFieldNames(Enum):
 
 
 class AlgHistory:
-    def __init__(self, dim: int, max_iters: int = 10000):
+    def __init__(self, dim: int, max_iters: int = 21000):
         self.alg_name = None
         self.alg_class = None
 

@@ -178,9 +178,12 @@ sys.stdout = captured_io
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
-# sys.stdout = sys.__stdout__
+
 problem = load_file_sample.prepareProblem(algorithm_params=params)
-# exit(0)
+sys.stdout = sys.__stdout__
+print(captured_io.getvalue())
+sys.stdout = captured_io
+exit(0)
 # endregion
 
 
@@ -516,9 +519,9 @@ algs_to_test = [
     # korpele,
     # korpele_adapt,
     # malitsky_tam_adaptive,
-    tseng,
+    # tseng,
     # extrapol_from_past,
-    # malitsky_tam,
+    malitsky_tam,
     # tseng_bregproj,
     # extrapol_from_past_bregproj,
     # malitsky_tam_bregproj,
@@ -551,6 +554,8 @@ for alg in algs_to_test:
         df = alg.history.toPandasDF()
         df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
     print('')
+
+    np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count-1])
 
 if params.save_history:
     writer.save()
