@@ -148,12 +148,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     n = 50
 
     # P = np.random.randint(1, 100, size=(m, n)).astype(float)
-    P = np.random.rand(m, n)
+    # P = (np.random.rand(m, n)-0.5) * 5
     #P = np.random.normal(-5., 20., (m, n))
     real_solution = None
 
-    np.save(f'minmax_P_{m}x{n}', P)
-    # P = np.load(f'minmax_P_{m}x{n}.npy')
+    # np.save(f'minmax_P_{m}x{n}', P)
+    P = np.load(f'minmax_P_{m}x{n}.npy')
 
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / m for i in range(m)])))
     # algorithm_params.x0 = np.array([1., 0., 0., 0., 0., 1., 0., 0., 0., 0.])
@@ -236,11 +236,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.min_iters = 3
 
-    algorithm_params.start_adaptive_lam = 1.
-    algorithm_params.start_adaptive_lam1 = 1.
+    algorithm_params.start_adaptive_lam = algorithm_params.lam * 2.
+    algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.3
-    algorithm_params.adaptive_tau_small = 0.2
+    algorithm_params.adaptive_tau = 0.5 * 0.5
+    algorithm_params.adaptive_tau_small = 0.33 * 0.5
 
     # real_solution = np.array([0.0 for i in range(N)])
 

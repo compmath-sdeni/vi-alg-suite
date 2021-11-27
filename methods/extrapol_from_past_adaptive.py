@@ -73,17 +73,17 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.projections_count += 2
         self.operator_count += 1
 
-        if self.D + self.D2 >= self.eps:
+        if self.D + self.D2 >= self.zero_delta:
             if self.projection_type.BREGMAN:
-                delta_A = np.linalg.norm(pAy - self.Ay, inf)
+                delta_A = np.linalg.norm(self.Ay - pAy, inf)
             else:
-                delta_A = np.linalg.norm(pAy - self.Ay)
+                delta_A = np.linalg.norm(self.Ay - pAy)
 
             if delta_A > self.zero_delta:
-                if self.projection_type.BREGMAN:
-                    difnorm = np.linalg.norm(py - self.y, 1)
+                if self.projection_type == ProjectionType.BREGMAN:
+                    difnorm = np.linalg.norm(self.y - py, 1)
                 else:
-                    difnorm = np.linalg.norm(py - self.y)
+                    difnorm = np.linalg.norm(self.y - py)
 
                 t = self.tau * difnorm / delta_A
                 if self.lam > t:
