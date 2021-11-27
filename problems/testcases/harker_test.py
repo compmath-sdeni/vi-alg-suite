@@ -12,7 +12,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     n = 1000
 
     # algorithm_params.x0 = np.array([10 if i%2 == 0 else -10 for i in range(n)])
-    algorithm_params.x0 = np.array([1 for i in range(n)])
+    algorithm_params.x0 = np.array([1. for i in range(n)])
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     real_solution = np.array([0.0 for i in range(n)])

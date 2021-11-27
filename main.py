@@ -31,7 +31,7 @@ from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000
+    sle_saddle_regression_100_100000, minmax_game_1
 
 from problems.testcases.transport import pigu_sample, braess_sample, load_file_sample
 
@@ -165,10 +165,10 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-#problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
-#problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
-#problem = harker_test.prepareProblem(algorithm_params=params)
+# problem = harker_test.prepareProblem(algorithm_params=params)
 # problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
@@ -179,11 +179,11 @@ sys.stdout = captured_io
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
 
-problem = load_file_sample.prepareProblem(algorithm_params=params)
-sys.stdout = sys.__stdout__
-print(captured_io.getvalue())
-sys.stdout = captured_io
-exit(0)
+# problem = load_file_sample.prepareProblem(algorithm_params=params)
+# sys.stdout = sys.__stdout__
+# print(captured_io.getvalue())
+# sys.stdout = captured_io
+# exit(0)
 # endregion
 
 
