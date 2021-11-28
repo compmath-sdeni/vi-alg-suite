@@ -3,13 +3,15 @@ from typing import Union, Dict
 
 import numpy as np
 
+from methods.algorithm_params import StopCondition
 from problems.viproblem import VIProblem
 from utils.alg_history import AlgHistory
 
 
 class IterativeAlgorithm:
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
-                 min_iters: int = 0, max_iters: int = 5000, hr_name: str = None):
+                 min_iters: int = 0, max_iters: int = 5000, hr_name: str = None,
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE):
         self.iter: int = 0
         self.projections_count: int = 0
         self.operator_count: int = 0
@@ -19,6 +21,7 @@ class IterativeAlgorithm:
         self.iterEndTime = 0
         self.max_iters = max_iters
         self.zero_delta = 1e-20
+        self.stop_condition = stop_condition
 
         self.x: Union[np.ndarray, float] = self.problem.x0.copy()
 
@@ -68,10 +71,10 @@ class IterativeAlgorithm:
         if goal_func_from_average is not None:
             self.history.goal_func_from_average[self.iter] = goal_func_from_average
 
-            if self.iter == 3:
-                self.history.goal_func_from_average[2] = goal_func_from_average
-                self.history.goal_func_from_average[1] = goal_func_from_average
-                self.history.goal_func_from_average[0] = goal_func_from_average
+            # if self.iter == 3:
+            #     self.history.goal_func_from_average[2] = goal_func_from_average
+            #     self.history.goal_func_from_average[1] = goal_func_from_average
+            #     self.history.goal_func_from_average[0] = goal_func_from_average
 
 
     def doPostStep(self):
@@ -110,7 +113,7 @@ class IterativeAlgorithm:
             self.history.projections_count = self.projections_count
             self.history.operator_count = self.operator_count
 
-            self.history.iters_count = self.iter
+            self.history.iters_count = self.iter + 1
             self.history.iter_time_ns[self.iter] = (finish - start) + (
             self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
             self.history.lam[self.iter] = self.lam

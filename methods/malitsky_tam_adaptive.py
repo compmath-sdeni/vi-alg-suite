@@ -2,6 +2,7 @@ import numpy as np
 from numpy import inf
 
 from methods.IterGradTypeMethod import IterGradTypeMethod, ProjectionType
+from methods.algorithm_params import StopCondition
 from problems.viproblem import VIProblem
 
 
@@ -10,9 +11,9 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
                  min_iters: int = 0, max_iters=5000, hr_name: str = None,
                  projection_type: ProjectionType = ProjectionType.EUCLID,
-                 lam1: float = 0.1, tau: float = 0.25):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float = 0.25):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
 
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
@@ -38,7 +39,9 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
         self.x = self.x1.copy()
-        # self.cum_x = self.x
+
+        # self.cum_x = self.x # start average from x1
+        self.cum_x = np.zeros_like(self.x)  # start average from x2
 
         self.D = np.linalg.norm(self.x - self.px)
         self.D_1 = 0
@@ -94,12 +97,28 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
                     self.lam = t
 
     def doPostStep(self):
-        val_for_gap = self.cum_x / (self.iter + 1)
+        if self.iter > 0:
+            val_for_gap = self.cum_x / self.iter
+        else:
+            val_for_gap = self.px
+
         self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D + self.D_1,
                             goal_func_value=self.problem.F(self.x), goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
-        return super(MalitskyTamAdaptive, self).isStopConditionMet() or (self.D + self.D_1 < self.eps)
+        stop_condition_met: bool = False
+        if self.stop_condition == StopCondition.STEP_SIZE:
+            stop_condition_met = (self.D + self.D_1 < self.eps)
+        elif self.stop_condition == StopCondition.GAP:
+            if self.iter > 0:
+                val_for_gap = self.cum_x / self.iter
+            else:
+                val_for_gap = self.px
+            stop_condition_met = (self.problem.F(val_for_gap) < self.eps)
+        elif self.stop_condition == StopCondition.EXACT_SOL_DIST:
+            stop_condition_met = (np.linalg.norm(self.x - self.problem.xtest) < self.eps)
+
+        return super(MalitskyTamAdaptive, self).isStopConditionMet() or stop_condition_met
 
     def __next__(self):
         return super(MalitskyTamAdaptive, self).__next__()

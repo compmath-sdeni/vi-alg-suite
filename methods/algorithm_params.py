@@ -1,9 +1,16 @@
 import os
 from typing import List
+from enum import Enum, unique
 
 import numpy as np
 
 from utils.graph.alg_stat_grapher import XAxisType, YAxisType
+
+@unique
+class StopCondition(Enum):
+    STEP_SIZE = 0,
+    GAP = 1,
+    EXACT_SOL_DIST = 2
 
 
 class AlgorithmParams:
@@ -30,7 +37,10 @@ class AlgorithmParams:
                  styles: List[str] = None,
                  plot_start_iter: int = 2,
                  show_plots: bool = True,
-                 save_history: bool = True
+                 save_history: bool = True,
+                 test_time: bool = False,
+                 test_time_count: int = 10,
+                 stop_by: StopCondition = StopCondition.STEP_SIZE
                  ):
         self.eps = eps
 
@@ -60,6 +70,11 @@ class AlgorithmParams:
         self.plot_start_iter = plot_start_iter
         self.save_history = save_history
 
+        self.stop_by = stop_by
+
+        self.test_time = test_time
+        self.test_time_count = test_time_count
+
     def saveToDir(self, path: str):
         os.makedirs(path, exist_ok=True)
 
@@ -86,4 +101,7 @@ class AlgorithmParams:
                 f"plot_start_iter:{self.plot_start_iter}\n",
                 f"show_plots:{self.show_plots}\n",
                 f"save_history:{self.save_history}\n",
+                f"stop_by:{self.stop_by}\n",
+                f"test_time:{self.test_time}\n",
+                f"test_time_count:{self.test_time_count}\n",
             ])

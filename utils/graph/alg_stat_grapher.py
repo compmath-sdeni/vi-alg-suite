@@ -11,7 +11,7 @@ class XAxisType(Enum):
     ITERATION = 1
     TIME = 2
 
-
+@unique
 class YAxisType(Enum):
     REAL_ERROR = 1,
     GOAL_FUNCTION = 2,
