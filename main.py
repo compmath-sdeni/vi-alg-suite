@@ -50,7 +50,7 @@ params = AlgorithmParams(
     min_iters=10,
     max_iters=2000,
     lam=0.01,
-    lam_small=0.005,
+    lam_KL=0.005,
     start_adaptive_lam=0.5,
     start_adaptive_lam1=0.5,
     adaptive_tau=0.75,
@@ -462,84 +462,89 @@ problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # region Init all algs
 
-korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
-korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
+def initAlgs():
+    korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
+    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
 
-tseng_adaptive = TsengAdaptive(problem,
-                               eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4 (tseng-A)")
+    tseng_adaptive = TsengAdaptive(problem,
+                                   eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 4 (tseng-A)")
 
-tseng = Tseng(problem,
-              eps=params.eps, lam=params.lam,
-              min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng")
+    tseng = Tseng(problem,
+                  eps=params.eps, lam=params.lam,
+                  min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng")
 
-tseng_bregproj = Tseng(problem,
-              eps=params.eps, lam=params.lam_small,
-              min_iters=params.min_iters, max_iters=params.max_iters,
-                       hr_name="Tseng-BP", projection_type=ProjectionType.BREGMAN)
-
-extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
-                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
-                                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="ALG. 1 (EFP)")
-
-extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
-                                           y0=params.x1.copy(), eps=params.eps, lam=params.lam_small*(math.sqrt(2.)-1),
-                                           min_iters=params.min_iters, max_iters=params.max_iters,
-                                                    hr_name="ALG. 1 - KL (EFP-KL)", projection_type=ProjectionType.BREGMAN)
-
-extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
-                                                         y0=params.x1.copy(), eps=params.eps,
-                                                         lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
-                                                         min_iters=params.min_iters, max_iters=params.max_iters,
-                                                         hr_name="Alg. 1 - E (EFP-A)")
-
-extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
-                                                         y0=params.x1.copy(), eps=params.eps,
-                                                         lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
-                                                         min_iters=params.min_iters, max_iters=params.max_iters,
-                                                         hr_name="Alg. 1 - KL (EFP-A-KL)", projection_type=ProjectionType.BREGMAN)
-
-
-malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
-                           x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                           min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 (MT)")
-
-malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
-                           x1=params.x1.copy(), eps=params.eps, lam=params.lam_small/2.,
+    tseng_bregproj = Tseng(problem,
+                           eps=params.eps, lam=params.lam_KL,
                            min_iters=params.min_iters, max_iters=params.max_iters,
-                           hr_name="Alg.2 - KL (MT-KL)", projection_type=ProjectionType.BREGMAN)
+                           hr_name="Tseng-BP", projection_type=ProjectionType.BREGMAN)
 
-malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
-                                            x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
-                                            lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
-                                            tau=params.adaptive_tau,
-                                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E (MT-A)")
+    extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
+                                               y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
+                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 - E (S)")
 
-malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
-                                            x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
-                                            lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
-                                            tau=params.adaptive_tau,
-                                            min_iters=params.min_iters, max_iters=params.max_iters,
-                                            hr_name="Alg. 2 - KL (MT-A-KL)", projection_type=ProjectionType.BREGMAN)
+    extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
+                                                        y0=params.x1.copy(), eps=params.eps, lam=params.lam_KL * (math.sqrt(2.) - 1),
+                                                        min_iters=params.min_iters, max_iters=params.max_iters,
+                                                        hr_name="Alg. 1 - KL (S)", projection_type=ProjectionType.BREGMAN)
+
+    extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Alg. 1 - E")
+
+    extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Alg. 1 - KL", projection_type=ProjectionType.BREGMAN)
+
+
+    malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
+                               x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E (S)")
+
+    malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
+                                        x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
+                                        min_iters=params.min_iters, max_iters=params.max_iters,
+                                        hr_name="Alg. 2 - KL (S)", projection_type=ProjectionType.BREGMAN)
+
+    malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
+                                                x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
+                                                lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
+                                                tau=params.adaptive_tau,
+                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
+
+    malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
+                                                x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
+                                                lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
+                                                tau=params.adaptive_tau,
+                                                min_iters=params.min_iters, max_iters=params.max_iters,
+                                                hr_name="Alg. 2 - KL", projection_type=ProjectionType.BREGMAN)
 
 
 
-algs_to_test = [
-    # korpele,
-    # korpele_adapt,
-    # malitsky_tam_adaptive,
-#    tseng,
-#    tseng_bregproj,
-    # tseng_adaptive,
-    extrapol_from_past,
-    extrapol_from_past_bregproj,
-    extrapol_from_past_adaptive,
-    extrapol_from_past_adaptive_bregproj,
-    malitsky_tam,
-    malitsky_tam_bregproj,
-    malitsky_tam_adaptive,
-    malitsky_tam_adaptive_bregproj
-]
+    algs_to_test = [
+        # korpele,
+        # korpele_adapt,
+        # malitsky_tam_adaptive,
+    #    tseng,
+    #    tseng_bregproj,
+#        tseng_adaptive,
+        extrapol_from_past,
+        extrapol_from_past_bregproj,
+        extrapol_from_past_adaptive,
+        extrapol_from_past_adaptive_bregproj,
+        malitsky_tam,
+        malitsky_tam_bregproj,
+        malitsky_tam_adaptive,
+        malitsky_tam_adaptive_bregproj
+    ]
+
+    return algs_to_test
+
+algs_to_test = initAlgs()
 # endregion
 
 # region Run all algs and save data and results
@@ -550,6 +555,9 @@ os.makedirs(saved_history_dir, exist_ok=True)
 
 problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
 params.saveToDir(os.path.join(saved_history_dir, "params"))
+print(f"eps: {params.eps}; tau1: {params.adaptive_tau}; tau2: {params.adaptive_tau_small}; "
+      f"start_lam: {params.start_adaptive_lam}; start_lam1: {params.start_adaptive_lam1}; "
+      f"lam: {params.lam}; lam_KL: {params.lam_KL}")
 
 if params.save_history:
     writer = pd.ExcelWriter(
@@ -563,12 +571,14 @@ for alg in algs_to_test:
         for i in range(params.test_time_count):
             # alg.history = AlgHistory(alg.history.x.shape[1])
             alg.do()
-            if alg.isStopConditionMet():
+            if alg.isStopConditionMet() and alg.iter < params.max_iters:
                 total_time += alg.history.iter_time_ns[alg.history.iters_count - 1]
             else:
                 total_time = math.inf
             print(f"{i+1}: {alg.hr_name} time: {alg.history.iter_time_ns[alg.history.iters_count - 1]/params.time_scale_divider}s.")
-        print(f"{alg.hr_name} average time from {params.test_time_count} repeats: {float(total_time)/params.test_time_count/params.time_scale_divider}s.")
+
+        BasicAlgoTests.PrintAlgRunStats(alg)
+        # print(f"{alg.hr_name} average time from {params.test_time_count} repeats: {float(total_time)/params.test_time_count/params.time_scale_divider}s.")
 
     else:
         alg.do()

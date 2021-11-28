@@ -144,11 +144,11 @@ def generateRandomFloatDefiniteGameTwoStrat(m: int, n: int, *, a: float = -10, b
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # region Random problem nxm
-    m = 100
+    m = 150
     n = 100
 
-    # P = np.random.randint(1, 100, size=(m, n)).astype(float)
-    # P = (np.random.rand(m, n)-0.5) * 10.
+    # P = np.random.randint(-10, 10, size=(m, n)).astype(float)
+    # P = (np.random.rand(m, n)) * 10. - 5.
     #P = np.random.normal(-5., 20., (m, n))
     real_solution = None
 
@@ -226,35 +226,36 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     #    real_solution = np.concatenate((np.array(eqs[0]), np.array(eqs[1])))
     #    print(real_solution)
 
-    algorithm_params.test_time = True
+    algorithm_params.test_time = False
     algorithm_params.test_time_count = 1
     algorithm_params.stop_by = StopCondition.GAP
 
     algorithm_params.save_history = False
-    algorithm_params.show_plots = False
+    algorithm_params.show_plots = True
 
     algorithm_params.eps = 1e-2
-    algorithm_params.max_iters = 10000
+    algorithm_params.max_iters = 2500
 
     algorithm_params.lam = 0.9 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.0  # 0.45 / np.linalg.norm(P, 2)
     # for Bregman variants
-    algorithm_params.lam_small = 1./np.max(np.abs(P))  #  5.9 / (max(abs(np.max(P)), abs(np.min(P))))
+    algorithm_params.lam_KL = 1. / np.max(np.abs(P))  #  5.9 / (max(abs(np.max(P)), abs(np.min(P))))
 
-    algorithm_params.min_iters = 2
+    algorithm_params.min_iters = 2500
 
-    algorithm_params.start_adaptive_lam = algorithm_params.lam * 4.
+    algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5 * 0.75
-    algorithm_params.adaptive_tau_small = 0.3 * 0.75
+    algorithm_params.adaptive_tau = 0.5 * 0.5
+    algorithm_params.adaptive_tau_small = 0.33 * 0.5
 
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
-    # algorithm_params.y_label = "Gap"
+    algorithm_params.y_label = "Gap"
     # algorithm_params.x_label = "sec."
+    algorithm_params.y_limits = [1e-3,10]
 
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
@@ -267,7 +268,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         x_test=real_solution,
         hr_name='$ min \ max (Px,y) ' +
 #                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
-#                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" +
+#                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +
                 #                f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
                 #                f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'

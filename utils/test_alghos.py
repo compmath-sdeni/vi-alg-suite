@@ -128,6 +128,7 @@ class BasicAlgoTests:
             except:
                 pass
 
+        round_decimals = 5
         if alg_object.x.shape[0] <= print_size * 2:
             print("Result: {0}".format(alg_object.x))
             if cum_res is not None:
@@ -137,9 +138,9 @@ class BasicAlgoTests:
             if print_len > print_size:
                 print_len = print_size
 
-            print("Result: {0} ... {1}\n".format(alg_object.x[:print_len], alg_object.x[-print_len:]))
+            print("Result: {0} ... {1}\n".format(np.round(alg_object.x[:print_len], round_decimals), np.round(alg_object.x[-print_len:], round_decimals)))
             if cum_res is not None:
-                print("Result AVG: {0} ... {1}\n".format(cum_res[:print_len], cum_res[-print_len:]))
+                print("Result AVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
 
         extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x)
         if extra_indicators:

@@ -24,6 +24,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.Ay: np.ndarray = self.problem.A(self.y0)
 
         self.cum_y: np.ndarray = np.zeros_like(self.y)
+        self.averaged_result: np.ndarray = None
 
         self.D: float = 0
         self.D2: float = 0
@@ -52,6 +53,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
 
         # self.cum_y = self.y # start average from y0
         self.cum_y = np.zeros_like(self.y) # start average from y1
+        self.averaged_result = None
 
         # self.hist_for_avg = np.zeros((self.max_iters + 1, self.y.shape[0]))
         # self.hist_for_avg[self.iter] = self.y
@@ -66,6 +68,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
             self.y = self.problem.Project(self.x - self.lam * self.Ay)
 
         self.cum_y += self.y
+        self.averaged_result = self.cum_y / self.iter
 
         # the first time we get here, iter = 1. So, to start average from y1 and not from y0, we need iter-1
 #        self.hist_for_avg[self.iter-1] = self.y
@@ -110,7 +113,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         # otherwise, we need to use iter and skip iteration-0
         # val_for_gap = self.cum_y / (self.iter + 1)
         if self.iter > 0:
-            val_for_gap = self.cum_y / self.iter
+            val_for_gap = self.averaged_result
             # start_iter_for_sum = 0  # int((self.iter) / 2)
             # t = self.hist_for_avg[start_iter_for_sum: self.iter]
             # d = float(self.iter - start_iter_for_sum)
@@ -130,11 +133,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         if self.stop_condition == StopCondition.STEP_SIZE:
             stop_condition_met = (self.D + self.D2 < self.eps)
         elif self.stop_condition == StopCondition.GAP:
-            if self.iter > 0:
-                val_for_gap = self.cum_y / self.iter
-            else:  # calc gap from y0
-                val_for_gap = self.y
-            stop_condition_met = (self.problem.F(val_for_gap) < self.eps)
+            stop_condition_met = (self.iter > 0 and self.problem.F(self.averaged_result) < self.eps)
         elif self.stop_condition == StopCondition.EXACT_SOL_DIST:
             stop_condition_met = (np.linalg.norm(self.x - self.problem.xtest) < self.eps)
 

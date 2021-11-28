@@ -37,7 +37,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     norm = np.linalg.norm(M, 2)
     algorithm_params.lam = 0.9/norm
-    algorithm_params.lam_small = algorithm_params.lam/2
+    algorithm_params.lam_KL = algorithm_params.lam / 2
 
     algorithm_params.start_adaptive_lam = 0.001
     algorithm_params.start_adaptive_lam1 = 0.0005
@@ -90,7 +90,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         x_test=test_solution,
         hr_name=f"$||Mx - p||_2 \\to min, M_{{ {n}x{m} }}, random, min-max \ form, \ ||x|| \\leq {c} " +
                 f", \ \\lambda = {round(algorithm_params.lam, 3)}" +
-                f", \ \\lambda_2 = {round(algorithm_params.lam_small, 3)}" +
+                f", \ \\lambda_2 = {round(algorithm_params.lam_KL, 3)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
                 f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'

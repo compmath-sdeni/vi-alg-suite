@@ -17,7 +17,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # algorithm_params.lam = 0.02
     # algorithm_params.lam = 1.0/5.07
     algorithm_params.lam = 0.18
-    algorithm_params.lam_small = algorithm_params.lam / 2
+    algorithm_params.lam_KL = algorithm_params.lam / 2
 
     algorithm_params.start_adaptive_lam = 1.
     algorithm_params.start_adaptive_lam1 = 1.
@@ -43,7 +43,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         x_test=algorithm_params.real_solution,
         hr_name='$Ax=f(x)(Mx+p), p \\ne 0, M - 5x5 \ matrix, \ C = [-5,5]^5 \\times \{x_1 + ... +x_5 <= 5\} ' +
                 f", \ \\lambda = {round(algorithm_params.lam, 3)}" +
-                f", \ \\lambda_2 = {round(algorithm_params.lam_small, 3)}" +
+                f", \ \\lambda_2 = {round(algorithm_params.lam_KL, 3)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
                 f", \ \\tau_2 = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'

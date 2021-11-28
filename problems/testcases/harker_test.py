@@ -48,7 +48,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     )
 
     algorithm_params.lam = 0.9 / ht.norm
-    algorithm_params.lam_small = algorithm_params.lam / 2
+    algorithm_params.lam_KL = algorithm_params.lam / 2
 
     algorithm_params.start_adaptive_lam = 1.5 / ht.norm
     algorithm_params.start_adaptive_lam1 = 1.5 / ht.norm
@@ -63,7 +63,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     ht.hr_name = f"$ HPHard, \  {constraints}" \
                 f", \ \\lambda = {round(algorithm_params.lam, 5)}" \
-                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" \
+                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" \
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" \
                 f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" \
                 f"$"

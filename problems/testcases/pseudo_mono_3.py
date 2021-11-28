@@ -16,7 +16,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.lam = 0.9 / 5.0679
-    algorithm_params.lam_small = algorithm_params.lam / 2
+    algorithm_params.lam_KL = algorithm_params.lam / 2
     # algorithm_params.lam = 1.0/5.07/4.0
     # algorithm_params.lam = 0.01
 
@@ -46,7 +46,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         x0=algorithm_params.x0,
         hr_name='$Ax=f(x)(Mx+p), p = 0, M - 3x3 \ matrix, C = [-5,5]^3 \\times \{x_1+x_2+x_3 = 0\} ' +
                 f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
-                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" +
+                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
                 f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'

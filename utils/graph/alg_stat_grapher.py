@@ -28,7 +28,7 @@ class DefaultLabels:
         YAxisType.REAL_ERROR: "$D_n$",  # "$||x_n - x^*||_2$",
         YAxisType.STEP_DELTA: "$D_n$",  # "$||x_{n} - x_{n-1}||_2$",
         YAxisType.GOAL_FUNCTION: "$G(z)$",  # "$||P_C(x_n - \lambda Ax_n)||_2$"
-        YAxisType.GOAL_OF_AVERAGED: "$G(z_avg)$"
+        YAxisType.GOAL_OF_AVERAGED: "$G(z_{avg})$"
     }
 
 
@@ -129,8 +129,8 @@ class AlgStatGrapher:
             graph_styles = self.initParamsArray(algs_count, y_dims,
                                             [
                                                 'k--', 'k-',
-                                                'r--', 'r-',
                                                 'y--', 'y-',
+                                                'r--', 'r-',
                                                 'c--', 'c-',
                                                 'm--', 'm-'])
 

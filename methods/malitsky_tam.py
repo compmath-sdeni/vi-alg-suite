@@ -25,6 +25,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.x1 = self.x.copy()
 
         self.cum_x = np.zeros_like(self.x)
+        self.averaged_result: np.ndarray = None
 
         self.Apx = self.problem.A(self.px)
         self.Ax = self.problem.A(self.x)
@@ -37,6 +38,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.px = self.problem.x0.copy()
         self.x = self.x1.copy()
         # self.cum_x = self.x
+        self.averaged_result = None
 
         self.D = np.linalg.norm(self.x - self.px)
         self.D2 = 0
@@ -59,6 +61,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.projections_count += 1
 
         self.cum_x += self.x
+        self.averaged_result = self.cum_x / self.iter
 
         self.Apx = self.Ax
         self.Ax = self.problem.A(self.x)
@@ -73,7 +76,7 @@ class MalitskyTam(IterGradTypeMethod):
 
     def doPostStep(self):
         if self.iter > 0:
-            val_for_gap = self.cum_x / self.iter
+            val_for_gap = self.averaged_result
         else:  # calc gap from x0
             val_for_gap = self.x
 
@@ -85,11 +88,7 @@ class MalitskyTam(IterGradTypeMethod):
         if self.stop_condition == StopCondition.STEP_SIZE:
             stop_condition_met = (self.D + self.D2 < self.eps)
         elif self.stop_condition == StopCondition.GAP:
-            if self.iter > 0:
-                val_for_gap = self.cum_x / self.iter
-            else:  # calc gap from x0
-                val_for_gap = self.px
-            stop_condition_met = (self.problem.F(val_for_gap) < self.eps)
+            stop_condition_met = (self.iter > 0 and self.problem.F(self.averaged_result) < self.eps)
         elif self.stop_condition == StopCondition.EXACT_SOL_DIST:
             stop_condition_met = (np.linalg.norm(self.x - self.problem.xtest) < self.eps)
 

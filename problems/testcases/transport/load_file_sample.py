@@ -131,7 +131,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.lam = 0.0000005
     algorithm_params.lam_medium = 0.00001
-    algorithm_params.lam_small = 0.1
+    algorithm_params.lam_KL = 0.1
 
     algorithm_params.min_iters = 3
 
@@ -157,7 +157,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         x_test=real_solution,
         hr_name='$ traffic equilibrium ' +
                 #                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
-                #                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_small, 5)}" +
+                #                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +
                 #                f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
                 #                f", \ \\tau_{{small}} = {round(algorithm_params.adaptive_tau_small, 3)}" +
                 '$'

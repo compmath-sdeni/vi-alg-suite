@@ -23,6 +23,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         self.Ay: np.ndarray = self.problem.A(self.y0)
 
         self.cum_y = np.zeros_like(self.x)
+        self.averaged_result: np.ndarray = None
 
         self.D: float = 0
         self.D2: float = 0
@@ -41,6 +42,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         self.D2 = 0
 
         self.cum_y = np.zeros_like(self.y)
+        self.averaged_result = None
 
         return super().__iter__()
 
@@ -52,6 +54,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
             self.y = self.problem.Project(self.x - self.lam * self.Ay)
 
         self.cum_y += self.y
+        self.averaged_result = self.cum_y / self.iter
 
         self.Ay = self.problem.A(self.y)
         px = self.x
@@ -73,7 +76,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
 
     def doPostStep(self):
         if self.iter > 0:
-            val_for_gap = self.cum_y / self.iter
+            val_for_gap = self.averaged_result
         else:  # calc gap from y0
             val_for_gap = self.y
 
@@ -85,11 +88,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         if self.stop_condition == StopCondition.STEP_SIZE:
             stop_condition_met = (self.D + self.D2 < self.eps)
         elif self.stop_condition == StopCondition.GAP:
-            if self.iter > 0:
-                val_for_gap = self.cum_y / self.iter
-            else:  # calc gap from y0
-                val_for_gap = self.y
-            stop_condition_met = (self.problem.F(val_for_gap) < self.eps)
+            stop_condition_met = (self.iter > 0 and self.problem.F(self.averaged_result) < self.eps)
         elif self.stop_condition == StopCondition.EXACT_SOL_DIST:
             stop_condition_met = (np.linalg.norm(self.x - self.problem.xtest) < self.eps)
 

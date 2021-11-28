@@ -20,7 +20,7 @@ class AlgorithmParams:
                  x1: np.ndarray = None,
                  lam: float = None,
                  lam_medium: float = None,
-                 lam_small: float = None,
+                 lam_KL: float = None,
                  start_adaptive_lam: float = None,
                  start_adaptive_lam1: float = None,
                  adaptive_tau: float = None,
@@ -49,7 +49,7 @@ class AlgorithmParams:
 
         self.lam = lam
         self.lam_medium = lam_medium if lam_medium else lam
-        self.lam_small = lam_small if lam_small else lam
+        self.lam_KL = lam_KL if lam_KL else lam
         self.start_adaptive_lam = start_adaptive_lam
         self.start_adaptive_lam1 = start_adaptive_lam1
         self.adaptive_tau = adaptive_tau
@@ -83,7 +83,7 @@ class AlgorithmParams:
                 f"eps:{self.eps}\n",
                 f"lam:{self.lam}\n",
                 f"lam_medium:{self.lam_medium}\n",
-                f"lam_small:{self.lam_small}\n",
+                f"lam_KL:{self.lam_KL}\n",
                 f"start_adaptive_lam:{self.start_adaptive_lam}\n",
                 f"start_adaptive_lam1:{self.start_adaptive_lam1}\n",
                 f"adaptive_tau:{self.adaptive_tau}\n",
