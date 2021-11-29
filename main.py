@@ -3,6 +3,7 @@ import datetime
 import os
 import io
 import sys
+from typing import List
 
 import numpy as np
 import cvxpy as cp
@@ -481,7 +482,7 @@ def initAlgs():
 
     extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
-                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 - E (S)")
+                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 - E")
 
     extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                         y0=params.x1.copy(), eps=params.eps, lam=params.lam_KL * (math.sqrt(2.) - 1),
@@ -492,7 +493,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1 - E")
+                                                             hr_name="Alg. 1 - E (A)")
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -503,7 +504,7 @@ def initAlgs():
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
                                x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E (S)")
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
 
     malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
                                         x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
@@ -514,7 +515,7 @@ def initAlgs():
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                                 tau=params.adaptive_tau,
-                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
+                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E (A)")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -529,22 +530,20 @@ def initAlgs():
         # korpele,
         # korpele_adapt,
         # malitsky_tam_adaptive,
-    #    tseng,
+ #       tseng,
     #    tseng_bregproj,
 #        tseng_adaptive,
-        extrapol_from_past,
-        extrapol_from_past_bregproj,
+#        extrapol_from_past,
+#        extrapol_from_past_bregproj,
         extrapol_from_past_adaptive,
         extrapol_from_past_adaptive_bregproj,
-        malitsky_tam,
-        malitsky_tam_bregproj,
+#        malitsky_tam,
+#        malitsky_tam_bregproj,
         malitsky_tam_adaptive,
-        malitsky_tam_adaptive_bregproj
+        malitsky_tam_adaptive_bregproj,
     ]
 
     return algs_to_test
-
-algs_to_test = initAlgs()
 # endregion
 
 # region Run all algs and save data and results
@@ -564,23 +563,40 @@ if params.save_history:
         os.path.join(saved_history_dir, f"history-{test_mnemo}.xlsx"),
         engine='openpyxl')
 
+timings = {}
 alg_history_list = []
-for alg in algs_to_test:
-    if params.test_time:
-        total_time: int = 0
-        for i in range(params.test_time_count):
-            # alg.history = AlgHistory(alg.history.x.shape[1])
+
+if params.test_time:
+    algs_to_test: List = None
+    for i in range(params.test_time_count):
+        algs_to_test = initAlgs()
+        for alg in algs_to_test:
+            total_time: float = 0
             alg.do()
             if alg.isStopConditionMet() and alg.iter < params.max_iters:
-                total_time += alg.history.iter_time_ns[alg.history.iters_count - 1]
+                total_time = alg.history.iter_time_ns[alg.history.iters_count - 1]
             else:
                 total_time = math.inf
-            print(f"{i+1}: {alg.hr_name} time: {alg.history.iter_time_ns[alg.history.iters_count - 1]/params.time_scale_divider}s.")
+
+            if alg.hr_name not in timings:
+                timings[alg.hr_name] = {'time': 0.0}
+
+            timings[alg.hr_name]['time'] += float(total_time)
+            print(f"{i+1}: {alg.hr_name} time: {total_time/params.time_scale_divider}s.")
+
+            timings[alg.hr_name]['iter'] = alg.history.iters_count
+            timings[alg.hr_name]['oper'] = alg.history.operator_count
+            timings[alg.hr_name]['proj'] = alg.history.projections_count
+
+    for alg in algs_to_test:
+        timings[alg.hr_name]['time'] /= params.test_time_count
+        timings[alg.hr_name]['time'] /= params.time_scale_divider
 
         BasicAlgoTests.PrintAlgRunStats(alg)
-        # print(f"{alg.hr_name} average time from {params.test_time_count} repeats: {float(total_time)/params.test_time_count/params.time_scale_divider}s.")
 
-    else:
+else:
+    algs_to_test = initAlgs()
+    for alg in algs_to_test:
         alg.do()
         BasicAlgoTests.PrintAlgRunStats(alg)
         alg_history_list.append(alg.history)
@@ -591,6 +607,10 @@ for alg in algs_to_test:
         print('')
 
         np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count - 1])
+
+if params.test_time:
+    for k in timings:
+        print(f"{k}: {timings[k]}")
 
 if params.save_history:
     writer.save()
@@ -632,9 +652,9 @@ if params.show_plots:
     plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
     plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
-    plt.title(problem.hr_name, loc='center')
     plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
 
+    plt.title(problem.hr_name, loc='center')
     plt.show()
     exit()
 
