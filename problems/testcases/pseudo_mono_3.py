@@ -28,15 +28,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau = 0.5 * 0.9
     algorithm_params.adaptive_tau_small = 0.33 * 0.9
 
-    algorithm_params.max_iters = 1000
-    algorithm_params.min_iters = 5
+    algorithm_params.max_iters = 400
+    algorithm_params.min_iters = 400
 
-    algorithm_params.test_time = True
+    algorithm_params.test_time = False
     algorithm_params.test_time_count = 100
     algorithm_params.stop_by = StopCondition.EXACT_SOL_DIST
 
-    algorithm_params.save_history = False
-    algorithm_params.show_plots = False
+    algorithm_params.save_history = True
+    algorithm_params.show_plots = True
 
     algorithm_params.eps = 1e-16
 

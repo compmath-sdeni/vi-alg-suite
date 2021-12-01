@@ -166,11 +166,11 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 # problem = harker_test.prepareProblem(algorithm_params=params)
-problem = minmax_game_1.prepareProblem(algorithm_params=params)
+#problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -482,7 +482,7 @@ def initAlgs():
 
     extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
-                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 - E")
+                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1")
 
     extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                         y0=params.x1.copy(), eps=params.eps, lam=params.lam_KL * (math.sqrt(2.) - 1),
@@ -493,7 +493,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1 - E (A)")
+                                                             hr_name="Alg. 1 (A)")
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -504,7 +504,7 @@ def initAlgs():
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
                                x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2")
 
     malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
                                         x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
@@ -515,7 +515,7 @@ def initAlgs():
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                                 tau=params.adaptive_tau,
-                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E (A)")
+                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 (A)")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -533,14 +533,14 @@ def initAlgs():
  #       tseng,
     #    tseng_bregproj,
 #        tseng_adaptive,
-#        extrapol_from_past,
+        extrapol_from_past,
 #        extrapol_from_past_bregproj,
         extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_bregproj,
-#        malitsky_tam,
+#        extrapol_from_past_adaptive_bregproj,
+        malitsky_tam,
 #        malitsky_tam_bregproj,
         malitsky_tam_adaptive,
-        malitsky_tam_adaptive_bregproj,
+#        malitsky_tam_adaptive_bregproj,
     ]
 
     return algs_to_test
