@@ -19,6 +19,7 @@ class IterativeAlgorithm:
         self.eps: float = eps
         self.lam: float = lam
         self.iterEndTime = 0
+        self.totalTime: int = 0
         self.max_iters = max_iters
         self.zero_delta = 1e-20
         self.stop_condition = stop_condition
@@ -86,6 +87,7 @@ class IterativeAlgorithm:
         self.projections_count: int = 0
         self.operator_count: int = 0
 
+        self.totalTime = 0
         self.history.iter_time_ns[self.iter] = 0
         self.history.lam[self.iter] = self.lam
 
@@ -114,8 +116,8 @@ class IterativeAlgorithm:
             self.history.operator_count = self.operator_count
 
             self.history.iters_count = self.iter + 1
-            self.history.iter_time_ns[self.iter] = (finish - start) + (
-            self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
+            self.totalTime = (finish - start) + (self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
+            self.history.iter_time_ns[self.iter] = self.totalTime
             self.history.lam[self.iter] = self.lam
 
             if self.problem.xtest is not None:

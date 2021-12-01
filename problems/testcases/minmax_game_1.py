@@ -144,21 +144,21 @@ def generateRandomFloatDefiniteGameTwoStrat(m: int, n: int, *, a: float = -10, b
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # region Random problem nxm
-    m = 750
-    n = 500
-
-    # P = np.random.randint(-10, 10, size=(m, n)).astype(float)
-    P = (np.random.rand(m, n)) * 10 - 5.
-    #P = np.random.normal(-5., 20., (m, n))
-    real_solution = None
-
-    np.save(f'minmax_P_{m}x{n}', P)
-    # P = np.load(f'minmax_P_{m}x{n}.npy')
-
-    algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / m for i in range(m)])))
-    # algorithm_params.x0 = np.array([1., 0., 0., 0., 0., 1., 0., 0., 0., 0.])
-
-    algorithm_params.x1 = algorithm_params.x0.copy()
+    # m = 100
+    # n = 150
+    #
+    # # P = np.random.randint(-10, 10, size=(m, n)).astype(float)
+    # P = (np.random.rand(m, n)) * 2 - 1.
+    # #P = np.random.normal(-5., 20., (m, n))
+    # real_solution = None
+    #
+    # # np.save(f'minmax_P_{m}x{n}', P)
+    # # P = np.load(f'minmax_P_{m}x{n}.npy')
+    #
+    # algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / m for i in range(m)])))
+    # # algorithm_params.x0 = np.array([1., 0., 0., 0., 0., 1., 0., 0., 0., 0.])
+    #
+    # algorithm_params.x1 = algorithm_params.x0.copy()
 
     # algorithm_params.y_limits = [0.05, 15]
     # endregion
@@ -174,29 +174,27 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region Test random fully defined game with known solution
-    # n = 3
-    # m = 5
-    # n = 50
-    # m = 50
-    # eq_row = 3
-    # eq_col = n-4
-    # game_val = 0.
-    #
-    # # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-20, b=20,
-    # #                                                             game_value=game_val, eq_row=eq_row, eq_col=eq_col)
-    # # P = -A.transpose()
-    # # np.save(f'matrix_game_3_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
-    #
-    # P = np.load(f'matrix_game_3_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
-    #
-    # print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
-    #
-    # real_solution = np.zeros(m + n)
-    # real_solution[eq_row] = 1.
-    # real_solution[m + eq_col] = 1.
-    #
-    # algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
-    # algorithm_params.x1 = algorithm_params.x0.copy()
+    n = 150
+    m = 100
+    eq_row = 3
+    eq_col = n-4
+    game_val = 0.
+
+    # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-2., b=2.,
+    #                                                              game_value=game_val, eq_row=eq_row, eq_col=eq_col)
+    # P = -A.transpose()
+    # np.save(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
+
+    P = np.load(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
+
+    print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
+
+    real_solution = np.zeros(m + n)
+    real_solution[eq_row] = 1.
+    real_solution[m + eq_col] = 1.
+
+    algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
+    algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
     # region Test Blotto game (non-zero value, 4x5)
@@ -228,32 +226,34 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 1
-    algorithm_params.stop_by = StopCondition.GAP
+    algorithm_params.stop_by = StopCondition.STEP_SIZE
 
     algorithm_params.save_history = False
     algorithm_params.show_plots = True
 
     algorithm_params.eps = 1e-3
-    algorithm_params.max_iters = 5000
+    algorithm_params.max_iters = 1000
 
-    algorithm_params.lam = 0.9 / np.linalg.norm(P, 2)
+    algorithm_params.lam = 0.5 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.0  # 0.45 / np.linalg.norm(P, 2)
     # for Bregman variants
-    algorithm_params.lam_KL = 1. / np.max(np.abs(P))  #  5.9 / (max(abs(np.max(P)), abs(np.min(P))))
+    algorithm_params.lam_KL = 0.5 / np.max(np.abs(P))  #  5.9 / (max(abs(np.max(P)), abs(np.min(P))))
 
-    algorithm_params.min_iters = 2
+    algorithm_params.min_iters = 3
+    # algorithm_params.x_limits = [-0.1, 10.]
+    # algorithm_params.y_limits = [0.02, 0.5]
 
-    algorithm_params.start_adaptive_lam = 1.0
+    algorithm_params.start_adaptive_lam = 0.5
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5 * 0.25
-    algorithm_params.adaptive_tau_small = 0.33 * 0.25
+    algorithm_params.adaptive_tau = 0.5 * 0.5
+    algorithm_params.adaptive_tau_small = 0.33 * 0.5
 
     # real_solution = np.array([0.0 for i in range(N)])
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
-    algorithm_params.y_label = "Gap"
+    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
+    # algorithm_params.y_label = "Gap"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 
