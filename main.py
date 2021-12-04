@@ -32,7 +32,7 @@ from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, minmax_game_1
+    sle_saddle_regression_100_100000, minmax_game_1, pagerank_1
 
 from problems.testcases.transport import pigu_sample, braess_sample, load_file_sample
 
@@ -166,11 +166,13 @@ sys.stdout = captured_io
 
 # region Test problem initialization
 
-#problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 # problem = harker_test.prepareProblem(algorithm_params=params)
-problem = minmax_game_1.prepareProblem(algorithm_params=params)
+# problem = minmax_game_1.prepareProblem(algorithm_params=params)
+
+problem = pagerank_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -534,17 +536,17 @@ def initAlgs():
     algs_to_test = [
         # korpele,
         # korpele_adapt,
-        tseng,
-        tseng_bregproj,
-        tseng_adaptive,
-        tseng_adaptive_bregproj,
-        extrapol_from_past,
-        extrapol_from_past_bregproj,
-        extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_bregproj,
-        malitsky_tam,
-        malitsky_tam_bregproj,
-        malitsky_tam_adaptive,
+        # tseng,
+        # tseng_bregproj,
+        # tseng_adaptive,
+        # tseng_adaptive_bregproj,
+        # extrapol_from_past,
+        # extrapol_from_past_bregproj,
+        # extrapol_from_past_adaptive,
+        # extrapol_from_past_adaptive_bregproj,
+        # malitsky_tam,
+        # malitsky_tam_bregproj,
+        # malitsky_tam_adaptive,
         malitsky_tam_adaptive_bregproj,
 
     ]
@@ -553,7 +555,7 @@ def initAlgs():
 # endregion
 
 # region Run all algs and save data and results
-saved_history_dir = "storage/stats2021-11-traffic"
+saved_history_dir = "storage/stats2021-12"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)

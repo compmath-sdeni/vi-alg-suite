@@ -12,7 +12,7 @@ class Problem:
     def __init__(self, *,
                  xtest: Union[np.ndarray, float] = None,
                  x0: Union[np.ndarray, float] = None,
-                 C: ConvexSetConstraints,
+                 C: ConvexSetConstraints = None,
                  hr_name: str = None,
                  x_dim: int = None,
                  lam_override: float = None,
