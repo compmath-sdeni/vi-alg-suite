@@ -19,8 +19,9 @@ class AlgorithmParams:
                  x0: np.ndarray = None,
                  x1: np.ndarray = None,
                  lam: float = None,
-                 lam_medium: float = None,
+                 lam_spec: dict = None,
                  lam_KL: float = None,
+                 lam_spec_KL: dict = None,
                  start_adaptive_lam: float = None,
                  start_adaptive_lam1: float = None,
                  adaptive_tau: float = None,
@@ -48,8 +49,9 @@ class AlgorithmParams:
         self.x1 = x1
 
         self.lam = lam
-        self.lam_medium = lam_medium if lam_medium else lam
+        self.lam_spec = lam_spec
         self.lam_KL = lam_KL if lam_KL else lam
+        self.lam_spec_KL = lam_spec_KL
         self.start_adaptive_lam = start_adaptive_lam
         self.start_adaptive_lam1 = start_adaptive_lam1
         self.adaptive_tau = adaptive_tau
@@ -82,8 +84,9 @@ class AlgorithmParams:
             file.writelines([
                 f"eps:{self.eps}\n",
                 f"lam:{self.lam}\n",
-                f"lam_medium:{self.lam_medium}\n",
+                f"lam_spec:{self.lam_spec}\n",
                 f"lam_KL:{self.lam_KL}\n",
+                f"lam_spec_KL:{self.lam_spec_KL}\n",
                 f"start_adaptive_lam:{self.start_adaptive_lam}\n",
                 f"start_adaptive_lam1:{self.start_adaptive_lam1}\n",
                 f"adaptive_tau:{self.adaptive_tau}\n",

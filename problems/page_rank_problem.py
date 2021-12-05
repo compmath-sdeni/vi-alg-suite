@@ -1,3 +1,5 @@
+from typing import Union, Optional, Dict
+
 from constraints.classic_simplex import ClassicSimplex
 from constraints.l1_ball import L1Ball
 from numpy import inf
@@ -11,17 +13,21 @@ from utils.print_utils import vectorToString
 class PageRankProblem(VIProblem):
     def __init__(self, *,
                  GraphMatr: np.ndarray,
+                 node_labels: list = None,
                  hr_name: str = None,
                  x0: np.ndarray = None,
                  x_test: np.ndarray = None,
+                 lam_override_by_method: dict = None
                  ):
         self.M = GraphMatr
         self.m = GraphMatr.shape[0]
 
+        self.node_labels = node_labels
+
         if x0 is None:
             x0 = np.concatenate((np.full(self.m, 1.0 / self.m), np.full(self.m, 1.0 / self.m)))
 
-        super().__init__(xtest=x_test, x0=x0, hr_name=hr_name)
+        super().__init__(xtest=x_test, x0=x0, hr_name=hr_name, lam_override_by_method=lam_override_by_method)
 
         b = GraphMatr.sum(axis=0)[:, None]
         b[b == 0] = 1
@@ -97,3 +103,24 @@ class PageRankProblem(VIProblem):
 
     def XToString(self, x: np.ndarray):
         return vectorToString(x)
+
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
+        res = {
+            'x elems sum': np.sum(x[:self.m]),
+            'y L1 norm': np.linalg.norm(x[self.m:], 1)
+        }
+
+        if final:
+            top_n: int = 10
+            if self.node_labels is not None:
+                res['top ranks'] = self.node_labels[np.argsort(x[:self.m])[::-1][:top_n]]
+            else:
+                res['top ranks'] = np.argsort(x[:self.m])[::-1][:top_n]
+
+            if averaged_x is not None:
+                if self.node_labels is not None:
+                    res['top ranks from AVG'] = self.node_labels[np.argsort(averaged_x[:self.m])[::-1][:top_n]]
+                else:
+                    res['top ranks from AVG'] = np.argsort(averaged_x[:self.m])[::-1][:top_n]
+
+        return res

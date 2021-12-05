@@ -92,7 +92,7 @@ class MinMaxGame(VIProblem):
         self.P = np.loadtxt("{0}/{1}".format(path, 'P.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
-    def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
         return {
             'Game value': self.getGameValue(x),
             'x compsum': np.sum(x[:self.m]),

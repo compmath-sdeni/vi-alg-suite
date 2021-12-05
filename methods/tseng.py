@@ -60,7 +60,8 @@ class Tseng(IterGradTypeMethod):
             self.px = self.x
 
             if self.projection_type == ProjectionType.BREGMAN:
-                self.x = np.exp(((np.log(self.y) + 1.) - self.lam * (self.problem.A(self.y) - Ax)) - 1.)
+                # self.x = np.exp(((np.log(self.y) + 1.) - self.lam * (self.problem.A(self.y) - Ax)) - 1.)
+                self.x = self.y * np.exp(-self.lam * (self.problem.A(self.y) - Ax) - 1.)
             else:
                 self.x = self.y - self.lam * (self.problem.A(self.y) - Ax)
 

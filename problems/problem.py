@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 from typing import Union, Dict, Optional
 
+import numpy as np
+
 from constraints.convex_set_constraint import ConvexSetConstraints
 from utils.print_utils import *
 
@@ -80,5 +82,5 @@ class Problem:
     def GetLambdaOverride(self):
         return self.lam_override
 
-    def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
         pass

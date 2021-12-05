@@ -474,7 +474,8 @@ def initAlgs():
                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1")
 
     tseng_bregproj = Tseng(problem, stop_condition=params.stop_by,
-                           eps=params.eps, lam=params.lam_KL,
+                           eps=params.eps,
+                           lam=params.lam_KL,
                            min_iters=params.min_iters, max_iters=params.max_iters,
                            hr_name="Alg. 1*", projection_type=ProjectionType.BREGMAN)
 
@@ -536,20 +537,34 @@ def initAlgs():
     algs_to_test = [
         # korpele,
         # korpele_adapt,
-        # tseng,
-        # tseng_bregproj,
+        tseng,
+
         # tseng_adaptive,
         # tseng_adaptive_bregproj,
-        # extrapol_from_past,
-        # extrapol_from_past_bregproj,
+        extrapol_from_past,
         # extrapol_from_past_adaptive,
         # extrapol_from_past_adaptive_bregproj,
-        # malitsky_tam,
-        # malitsky_tam_bregproj,
+        malitsky_tam,
+
         # malitsky_tam_adaptive,
-        malitsky_tam_adaptive_bregproj,
+        # malitsky_tam_adaptive_bregproj,
+        tseng_bregproj,
+        extrapol_from_past_bregproj,
+        malitsky_tam_bregproj,
 
     ]
+
+    if params.lam_spec_KL is not None or params.lam_spec is not None:
+        lam_set_log: dict = {}
+        for alg in algs_to_test:
+            algname: str = alg.__class__.__name__
+            lam_dic: dict = params.lam_spec_KL if alg.projection_type == ProjectionType.BREGMAN else params.lam_spec
+            if lam_dic is not None and algname in lam_dic:
+                alg.lam = lam_dic[algname]
+                lam_set_log[algname + ('-KL' if alg.projection_type == ProjectionType.BREGMAN else '')] = alg.lam
+
+        if len(lam_set_log)>0:
+            print(f"Custom step sizes: {lam_set_log}")
 
     return algs_to_test
 # endregion

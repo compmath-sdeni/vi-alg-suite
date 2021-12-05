@@ -119,14 +119,10 @@ class BasicAlgoTests:
 
         cum_res:np.ndarray = None
         try:
-            if alg_object.cum_x  is not None:
-                cum_res = alg_object.cum_x/alg_object.iter
+            if alg_object.averaged_result  is not None:
+                cum_res = alg_object.averaged_result
         except:
-            try:
-                if alg_object.cum_y is not None:
-                    cum_res = alg_object.cum_y / alg_object.iter
-            except:
-                pass
+            pass
 
         round_decimals = 5
         if alg_object.x.shape[0] <= print_size * 2:
@@ -142,7 +138,7 @@ class BasicAlgoTests:
             if cum_res is not None:
                 print("Result AVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
 
-        extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x)
+        extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x, final=True, averaged_x=cum_res)
         if extra_indicators:
             extra_strings = []
             for name, value in extra_indicators.items():

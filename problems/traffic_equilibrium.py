@@ -75,7 +75,7 @@ class TrafficEquilibrium(VIProblem):
         self.d = np.loadtxt("{0}/{1}".format(path, 'd.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
-    def GetExtraIndicators(self, x: Union[np.ndarray, float]) -> Optional[Dict]:
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
         return {
             'Individual loss': self.getIndividualLoss(x),
         }

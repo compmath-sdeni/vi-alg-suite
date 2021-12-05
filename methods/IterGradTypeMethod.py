@@ -18,6 +18,7 @@ class IterGradTypeMethod(IterativeAlgorithm):
                  stop_condition: StopCondition = StopCondition.STEP_SIZE):
         self.problem: VIProblem
         self.projection_type: ProjectionType = projection_type
+        self.averaged_result = None
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
                          hr_name=hr_name, stop_condition=stop_condition)
