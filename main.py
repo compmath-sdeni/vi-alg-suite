@@ -537,14 +537,14 @@ def initAlgs():
     algs_to_test = [
         # korpele,
         # korpele_adapt,
-        tseng,
+        #tseng,
 
-        # tseng_adaptive,
+        #tseng_adaptive,
         # tseng_adaptive_bregproj,
-        extrapol_from_past,
+        #extrapol_from_past,
         # extrapol_from_past_adaptive,
         # extrapol_from_past_adaptive_bregproj,
-        malitsky_tam,
+        #malitsky_tam,
 
         # malitsky_tam_adaptive,
         # malitsky_tam_adaptive_bregproj,

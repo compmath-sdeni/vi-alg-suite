@@ -231,15 +231,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_history = False
     algorithm_params.show_plots = True
 
-    algorithm_params.eps = 1e-3
-    algorithm_params.max_iters = 1000
+    algorithm_params.eps = 1e-5
+    algorithm_params.max_iters = 5000
+    algorithm_params.min_iters = 5000
 
     algorithm_params.lam = 0.5 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.0  # 0.45 / np.linalg.norm(P, 2)
     # for Bregman variants
     algorithm_params.lam_KL = 0.5 / np.max(np.abs(P))  #  5.9 / (max(abs(np.max(P)), abs(np.min(P))))
 
-    algorithm_params.min_iters = 3
     # algorithm_params.x_limits = [-0.1, 10.]
     # algorithm_params.y_limits = [0.02, 0.5]
 
