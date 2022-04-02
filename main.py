@@ -172,7 +172,7 @@ sys.stdout = captured_io
 # problem = harker_test.prepareProblem(algorithm_params=params)
 # problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
-problem = pagerank_1.prepareProblem(algorithm_params=params)
+# problem = pagerank_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -180,9 +180,9 @@ problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
-# problem = braess_sample.prepareProblem(algorithm_params=params)
+#problem = braess_sample.prepareProblem(algorithm_params=params)
 
-# problem = load_file_sample.prepareProblem(algorithm_params=params)
+problem = load_file_sample.prepareProblem(algorithm_params=params)
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
 # sys.stdout = captured_io
@@ -471,7 +471,7 @@ def initAlgs():
 
     tseng = Tseng(problem, stop_condition=params.stop_by,
                   eps=params.eps, lam=params.lam,
-                  min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1")
+                  min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng")
 
     tseng_bregproj = Tseng(problem, stop_condition=params.stop_by,
                            eps=params.eps,
@@ -481,7 +481,7 @@ def initAlgs():
 
     tseng_adaptive = TsengAdaptive(problem,
                                    eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
-                                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1 (A)")
+                                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng (A)")
 
     tseng_adaptive_bregproj = TsengAdaptive(problem, stop_condition=params.stop_by,
                                    eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
@@ -490,7 +490,7 @@ def initAlgs():
 
     extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
-                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2")
+                                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="EfP")
 
     extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                         y0=params.x1.copy(), eps=params.eps, lam=params.lam_KL * (math.sqrt(2.) - 1),
@@ -501,7 +501,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 2 (A)")
+                                                             hr_name="EfP (A)")
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -512,7 +512,7 @@ def initAlgs():
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
                                x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3")
+                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="MT")
 
     malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
                                         x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
@@ -523,7 +523,7 @@ def initAlgs():
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                                 tau=params.adaptive_tau,
-                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 3 (A)")
+                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="MT (A)")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -537,20 +537,20 @@ def initAlgs():
     algs_to_test = [
         # korpele,
         # korpele_adapt,
-        #tseng,
+        tseng,
 
-        #tseng_adaptive,
+        # tseng_adaptive,
         # tseng_adaptive_bregproj,
-        #extrapol_from_past,
+        # extrapol_from_past,
         # extrapol_from_past_adaptive,
         # extrapol_from_past_adaptive_bregproj,
-        #malitsky_tam,
+        # malitsky_tam,
 
         # malitsky_tam_adaptive,
         # malitsky_tam_adaptive_bregproj,
-        tseng_bregproj,
-        extrapol_from_past_bregproj,
-        malitsky_tam_bregproj,
+#        tseng_bregproj,
+#        extrapol_from_past_bregproj,
+#        malitsky_tam_bregproj,
 
     ]
 
@@ -655,7 +655,7 @@ f.close()
 
 
 # region Plot and save graphs
-if params.show_plots:
+if params.save_plots or params.show_plots:
     grapher = AlgStatGrapher()
     grapher.plot_by_history(
         alg_history_list=alg_history_list,
@@ -670,16 +670,19 @@ if params.show_plots:
     if params.y_limits is not None:
         plt.ylim(params.y_limits)
 
-    dpi = 300.
+    if params.save_plots:
+        dpi = 300.
 
-    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
-    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
+        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
+        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
-    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
+        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
 
-    plt.title(problem.hr_name, loc='center')
-    plt.show()
-    exit()
+    if params.show_plots:
+        plt.title(problem.hr_name, loc='center')
+        plt.show()
+
+    exit(0)
 
 # endregion
 

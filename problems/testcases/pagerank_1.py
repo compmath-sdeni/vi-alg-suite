@@ -125,7 +125,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.stop_by = StopCondition.STEP_SIZE
 
     algorithm_params.save_history = False
-    algorithm_params.show_plots = True
+    algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-6
     algorithm_params.max_iters = 15

@@ -69,7 +69,7 @@ class TransportationNetwork:
         print(self.paths[:5])
 
     def draw(self):
-        pos = nx.spring_layout(self.graph)
+        pos = nx.planar_layout(self.graph)
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
         nx.draw_networkx_edge_labels(self.graph, pos)
 

@@ -36,7 +36,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.stop_by = StopCondition.EXACT_SOL_DIST
 
     algorithm_params.save_history = True
-    algorithm_params.show_plots = True
+    algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-16
 

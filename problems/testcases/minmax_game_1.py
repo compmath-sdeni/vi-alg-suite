@@ -180,12 +180,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     eq_col = n-4
     game_val = 0.
 
-    # A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-2., b=2.,
-    #                                                              game_value=game_val, eq_row=eq_row, eq_col=eq_col)
-    # P = -A.transpose()
-    # np.save(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
+    A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-2., b=2.,
+                                                                 game_value=game_val, eq_row=eq_row, eq_col=eq_col)
+    P = -A.transpose()
+    np.save(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
 
-    P = np.load(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
+    # P = np.load(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}.npy')
 
     print(f"eq_row: {eq_row}; eq_col: {eq_col}; game_val: {game_val}; A:\n{-P.transpose()}")
 
@@ -229,7 +229,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.stop_by = StopCondition.STEP_SIZE
 
     algorithm_params.save_history = False
-    algorithm_params.show_plots = True
+    algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-5
     algorithm_params.max_iters = 5000

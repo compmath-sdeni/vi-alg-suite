@@ -37,6 +37,7 @@ class AlgorithmParams:
                  time_scale_divider: int = 1e+6,  # time is in nanoseconds - 1e+6 for ms, 1e+9 for sec.
                  styles: List[str] = None,
                  plot_start_iter: int = 2,
+                 save_plots: bool = True,
                  show_plots: bool = True,
                  save_history: bool = True,
                  test_time: bool = False,
@@ -68,6 +69,7 @@ class AlgorithmParams:
         self.y_limits = y_limits
         self.time_scale_divider = time_scale_divider
         self.styles = styles
+        self.save_plots = save_plots
         self.show_plots = show_plots
         self.plot_start_iter = plot_start_iter
         self.save_history = save_history
@@ -102,6 +104,7 @@ class AlgorithmParams:
                 f"time_scale_divider:{self.time_scale_divider}\n",
                 f"styles:{self.styles}\n",
                 f"plot_start_iter:{self.plot_start_iter}\n",
+                f"save_plots:{self.save_plots}\n",
                 f"show_plots:{self.show_plots}\n",
                 f"save_history:{self.save_history}\n",
                 f"stop_by:{self.stop_by}\n",

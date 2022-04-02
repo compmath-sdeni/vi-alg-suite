@@ -47,8 +47,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
-    algorithm_params.eps = 1e-5
-    algorithm_params.max_iters = 300
+    algorithm_params.eps = 1e-9
+    algorithm_params.max_iters = 3000
 
     algorithm_params.lam = 0.01
     algorithm_params.lam_medium = 0.1
@@ -63,8 +63,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau_small = 0.45
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    algorithm_params.y_label = "Gap"
+    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
+    # algorithm_params.y_label = "Gap"
     # algorithm_params.x_label = "sec."
 
     algorithm_params.time_scale_divider = 1e+9

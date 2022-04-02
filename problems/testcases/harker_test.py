@@ -24,28 +24,28 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # constraints = ClassicSimplex(n, 1.)
     constraints = RnPlus(n)
 
-    # ht = HarkerTest(
-    #     n,
-    #     C=constraints,
-    #     x0=algorithm_params.x0,
-    #     xtest=real_solution
-    # )
-#    np.save(f"hphard_M_{n}", ht.AM)
-#    np.save(f"hphard_q_{n}", ht.q)
-
-    algorithm_params.save_history = True
-    algorithm_params.show_plots = True
-
-    P = np.load(f'hphard_M_{n}.npy')
-    q = np.load(f'hphard_q_{n}.npy')
-
     ht = HarkerTest(
         n,
-        matr=P, q=q,
         C=constraints,
         x0=algorithm_params.x0,
         xtest=real_solution
     )
+    np.save(f"hphard_M_{n}", ht.AM)
+    np.save(f"hphard_q_{n}", ht.q)
+
+    algorithm_params.save_history = True
+    algorithm_params.save_plots = True
+
+    # P = np.load(f'hphard_M_{n}.npy')
+    # q = np.load(f'hphard_q_{n}.npy')
+    #
+    # ht = HarkerTest(
+    #     n,
+    #     matr=P, q=q,
+    #     C=constraints,
+    #     x0=algorithm_params.x0,
+    #     xtest=real_solution
+    # )
 
     algorithm_params.lam = 0.9 / ht.norm
     algorithm_params.lam_KL = algorithm_params.lam / 2
