@@ -34,7 +34,9 @@ from problems.sle_saddle import SLESaddle
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
     sle_saddle_regression_100_100000, minmax_game_1, pagerank_1
 
-from problems.testcases.transport import pigu_sample, braess_sample, load_file_sample
+from problems.funcndmin import FuncNDMin
+
+from problems.testcases.transport import pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample
 
 from problems.testcases.slar_random import getSLE
 from utils.alg_history import AlgHistory
@@ -43,7 +45,6 @@ from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
 from constraints.hyperrectangle import Hyperrectangle
 
 from methods.korpelevich import Korpelevich
-from problems.funcndmin import FuncNDMin
 from utils.test_alghos import BasicAlgoTests
 
 params = AlgorithmParams(
@@ -180,9 +181,11 @@ sys.stdout = captured_io
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
-#problem = braess_sample.prepareProblem(algorithm_params=params)
+# problem = braess_sample.prepareProblem(algorithm_params=params)
+# problem = load_file_sample.prepareProblem(algorithm_params=params)
+# problem = test_one_sample.prepareProblem(algorithm_params=params)
+problem = test_two_sample.prepareProblem(algorithm_params=params)
 
-problem = load_file_sample.prepareProblem(algorithm_params=params)
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
 # sys.stdout = captured_io
@@ -538,8 +541,7 @@ def initAlgs():
         # korpele,
         # korpele_adapt,
         tseng,
-
-        # tseng_adaptive,
+        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
         # extrapol_from_past_adaptive,

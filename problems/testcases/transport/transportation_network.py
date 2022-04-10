@@ -29,13 +29,15 @@ class TransportationNetwork:
                  network_graph_file: str = None,
                  demands_file: str = None,
                  edges_list: Sequence[Tuple[int, int, Mapping]] = None,
-                 demand: List[Tuple[int, int, float]] = None) -> None:
+                 demand: List[Tuple[int, int, float]] = None,
+                 nodes_coords: List[Tuple[int, float, float]] = None) -> None:
 
         self.paths_count = 0
         self.graph: nx.MultiDiGraph = nx.MultiDiGraph()
         self.paths: List[List[np.ndarray]] = []
         self.Q: np.ndarray = None
         self.total_demand: float = 0
+        self.nodes_coords = nodes_coords
 
         if network_graph_file:
             self.load_network_graph(network_graph_file)
@@ -58,18 +60,31 @@ class TransportationNetwork:
         if edges_list and demand:
             self.recalc_derived_data()
 
-    def show(self):
+    def show(self, *, limit: int = 7):
         print(self.graph)
-        print(list(self.graph.edges(data=True))[:5])
+        print(list(self.graph.edges(data=True))[:limit])
         print("Demand: ")
-        for d in self.demand[:5]:
+        for d in self.demand[:limit]:
             print(f'{d[0]} -> {d[1]}: {d[2]}')
 
+        edg = list(self.graph.edges(data=True))
+
         print("Paths: ")
-        print(self.paths[:5])
+        for idx, path_data in enumerate(self.paths):
+            print(f'Paths for {self.demand[idx][:2]}')
+            for l, edges_list in enumerate(path_data):
+                print(f"\n{l+1}:")
+                for k, edge_key in enumerate(edges_list):
+                    if k > 0:
+                        print('->', sep='', end='')
+                    print(edg[edge_key][:2], sep='', end='')
 
     def draw(self):
-        pos = nx.planar_layout(self.graph)
+        if self.nodes_coords:
+            pos = self.nodes_coords
+        else:
+            pos = nx.planar_layout(self.graph)
+
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
         nx.draw_networkx_edge_labels(self.graph, pos)
 
@@ -208,10 +223,10 @@ class TransportationNetwork:
         capacity_inv = np.ndarray((N,), dtype=float)
         power = np.ndarray((N,), dtype=float)
         for i, e in enumerate(self.graph.edges.data()):
-            free_flows[i] = e[2]['frf']
-            koeffs[i] = e[2]['k']
-            capacity_inv[i] = 1. / e[2]['cap']
-            power[i] = e[2]['pow']
+            free_flows[i] = e[2][str(EdgeParams.FRF)]
+            koeffs[i] = e[2][str(EdgeParams.K)]
+            capacity_inv[i] = 1. / e[2][str(EdgeParams.CAP)]
+            power[i] = e[2][str(EdgeParams.POW)]
 
         def cost(x: np.ndarray) -> np.ndarray:
             return self.Q.T @ (free_flows * (1.0 + koeffs * np.power(((self.Q @ x) * capacity_inv), power)))
