@@ -38,6 +38,7 @@ class TransportationNetwork:
         self.Q: np.ndarray = None
         self.total_demand: float = 0
         self.nodes_coords = nodes_coords
+        self.keyed_edges = {}
 
         if network_graph_file:
             self.load_network_graph(network_graph_file)
@@ -48,6 +49,7 @@ class TransportationNetwork:
             k: int = 0  # edge key = zero based edge number for algs
             for e in edges_list:
                 self.graph.add_edge(e[0], e[1], key=k, **e[2])
+                self.keyed_edges[k] = (e[0], e[1], k)
                 k += 1
 
             # self.graph.add_edges_from(sorted_edges)
@@ -67,17 +69,22 @@ class TransportationNetwork:
         for d in self.demand[:limit]:
             print(f'{d[0]} -> {d[1]}: {d[2]}')
 
-        edg = list(self.graph.edges(data=True))
+        # edg = list(self.graph.edges(data=True))
 
         print("Paths: ")
-        for idx, path_data in enumerate(self.paths):
-            print(f'Paths for {self.demand[idx][:2]}')
-            for l, edges_list in enumerate(path_data):
-                print(f"\n{l+1}:")
-                for k, edge_key in enumerate(edges_list):
-                    if k > 0:
-                        print('->', sep='', end='')
-                    print(edg[edge_key][:2], sep='', end='')
+        pi = 0
+        for idx, paths_for_pair in enumerate(self.paths):
+            if idx>0:
+                print()
+            print(f'Paths for {self.demand[idx][:2]}', sep='', end='')
+            for l, path_edges in enumerate(paths_for_pair):
+                print(f"\n{pi}: ", sep='', end='')
+                pi += 1
+                for k, edge_key in enumerate(path_edges):
+                    if k == 0:
+                        print(self.keyed_edges[edge_key][0], sep='', end='')
+                    print('->', sep='', end='')
+                    print(self.keyed_edges[edge_key][1], sep='', end='')
 
     def draw(self):
         if self.nodes_coords:
