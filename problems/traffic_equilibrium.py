@@ -33,7 +33,10 @@ class TrafficEquilibrium(VIProblem):
 
     def F(self, x: np.ndarray) -> float:
         # GAP
-        g = np.max(self.Gf(x)) - np.min(self.Gf(x))
+
+        costs = self.Gf(x)
+
+        g = np.max(costs) - np.min(costs)
         return g  # priciest path expenses vs cheapest path expenses
 
     def GradF(self, x: np.ndarray) -> np.ndarray:

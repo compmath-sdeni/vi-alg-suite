@@ -11,37 +11,25 @@ from matplotlib import pyplot as plt
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     tnet = TransportationNetwork(
         edges_list=[
-            (1, 5, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0/5.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
-            (1, 3, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
-            (1, 4, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 10.0, str(EdgeParams.CAP): 1.,
+            (1, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0/5.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
+            (1, 5, {str(EdgeParams.FRF): 3., str(EdgeParams.K): 3.0 / 3.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
+            (5, 6, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 2.0 / 1.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (3, 5, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
+            (1, 3, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 1.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (3, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
+            (3, 5, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 1.0 / 5.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (2, 3, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (2, 4, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (2, 7, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 5.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (4, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (4, 7, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (6, 5, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (6, 7, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 10.0, str(EdgeParams.CAP): 1.,
+            (3, 7, {str(EdgeParams.FRF): 20., str(EdgeParams.K): 1.0 / 20.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
         ],
-        demand=[(1, 5, 5), (1, 6, 3), (1, 7, 2), (2, 5, 2), (2, 6, 3), (2, 7, 5)],
-        nodes_coords={1: (3, 15), 2: (3, 5), 3: (20, 13), 4: (20, 7), 5: (50, 20), 6: (50, 10), 7: (50, 1)}
+        demand=[(1, 6, 12), (1, 7, 3)],
+        nodes_coords={1: (5, 50), 3: (50, 50), 5: (25, 25), 6: (15, 5), 7: (75,40)}
     )
 
     tnet.show()
 
-    # tnet.draw()
-    # plt.show()
+    tnet.draw()
+    plt.show()
 
     d = tnet.get_demands_vector()
 
@@ -63,12 +51,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         print(f"Demands count: {len(d)}")
         print(f"Paths count: {n}")
 
-    #real_solution = np.array([2., 2., 2.])
     real_solution = None
+    real_solution = np.array([5., 4., 3., 3.])
 
-    if real_solution:
+    if real_solution is not None:
         print(f"Cost from real solution (from {real_solution[:5]})")
         print(Gf(real_solution)[:5])
+
+        print(f"Flow on edges from real solution:")
+        print(Q.dot(real_solution)[:5])
 
     #algorithm_params.x0 = np.array([6., 0., 0.])
 

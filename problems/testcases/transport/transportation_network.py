@@ -62,16 +62,21 @@ class TransportationNetwork:
         if edges_list and demand:
             self.recalc_derived_data()
 
-    def show(self, *, limit: int = 7):
+    def show(self, *, limit: int = 7, print_edges_data: bool = False):
         print(self.graph)
-        print(list(self.graph.edges(data=True))[:limit])
+        print("Edges:")
+        for k in self.keyed_edges.keys():
+            if k>0:
+                print('; ', end='')
+            print(f"{k}: {self.keyed_edges[k][:2]}", end='')
+        print()
+
         print("Demand: ")
         for d in self.demand[:limit]:
             print(f'{d[0]} -> {d[1]}: {d[2]}')
 
         # edg = list(self.graph.edges(data=True))
 
-        print("Paths: ")
         pi = 0
         for idx, paths_for_pair in enumerate(self.paths):
             if idx>0:
@@ -85,6 +90,8 @@ class TransportationNetwork:
                         print(self.keyed_edges[edge_key][0], sep='', end='')
                     print('->', sep='', end='')
                     print(self.keyed_edges[edge_key][1], sep='', end='')
+
+        print()
 
     def draw(self):
         if self.nodes_coords:
@@ -229,11 +236,14 @@ class TransportationNetwork:
         koeffs = np.ndarray((N,), dtype=float)
         capacity_inv = np.ndarray((N,), dtype=float)
         power = np.ndarray((N,), dtype=float)
-        for i, e in enumerate(self.graph.edges.data()):
-            free_flows[i] = e[2][str(EdgeParams.FRF)]
-            koeffs[i] = e[2][str(EdgeParams.K)]
-            capacity_inv[i] = 1. / e[2][str(EdgeParams.CAP)]
-            power[i] = e[2][str(EdgeParams.POW)]
+
+        # for i, e in enumerate(self.graph.edges.data()):
+        for k, edg_key in self.keyed_edges.items():
+            e = self.graph.edges[edg_key]
+            free_flows[k] = e[str(EdgeParams.FRF)]
+            koeffs[k] = e[str(EdgeParams.K)]
+            capacity_inv[k] = 1. / e[str(EdgeParams.CAP)]
+            power[k] = e[str(EdgeParams.POW)]
 
         def cost(x: np.ndarray) -> np.ndarray:
             return self.Q.T @ (free_flows * (1.0 + koeffs * np.power(((self.Q @ x) * capacity_inv), power)))

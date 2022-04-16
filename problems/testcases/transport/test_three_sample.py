@@ -13,29 +13,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         edges_list=[
             (1, 5, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0/5.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
             (1, 3, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
-            (1, 4, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
             (3, 5, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (3, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (2, 3, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 10.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
             (2, 4, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
             (2, 7, {str(EdgeParams.FRF): 10., str(EdgeParams.K): 10.0 / 5.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (4, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
             (4, 7, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0 / 10.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (6, 5, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
-            (6, 7, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 10.0, str(EdgeParams.CAP): 1.,
-                    str(EdgeParams.POW): 1.}),
         ],
-        demand=[(1, 5, 5), (1, 6, 3), (1, 7, 2), (2, 5, 2), (2, 6, 3), (2, 7, 5)],
-        nodes_coords={1: (3, 15), 2: (3, 5), 3: (20, 13), 4: (20, 7), 5: (50, 20), 6: (50, 10), 7: (50, 1)}
+        demand=[(1, 5, 5), (2, 7, 5)],
+        nodes_coords={1: (3, 15), 2: (3, 5), 3: (20, 13), 4: (20, 7), 5: (50, 20), 7: (50, 1)}
     )
 
     tnet.show()

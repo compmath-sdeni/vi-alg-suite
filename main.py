@@ -36,7 +36,9 @@ from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcode
 
 from problems.funcndmin import FuncNDMin
 
-from problems.testcases.transport import pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample
+from problems.testcases.transport import \
+    pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample, test_three_sample, test_sample_1_2, \
+    test_sample_1_3
 
 from problems.testcases.slar_random import getSLE
 from utils.alg_history import AlgHistory
@@ -184,7 +186,8 @@ sys.stdout = captured_io
 # problem = braess_sample.prepareProblem(algorithm_params=params)
 # problem = load_file_sample.prepareProblem(algorithm_params=params)
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
-problem = test_two_sample.prepareProblem(algorithm_params=params)
+#problem = test_three_sample.prepareProblem(algorithm_params=params)
+problem = test_sample_1_3.prepareProblem(algorithm_params=params)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
