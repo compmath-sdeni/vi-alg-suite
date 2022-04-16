@@ -25,15 +25,18 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Braess-Example/Braess_net.tntp',
     #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Braess-Example/Braess_trips.tntp')
 
-    tnet.load_network_graph(
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls/SiouxFalls_net.tntp',
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls/SiouxFalls_trips.tntp')
+    # tnet.load_network_graph(
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls/SiouxFalls_net.tntp',
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls/SiouxFalls_trips.tntp')
 
+    tnet.load_network_graph(
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-3-1/sample_net.tntp',
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-3-1/sample_trips.tntp')
 
     tnet.show()
 
-    # tnet.draw()
-    # plt.show()
+    tnet.draw()
+    plt.show()
 
     d = tnet.get_demands_vector()
 
@@ -55,24 +58,25 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         print(f"Demands count: {len(d)}")
         print(f"Paths count: {n}")
 
-    #real_solution = np.array([2., 2., 2.])
     real_solution = None
+    real_solution = np.array([5., 4., 3., 3.])
 
-    if real_solution:
+    if real_solution is not None:
         print(f"Cost from real solution (from {real_solution[:5]})")
         print(Gf(real_solution)[:5])
 
+        print(f"Flow on edges from real solution:")
+        print(Q.dot(real_solution)[:5])
+
     #algorithm_params.x0 = np.array([6., 0., 0.])
 
-    try:
-        x0 = np.load('traff_eq_lastx.npy')
-    except:
-        x0 = None
-
-    if x0 is not None:
-        algorithm_params.x0 = x0
-    else:
-        algorithm_params.x0 = np.array([1. for i in range(n)])
+    algorithm_params.x0 = np.array([0. for i in range(n)])
+    # build initial flow
+    for idx, demand in enumerate(tnet.get_demands_vector()):
+        paths_for_pair = W[idx]
+        flow = demand / len(paths_for_pair)
+        for path_index in paths_for_pair:
+            algorithm_params.x0[path_index] = flow
 
     print(f"Cost from initial flow (from {algorithm_params.x0[:5]} ...)")
     print(Gf(algorithm_params.x0)[:5])
@@ -83,53 +87,10 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
 
-    # region Braess example - hardcoded
-    # n = 3
+    algorithm_params.eps = 1e-8
+    algorithm_params.max_iters = 1000
 
-    # paths to demands incidence matrix
-    # Have a row for each demand (source-destination pair)
-    # And the row contains vector of path indices which should satisfy corresponding demand
-    # W = [
-    #     np.array([0, 1, 2])
-    # ]
-
-    # edges to paths incidence matrix
-    # Q = np.array([
-    #     [1, 0, 1],
-    #     [0, 1, 0],
-    #     [0, 1, 1],
-    #     [1, 0, 0],
-    #     [0, 0, 1]
-    # ], dtype=float)
-
-    # affine edges cost function - cost(y) = Ay+b
-    # A = np.array([
-    #     [10, 0, 0, 0, 0],
-    #     [0, 1, 0, 0, 0],
-    #     [0, 0, 10, 0, 0],
-    #     [0, 0, 0, 1, 0],
-    #     [0, 0, 0, 0, 1],
-    # ], dtype=float)
-    # b = np.array([0, 50, 0, 50, 10])
-
-    # Affine cost function - with edges <-> paths relation using incidence matrix
-    # 1. get edges flow by paths flow;
-    # 2. Calculate edges cost by affine cost function;
-    # 3. Transform edges cost to paths cost
-    # Ge = lambda x: Q.T @ (A @ (Q @ x) + b)
-
-    # d = np.array([6.])
-
-    # real_solution = np.array([2., 2., 2.])
-    #
-    # algorithm_params.x0 = np.array([0., 0., 6.])
-    # algorithm_params.x1 = algorithm_params.x0.copy()
-    # endregion
-
-    algorithm_params.eps = 1e-5
-    algorithm_params.max_iters = 100
-
-    algorithm_params.lam = 0.0000005
+    algorithm_params.lam = 0.1
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 

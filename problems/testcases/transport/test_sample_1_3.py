@@ -11,19 +11,19 @@ from matplotlib import pyplot as plt
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     tnet = TransportationNetwork(
         edges_list=[
-            (1, 6, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0/5.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
-            (1, 5, {str(EdgeParams.FRF): 3., str(EdgeParams.K): 3.0 / 3.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
-            (5, 6, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 2.0 / 1.0, str(EdgeParams.CAP): 1.,
+            (1, 4, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 5.0/5.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
+            (1, 3, {str(EdgeParams.FRF): 3., str(EdgeParams.K): 3.0 / 3.0, str(EdgeParams.CAP): 1., str(EdgeParams.POW): 1.}),
+            (3, 4, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 2.0 / 1.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (1, 3, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 1.0, str(EdgeParams.CAP): 1.,
+            (1, 2, {str(EdgeParams.FRF): 1., str(EdgeParams.K): 1.0 / 1.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (3, 5, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 1.0 / 5.0, str(EdgeParams.CAP): 1.,
+            (2, 3, {str(EdgeParams.FRF): 5., str(EdgeParams.K): 1.0 / 5.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
-            (3, 7, {str(EdgeParams.FRF): 20., str(EdgeParams.K): 1.0 / 20.0, str(EdgeParams.CAP): 1.,
+            (2, 5, {str(EdgeParams.FRF): 20., str(EdgeParams.K): 1.0 / 20.0, str(EdgeParams.CAP): 1.,
                     str(EdgeParams.POW): 1.}),
         ],
-        demand=[(1, 6, 12), (1, 7, 3)],
-        nodes_coords={1: (5, 50), 3: (50, 50), 5: (25, 25), 6: (15, 5), 7: (75,40)}
+        demand=[(1, 4, 12), (1, 5, 3)],
+        nodes_coords={1: (5, 50), 2: (50, 50), 3: (25, 25), 4: (15, 5), 5: (75,40)}
     )
 
     tnet.show()

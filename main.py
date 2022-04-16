@@ -184,10 +184,10 @@ sys.stdout = captured_io
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
-#problem = load_file_sample.prepareProblem(algorithm_params=params)
-#problem = test_one_sample.prepareProblem(algorithm_params=params)
-problem = test_two_sample.prepareProblem(algorithm_params=params)
-#problem = test_three_sample.prepareProblem(algorithm_params=params)
+problem = load_file_sample.prepareProblem(algorithm_params=params)
+# problem = test_one_sample.prepareProblem(algorithm_params=params)
+# problem = test_two_sample.prepareProblem(algorithm_params=params)
+# problem = test_three_sample.prepareProblem(algorithm_params=params)
 # problem = test_sample_1_3.prepareProblem(algorithm_params=params)
 
 # sys.stdout = sys.__stdout__
@@ -545,7 +545,7 @@ def initAlgs():
         # korpele,
         # korpele_adapt,
         tseng,
-        tseng_adaptive,
+#        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
         # extrapol_from_past_adaptive,

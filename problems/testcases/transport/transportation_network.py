@@ -199,7 +199,7 @@ class TransportationNetwork:
                 mat[i, j] = matrix.get(i + 1, {}).get(j + 1, 0)
 
     def load_network_graph(self, edges_list_file_path: str, demands_file_path: str):
-        net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep='\t')
+        net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep='\t+', skipinitialspace=False)
 
         trimmed = [s.strip().lower() for s in net.columns]
         net.columns = trimmed
@@ -223,6 +223,11 @@ class TransportationNetwork:
                                 [str(EdgeParams.FRF), str(EdgeParams.CAP), str(EdgeParams.K),
                                  str(EdgeParams.POW), str(EdgeParams.LEN)],
                                 create_using=nx.MultiDiGraph, edge_key='edge_id')
+
+        k: int = 0  # edge key = zero based edge number for algs
+        for e in self.graph.edges:
+            self.keyed_edges[e[2]] = (e[0], e[1], e[2])
+            k += 1
 
         if demands_file_path:
             self.load_demands(demands_file_path)
