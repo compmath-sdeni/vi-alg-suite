@@ -166,6 +166,17 @@ class TransportationNetwork:
 
         return res.T
 
+    def load_positions(self, file_path: str):
+        pos = {}
+        f = open(file_path, 'r')
+        file_contents = f.read()
+        rows = file_contents.splitlines()
+        for row in rows:
+            parts = row.strip().split(' ')
+            pos[int(parts[0])] = (int(parts[1]), int(parts[2]))
+
+        return pos
+
     def load_demands(self, file_path: str):
         f = open(file_path, 'r')
         all_rows = f.read()
@@ -198,7 +209,7 @@ class TransportationNetwork:
                 # We map values to a index i-1, as Numpy is base 0
                 mat[i, j] = matrix.get(i + 1, {}).get(j + 1, 0)
 
-    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str):
+    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str, *, pos_file: str = None):
         net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep='\t+', skipinitialspace=False)
 
         trimmed = [s.strip().lower() for s in net.columns]
@@ -223,6 +234,9 @@ class TransportationNetwork:
                                 [str(EdgeParams.FRF), str(EdgeParams.CAP), str(EdgeParams.K),
                                  str(EdgeParams.POW), str(EdgeParams.LEN)],
                                 create_using=nx.MultiDiGraph, edge_key='edge_id')
+
+        if pos_file is not None:
+            self.nodes_coords = self.load_positions(pos_file)
 
         k: int = 0  # edge key = zero based edge number for algs
         for e in self.graph.edges:

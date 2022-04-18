@@ -184,7 +184,11 @@ sys.stdout = captured_io
 
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
-problem = load_file_sample.prepareProblem(algorithm_params=params)
+
+problem = load_file_sample.prepareProblem(algorithm_params=params,
+                                          data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
+                                          pos_file_name='sample_pos.txt')
+
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
 # problem = test_three_sample.prepareProblem(algorithm_params=params)

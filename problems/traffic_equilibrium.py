@@ -20,7 +20,8 @@ class TrafficEquilibrium(VIProblem):
                  hr_name: str = None,
                  x_test: np.ndarray = None,
                  lam_override: float = None,
-                 lam_override_by_method: dict = None
+                 lam_override_by_method: dict = None,
+                 flow_eps: float = 0.0000001
                  ):
         super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method)
@@ -28,6 +29,7 @@ class TrafficEquilibrium(VIProblem):
         self.Gf = Gf
         self.d = d
         self.W = W
+        self.flow_eps = flow_eps
 
         self.n: int = len(W)  # paths count
 
@@ -39,7 +41,7 @@ class TrafficEquilibrium(VIProblem):
 
         k = 0
         for demand_paths in self.W:
-            g[k] = np.max(costs[demand_paths]) - np.min(costs[demand_paths])
+            g[k] = np.max(costs[demand_paths[x[demand_paths]>self.flow_eps]]) - np.min(costs[demand_paths[x[demand_paths]>self.flow_eps]])
             k += 1
 
         return np.max(g)  # priciest path expenses vs cheapest path expenses
@@ -86,4 +88,6 @@ class TrafficEquilibrium(VIProblem):
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
         return {
             'Individual loss': self.getIndividualLoss(x),
+            f"\nCost from final flow": self.Gf(x)[:10],
+            f"\nGap": self.F(x)
         }

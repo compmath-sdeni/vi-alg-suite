@@ -1,3 +1,6 @@
+import os.path
+import pathlib
+
 import numpy as np
 
 from constraints.allspace import Rn
@@ -8,17 +11,11 @@ from problems.testcases.transport.transportation_network import TransportationNe
 from matplotlib import pyplot as plt
 
 
-def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
-    # tnet = TransportationNetwork(
-    #     edges_list=[
-    #         (1, 3, {str(EdgeParams.FRF): 0.00000001, 'k': 1000000000., 'cap': 1., 'pow': 1.}),
-    #         (1, 4, {str(EdgeParams.FRF): 50., 'k': 0.02, 'cap': 1., 'pow': 1.}),
-    #         (3, 2, {str(EdgeParams.FRF): 50., 'k': 0.02, 'cap': 1., 'pow': 1.}),
-    #         (3, 4, {str(EdgeParams.FRF): 10., 'k': 0.1, 'cap': 1., 'pow': 1.}),
-    #         (4, 2, {str(EdgeParams.FRF): 0.00000001, 'k': 1000000000., 'cap': 1., 'pow': 1.}),
-    #     ],
-    #     demand=[(1, 2, 6.)]
-    # )
+def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
+                   data_path: str,
+                   net_file_name: str = 'sample_net.tntp',
+                   demands_file_name: str = 'sample_trips.tntp',
+                   pos_file_name: str = None):
 
     tnet = TransportationNetwork()
     # tnet.load_network_graph(
@@ -30,8 +27,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls/SiouxFalls_trips.tntp')
 
     tnet.load_network_graph(
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-3-1/sample_net.tntp',
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-3-1/sample_trips.tntp')
+        os.path.join(data_path, net_file_name),
+        os.path.join(data_path, demands_file_name),
+        pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
     tnet.show()
 
@@ -45,7 +43,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     W = tnet.get_paths_to_demands_incidence()
     n = Q.shape[1]
 
-    if n < 10:
+    if n <= 10:
         print("Demands: ")
         print(d)
 
@@ -59,14 +57,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         print(f"Paths count: {n}")
 
     real_solution = None
-    real_solution = np.array([5., 4., 3., 3.])
+    # real_solution = np.array([5., 4., 3., 3.])
 
     if real_solution is not None:
         print(f"Cost from real solution (from {real_solution[:5]})")
-        print(Gf(real_solution)[:5])
+        print(Gf(real_solution)[:10])
 
         print(f"Flow on edges from real solution:")
-        print(Q.dot(real_solution)[:5])
+        print(Q.dot(real_solution)[:10])
 
     #algorithm_params.x0 = np.array([6., 0., 0.])
 
@@ -78,8 +76,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         for path_index in paths_for_pair:
             algorithm_params.x0[path_index] = flow
 
-    print(f"Cost from initial flow (from {algorithm_params.x0[:5]} ...)")
-    print(Gf(algorithm_params.x0)[:5])
+    print(f"Cost from initial flow (from {algorithm_params.x0[:10]} ...)")
+    print(Gf(algorithm_params.x0)[:10])
 
     print(f"Initial flow on edges:")
     print((tnet.Q @ algorithm_params.x0)[:10])
@@ -90,7 +88,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.eps = 1e-8
     algorithm_params.max_iters = 1000
 
-    algorithm_params.lam = 0.1
+    algorithm_params.lam = 0.01
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 
