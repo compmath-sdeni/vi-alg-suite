@@ -15,7 +15,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                    data_path: str,
                    net_file_name: str = 'sample_net.tntp',
                    demands_file_name: str = 'sample_trips.tntp',
-                   pos_file_name: str = None):
+                   pos_file_name: str = None, zero_cutoff: float = 0.5):
 
     tnet = TransportationNetwork()
     # tnet.load_network_graph(
@@ -29,12 +29,13 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     tnet.load_network_graph(
         os.path.join(data_path, net_file_name),
         os.path.join(data_path, demands_file_name),
+        saved_paths_file=os.path.join(data_path, 'saved_paths.npy'),
         pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
     tnet.show()
 
-    tnet.draw()
-    plt.show()
+    # tnet.draw()
+    # plt.show()
 
     d = tnet.get_demands_vector()
 
@@ -86,15 +87,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
 
     algorithm_params.eps = 1e-8
-    algorithm_params.max_iters = 1000
+    algorithm_params.max_iters = 10000
 
-    algorithm_params.lam = 0.01
+    algorithm_params.lam = 0.05
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 
     algorithm_params.min_iters = 3
 
-    algorithm_params.start_adaptive_lam = 1.0
+    algorithm_params.start_adaptive_lam = 0.05
     algorithm_params.start_adaptive_lam1 = 1.0
 
     algorithm_params.adaptive_tau = 0.9
@@ -111,7 +112,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     algorithm_params.plot_start_iter = 3
 
     problem = TrafficEquilibrium(
-        Gf=Gf, d=d, W=W, C=Rn(n),
+        Gf=Gf, d=d, W=W, Q=Q, C=Rn(n),
+        zero_cutoff=zero_cutoff,
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ traffic equilibrium ' +

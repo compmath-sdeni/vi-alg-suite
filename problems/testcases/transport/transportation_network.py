@@ -1,7 +1,9 @@
 import os
 import sys
+import time
 from collections import Iterable
 from enum import Enum, unique
+from operator import itemgetter
 
 import pandas as pd
 from typing import Dict, List, Tuple, Sequence, Mapping
@@ -44,15 +46,13 @@ class TransportationNetwork:
             self.load_network_graph(network_graph_file)
 
         if edges_list:
-            # sorted_edges = sorted(edges_list, key=itemgetter(0, 1))
+            sorted_edges = sorted(edges_list, key=itemgetter(0, 1))
 
             k: int = 0  # edge key = zero based edge number for algs
-            for e in edges_list:
+            for e in sorted_edges:
                 self.graph.add_edge(e[0], e[1], key=k, **e[2])
                 self.keyed_edges[k] = (e[0], e[1], k)
                 k += 1
-
-            # self.graph.add_edges_from(sorted_edges)
 
         if demand:
             self.demand: List[Tuple[int, int, float]] = demand
@@ -102,8 +102,8 @@ class TransportationNetwork:
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
         nx.draw_networkx_edge_labels(self.graph, pos)
 
-    def recalc_derived_data(self):
-        self.calc_paths()
+    def recalc_derived_data(self, saved_paths_file: str = None):
+        self.calc_paths(saved_paths_file=saved_paths_file)
         self.Q = self._calc_edges_to_paths_incidence_()
 
     def estimate_path_cost(self, path: Iterable):
@@ -121,28 +121,44 @@ class TransportationNetwork:
         return cost
 
 
-    def calc_paths(self, max_count: int = 3, max_depth: int = 10):
+    def calc_paths(self, *, saved_paths_file: str = None, max_count: int = 4, max_depth: int = 15):
         self.paths = []
         self.paths_count = 0
-        for d in self.demand:
-            paths_for_pair_edge_ids: List = []
-            paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_depth))
-            if len(paths) > max_count:
-                cost_ordered_paths = sorted(paths, key=self.estimate_path_cost)
-                best_paths = cost_ordered_paths[:max_count]
-            else:
-                best_paths = paths
 
-            for p in best_paths:
-                edge_keys = np.ndarray((len(p),), dtype=int)
-                i = 0
-                for e in p:
-                    edge_keys[i] = e[2]
-                    i += 1
-                paths_for_pair_edge_ids.append(edge_keys)
-                self.paths_count += 1
+        if saved_paths_file and os.path.exists(saved_paths_file):
+            start = time.process_time()
+            self.paths = np.load(saved_paths_file, allow_pickle=True)
+            for p in self.paths:
+                self.paths_count += len(p)
+            end = time.process_time()
+            print(f"Loaded {self.paths_count} paths in {end-start} sec.")
+        else:
+            start = time.process_time()
+            for d in self.demand:
+                paths_for_pair_edge_ids: List = []
+                paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_depth))
+                if len(paths) > max_count:
+                    cost_ordered_paths = sorted(paths, key=self.estimate_path_cost)
+                    best_paths = cost_ordered_paths[:max_count]
+                else:
+                    best_paths = paths
 
-            self.paths.append(paths_for_pair_edge_ids)
+                for p in best_paths:
+                    edge_keys = np.ndarray((len(p),), dtype=int)
+                    i = 0
+                    for e in p:
+                        edge_keys[i] = e[2]
+                        i += 1
+                    paths_for_pair_edge_ids.append(edge_keys)
+                    self.paths_count += 1
+
+                self.paths.append(paths_for_pair_edge_ids)
+
+            end = time.process_time()
+            print(f"Calculated {self.paths_count} paths in {end-start} sec.")
+
+            if saved_paths_file:
+                np.save(saved_paths_file, self.paths, allow_pickle=True)
 
     def get_demands_vector(self) -> np.ndarray:
         return np.array([d[2] for d in self.demand])
@@ -209,8 +225,8 @@ class TransportationNetwork:
                 # We map values to a index i-1, as Numpy is base 0
                 mat[i, j] = matrix.get(i + 1, {}).get(j + 1, 0)
 
-    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str, *, pos_file: str = None):
-        net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep='\t+', skipinitialspace=False)
+    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str, *, saved_paths_file: str = None, pos_file: str = None, columns_separator: str = '\t'):
+        net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep=columns_separator, skipinitialspace=False)
 
         trimmed = [s.strip().lower() for s in net.columns]
         net.columns = trimmed
@@ -224,16 +240,23 @@ class TransportationNetwork:
                             'b': str(EdgeParams.K), 'power': str(EdgeParams.POW), 'length': str(EdgeParams.LEN)},
                    inplace=True)
 
-        net['edge_id'] = np.arange(len(net))
+        net.sort_values(by=['init_node', 'term_node'], inplace=True)
 
-        # show for debug
-        # print(net.head())
-        # net.to_csv('test.csv', sep='\t')
+        k: int = 0  # edge key = zero based edge number for algs
+        for e in net.itertuples(False):
+            ed = e._asdict()
+            src = ed.pop('init_node')
+            dst = ed.pop('term_node')
+            self.graph.add_edge(src, dst, key=k, **ed)
+            self.keyed_edges[k] = (e[0], e[1], k)
+            k += 1
 
-        self.graph = nx.from_pandas_edgelist(net, 'init_node', 'term_node',
-                                [str(EdgeParams.FRF), str(EdgeParams.CAP), str(EdgeParams.K),
-                                 str(EdgeParams.POW), str(EdgeParams.LEN)],
-                                create_using=nx.MultiDiGraph, edge_key='edge_id')
+        # net['edge_id'] = np.arange(len(net))
+        #
+        # self.graph = nx.from_pandas_edgelist(net, 'init_node', 'term_node',
+        #                         [str(EdgeParams.FRF), str(EdgeParams.CAP), str(EdgeParams.K),
+        #                          str(EdgeParams.POW), str(EdgeParams.LEN)],
+        #                         create_using=nx.MultiDiGraph, edge_key='edge_id')
 
         if pos_file is not None:
             self.nodes_coords = self.load_positions(pos_file)
@@ -246,7 +269,7 @@ class TransportationNetwork:
         if demands_file_path:
             self.load_demands(demands_file_path)
 
-        self.recalc_derived_data()
+        self.recalc_derived_data(saved_paths_file)
 
 
     def get_cost_function(self):

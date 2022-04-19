@@ -109,6 +109,10 @@ class IterativeAlgorithm:
             self.iter += 1
             start = time.process_time_ns()
             self.doStep()
+
+            if self.problem.zero_cutoff is not None:
+                self.x[self.x < self.problem.zero_cutoff] = 0
+
             finish = time.process_time_ns()
             self.iterEndTime = time.process_time()
 

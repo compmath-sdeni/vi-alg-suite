@@ -18,7 +18,8 @@ class Problem:
                  hr_name: str = None,
                  x_dim: int = None,
                  lam_override: float = None,
-                 lam_override_by_method: dict = None):
+                 lam_override_by_method: dict = None,
+                 zero_cutoff: float = None):
 
         self._x0: Union[np.ndarray, float] = x0
         self.C = C
@@ -27,6 +28,7 @@ class Problem:
         self.lam_override = lam_override
         self.lam_override_by_method = lam_override_by_method
         self.x_dim = x_dim if x_dim is not None else x0.shape[0]
+        self.zero_cutoff = zero_cutoff
 
     @property
     def x0(self) -> Union[np.ndarray, float]:

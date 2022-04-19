@@ -74,6 +74,9 @@ class TsengAdaptive(IterGradTypeMethod):
             else:
                 delta_A_norm = np.linalg.norm(delta_A, 2)
 
+            if self.iter>100 and self.iter % 10 == 0:
+                self.lam *= 2.
+
             if delta_A_norm >= self.zero_delta:
                 t = self.tau * self.D / delta_A_norm
                 if self.lam >= t:

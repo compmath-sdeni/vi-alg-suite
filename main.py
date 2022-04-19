@@ -7,6 +7,7 @@ from typing import List
 
 import numpy as np
 import cvxpy as cp
+import pandas
 import pandas as pd
 from matplotlib import pyplot as plt
 
@@ -185,9 +186,19 @@ sys.stdout = captured_io
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
 
-problem = load_file_sample.prepareProblem(algorithm_params=params,
-                                          data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
-                                          pos_file_name='sample_pos.txt')
+# problem = load_file_sample.prepareProblem(algorithm_params=params,
+#                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
+#                                           pos_file_name='sample_pos.txt')
+
+# problem = load_file_sample.prepareProblem(algorithm_params=params,
+#                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
+#                                           pos_file_name='sample_pos.txt')
+
+problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
+                                          data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls',
+                                          net_file_name='SiouxFalls_net.tntp',
+                                          demands_file_name='SiouxFalls_trips.tntp')
+
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -548,15 +559,15 @@ def initAlgs():
     algs_to_test = [
         # korpele,
         # korpele_adapt,
-        tseng,
-#        tseng_adaptive,
+#        tseng,
+        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
         # extrapol_from_past_adaptive,
         # extrapol_from_past_adaptive_bregproj,
         # malitsky_tam,
 
-        # malitsky_tam_adaptive,
+#        malitsky_tam_adaptive,
         # malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,
@@ -635,11 +646,24 @@ else:
         alg_history_list.append(alg.history)
 
         if params.save_history:
-            df = alg.history.toPandasDF()
-            df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
+            # formatting params - precision is ignored for some reason...
+            with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
+                df: pandas.DataFrame = alg.history.toPandasDF()
+                df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
+
+            # save to csv without cutting data (without ...)
+            with np.printoptions(threshold=sys.maxsize, precision=3, linewidth=sys.maxsize, floatmode='fixed'):
+                # pandas.set_option('display.max_columns', None)
+                # pandas.set_option('display.max_colwidth', None)
+                # pandas.set_option('display.max_seq_items', None)
+
+                df: pandas.DataFrame = alg.history.toPandasDF()
+                df.to_csv(os.path.join(saved_history_dir, f"history-{test_mnemo}.csv"))
+
         print('')
 
-        np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count - 1])
+        # save last approximation - to start from it next time
+        # np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count - 1])
 
 if params.test_time:
     for k in timings:

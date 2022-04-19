@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Union, Dict, Optional, Callable, List
 
 import numpy as np
@@ -15,20 +16,23 @@ class TrafficEquilibrium(VIProblem):
                  Gf: Callable[[np.ndarray], np.ndarray],  # Cost function for paths, dependent on traffic
                  d: np.ndarray,  # demands for source-destination pairs
                  W: List[np.ndarray],  # paths to demands incidence matrix
+                 Q: np.ndarray, # paths to edges correspondence matrix
                  x0: Union[np.ndarray] = None,
                  C: ConvexSetConstraints,
                  hr_name: str = None,
                  x_test: np.ndarray = None,
                  lam_override: float = None,
                  lam_override_by_method: dict = None,
-                 flow_eps: float = 0.0000001
+                 flow_eps: float = 0.0000001,
+                 zero_cutoff: float = None
                  ):
         super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
-                         lam_override_by_method=lam_override_by_method)
+                         lam_override_by_method=lam_override_by_method, zero_cutoff=zero_cutoff)
 
         self.Gf = Gf
         self.d = d
         self.W = W
+        self.Q = Q
         self.flow_eps = flow_eps
 
         self.n: int = len(W)  # paths count
@@ -86,8 +90,12 @@ class TrafficEquilibrium(VIProblem):
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
-        return {
-            'Individual loss': self.getIndividualLoss(x),
-            f"\nCost from final flow": self.Gf(x)[:10],
-            f"\nGap": self.F(x)
+        res = {
+            "Individual loss": self.getIndividualLoss(x),
+            "Cost from final flow": self.Gf(x),
+            "Flow on edges": self.Q @ x,
+            "Check of feasible set": np.linalg.norm(x - self.Project(x)),
+            "Gap": self.F(x)
         }
+
+        return res

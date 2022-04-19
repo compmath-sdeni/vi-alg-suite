@@ -1,3 +1,4 @@
+import sys
 import time
 from typing import Callable
 
@@ -115,33 +116,33 @@ class BasicAlgoTests:
         if alg_object.problem.C:
             print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x[:alg_object.problem.x_dim])}")
 
-        print_size = 5
+        with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
+            print_size = 5
+            cum_res:np.ndarray = None
+            try:
+                if alg_object.averaged_result  is not None:
+                    cum_res = alg_object.averaged_result
+            except:
+                pass
 
-        cum_res:np.ndarray = None
-        try:
-            if alg_object.averaged_result  is not None:
-                cum_res = alg_object.averaged_result
-        except:
-            pass
+            round_decimals = 5
+            if alg_object.x.shape[0] <= print_size * 2:
+                print("Result: {0}".format(alg_object.x))
+                if cum_res is not None:
+                    print("Result AVG: {0}".format(cum_res))
+            else:
+                print_len = int(alg_object.x.shape[0] / 2)
+                if print_len > print_size:
+                    print_len = print_size
 
-        round_decimals = 5
-        if alg_object.x.shape[0] <= print_size * 2:
-            print("Result: {0}".format(alg_object.x))
-            if cum_res is not None:
-                print("Result AVG: {0}".format(cum_res))
-        else:
-            print_len = int(alg_object.x.shape[0] / 2)
-            if print_len > print_size:
-                print_len = print_size
+                print("Result: {0} ... {1}\n".format(np.round(alg_object.x[:print_len], round_decimals), np.round(alg_object.x[-print_len:], round_decimals)))
+                if cum_res is not None:
+                    print("Result AVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
 
-            print("Result: {0} ... {1}\n".format(np.round(alg_object.x[:print_len], round_decimals), np.round(alg_object.x[-print_len:], round_decimals)))
-            if cum_res is not None:
-                print("Result AVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
+            extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x, final=True, averaged_x=cum_res)
+            if extra_indicators:
+                extra_strings = []
+                for name, value in extra_indicators.items():
+                    extra_strings.append(f'{name}: {value}')
 
-        extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x, final=True, averaged_x=cum_res)
-        if extra_indicators:
-            extra_strings = []
-            for name, value in extra_indicators.items():
-                extra_strings.append(f'{name}: {value}')
-
-            print('; '.join(extra_strings))
+                print(";\n".join(extra_strings))
