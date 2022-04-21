@@ -85,8 +85,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     print(f"Initial flow on edges:")
     print((tnet.Q @ algorithm_params.x0)[:10])
 
-    algorithm_params.x1 = algorithm_params.x0.copy()
+    algorithm_params.save_history = False
 
+    algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.eps = 1e-8
     algorithm_params.max_iters = 500
