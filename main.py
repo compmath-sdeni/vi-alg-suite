@@ -4,6 +4,7 @@ import os
 import io
 import sys
 from typing import List
+import getopt
 
 import numpy as np
 import cvxpy as cp
@@ -61,6 +62,11 @@ params = AlgorithmParams(
     adaptive_tau=0.75,
     adaptive_tau_small=0.45
 )
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "ha:p:", ["algorithms=", "problem="])
+except getopt.GetoptError:
+    print('no command line options mode.')
 
 captured_io = io.StringIO()
 sys.stdout = captured_io
@@ -195,7 +201,7 @@ sys.stdout = captured_io
 #                                           pos_file_name='sample_pos.txt')
 
 problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-                                          data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/SiouxFalls',
+                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
                                           net_file_name='SiouxFalls_net.tntp',
                                           demands_file_name='SiouxFalls_trips.tntp')
 
