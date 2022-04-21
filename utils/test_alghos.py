@@ -116,7 +116,7 @@ class BasicAlgoTests:
         if alg_object.problem.C:
             print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x[:alg_object.problem.x_dim])}")
 
-        with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
+        with np.printoptions(threshold=1500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
             print_size = 5
             cum_res:np.ndarray = None
             try:

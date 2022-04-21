@@ -16,7 +16,7 @@ class TrafficEquilibrium(VIProblem):
                  Gf: Callable[[np.ndarray], np.ndarray],  # Cost function for paths, dependent on traffic
                  d: np.ndarray,  # demands for source-destination pairs
                  W: List[np.ndarray],  # paths to demands incidence matrix
-                 Q: np.ndarray, # paths to edges correspondence matrix
+                 Q: np.ndarray,  # paths to edges correspondence matrix
                  x0: Union[np.ndarray] = None,
                  C: ConvexSetConstraints,
                  hr_name: str = None,
@@ -41,11 +41,12 @@ class TrafficEquilibrium(VIProblem):
         # GAP
 
         costs = self.Gf(x)
-        g=np.ndarray(self.d.shape)
+        g = np.ndarray(self.d.shape)
 
         k = 0
         for demand_paths in self.W:
-            g[k] = np.max(costs[demand_paths[x[demand_paths]>self.flow_eps]]) - np.min(costs[demand_paths[x[demand_paths]>self.flow_eps]])
+            g[k] = np.max(costs[demand_paths[x[demand_paths] > self.flow_eps]]) - np.min(
+                costs[demand_paths[x[demand_paths] > self.flow_eps]])
             k += 1
 
         return np.max(g)  # priciest path expenses vs cheapest path expenses
@@ -68,6 +69,16 @@ class TrafficEquilibrium(VIProblem):
     def getIndividualLoss(self, x: np.ndarray) -> float:
         return self.Gf(x).max()
 
+    def getFlowsBetweenODPairs(self, x: np.ndarray) -> np.ndarray:
+        res = np.ndarray(self.d.shape)
+        k = 0
+        for demand_paths in self.W:
+            res[k] = np.sum(x[demand_paths])
+            k += 1
+
+        return res
+
+
     def saveToDir(self, *, path_to_save: str = None):
         path_to_save = super().saveToDir(path_to_save=path_to_save)
 
@@ -89,12 +100,18 @@ class TrafficEquilibrium(VIProblem):
         self.d = np.loadtxt("{0}/{1}".format(path, 'd.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
-    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> \
+    Optional[Dict]:
+
+        od_flows: np.ndarray = self.getFlowsBetweenODPairs(x)
         res = {
             "Individual loss": self.getIndividualLoss(x),
             "Cost from final flow": self.Gf(x),
             "Flow on edges": self.Q @ x,
-            "Check of feasible set": np.linalg.norm(x - self.Project(x)),
+            "Distance to feasible set": np.linalg.norm(x - self.Project(x)),
+            "Flows between OD pairs": od_flows,
+            "Flows between OD pairs delta": self.d - od_flows,
+            "Flows error (abs, rel)":((self.d - od_flows).sum(), (self.d - od_flows).sum()/self.d.sum()),
             "Gap": self.F(x)
         }
 

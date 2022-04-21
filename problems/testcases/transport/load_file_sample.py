@@ -29,10 +29,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     tnet.load_network_graph(
         os.path.join(data_path, net_file_name),
         os.path.join(data_path, demands_file_name),
-        saved_paths_file=os.path.join(data_path, 'saved_paths.npy'),
+        max_od_paths_count=10,
+        max_path_edges=25,
+        saved_paths_file=os.path.join(data_path, 'saved_paths_cnt10_depth25.npy'),
         pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
-    tnet.show()
+    tnet.show(limit=50)
 
     # tnet.draw()
     # plt.show()
@@ -87,15 +89,15 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
 
     algorithm_params.eps = 1e-8
-    algorithm_params.max_iters = 10000
+    algorithm_params.max_iters = 500
 
-    algorithm_params.lam = 0.05
+    algorithm_params.lam = 0.1
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 
     algorithm_params.min_iters = 3
 
-    algorithm_params.start_adaptive_lam = 0.05
+    algorithm_params.start_adaptive_lam = 0.0005
     algorithm_params.start_adaptive_lam1 = 1.0
 
     algorithm_params.adaptive_tau = 0.9
@@ -124,6 +126,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                 '$'
     )
 
-    print(f"Initial data: Max individual loss = {problem.getIndividualLoss(problem.x0)}; Gap = {problem.F(problem.x0)}")
+    print(f"Initial state:\n{problem.GetExtraIndicators(problem.x0)}")
 
     return problem

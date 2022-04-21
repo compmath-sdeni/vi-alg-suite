@@ -102,8 +102,10 @@ class TransportationNetwork:
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
         nx.draw_networkx_edge_labels(self.graph, pos)
 
-    def recalc_derived_data(self, saved_paths_file: str = None):
-        self.calc_paths(saved_paths_file=saved_paths_file)
+    def recalc_derived_data(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3, max_path_edges: int = 10):
+        self.calc_paths(saved_paths_file=saved_paths_file,
+                        max_od_paths_count=max_od_paths_count, max_path_edges=max_path_edges)
+
         self.Q = self._calc_edges_to_paths_incidence_()
 
     def estimate_path_cost(self, path: Iterable):
@@ -121,10 +123,9 @@ class TransportationNetwork:
         return cost
 
 
-    def calc_paths(self, *, saved_paths_file: str = None, max_count: int = 4, max_depth: int = 15):
+    def calc_paths(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3, max_path_edges: int = 10):
         self.paths = []
         self.paths_count = 0
-
         if saved_paths_file and os.path.exists(saved_paths_file):
             start = time.process_time()
             self.paths = np.load(saved_paths_file, allow_pickle=True)
@@ -136,10 +137,10 @@ class TransportationNetwork:
             start = time.process_time()
             for d in self.demand:
                 paths_for_pair_edge_ids: List = []
-                paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_depth))
-                if len(paths) > max_count:
+                paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_path_edges))
+                if len(paths) > max_od_paths_count:
                     cost_ordered_paths = sorted(paths, key=self.estimate_path_cost)
-                    best_paths = cost_ordered_paths[:max_count]
+                    best_paths = cost_ordered_paths[:max_od_paths_count]
                 else:
                     best_paths = paths
 
@@ -225,7 +226,9 @@ class TransportationNetwork:
                 # We map values to a index i-1, as Numpy is base 0
                 mat[i, j] = matrix.get(i + 1, {}).get(j + 1, 0)
 
-    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str, *, saved_paths_file: str = None, pos_file: str = None, columns_separator: str = '\t'):
+    def load_network_graph(self, edges_list_file_path: str, demands_file_path: str, *, saved_paths_file: str = None,
+                           pos_file: str = None, columns_separator: str = '\t',
+                           max_od_paths_count: int = 3, max_path_edges: int = 10):
         net: pd.DataFrame = pd.read_csv(edges_list_file_path, skiprows=8, sep=columns_separator, skipinitialspace=False)
 
         trimmed = [s.strip().lower() for s in net.columns]
@@ -269,7 +272,7 @@ class TransportationNetwork:
         if demands_file_path:
             self.load_demands(demands_file_path)
 
-        self.recalc_derived_data(saved_paths_file)
+        self.recalc_derived_data(saved_paths_file=saved_paths_file, max_od_paths_count=max_od_paths_count, max_path_edges=max_path_edges)
 
 
     def get_cost_function(self):
