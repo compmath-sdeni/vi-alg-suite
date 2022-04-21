@@ -47,6 +47,7 @@ class TrafficEquilibrium(VIProblem):
         for demand_paths in self.W:
             g[k] = np.max(costs[demand_paths[x[demand_paths] > self.flow_eps]]) - np.min(
                 costs[demand_paths[x[demand_paths] > self.flow_eps]])
+
             k += 1
 
         return np.max(g)  # priciest path expenses vs cheapest path expenses
