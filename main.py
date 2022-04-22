@@ -98,9 +98,6 @@ if not has_opts:
     print('No command line options mode - default for interactive usage. Possible options below.')
     print(help_string)
 
-
-exit()
-
 captured_io = io.StringIO()
 sys.stdout = captured_io
 
