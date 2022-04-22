@@ -111,7 +111,7 @@ class BasicAlgoTests:
               f"Exact error: {alg_object.history.real_error[last_history_index]}; "
               f"Goal function: {alg_object.history.goal_func_value[last_history_index]}; "
               f"Goal function form avg: {alg_object.history.goal_func_from_average[last_history_index]}; "
-              f"Lambda: {alg_object.history.lam[last_history_index]}; "
+              f"Lambda: {alg_object.lam}; "
               )
 
         if alg_object.problem.C:
