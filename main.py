@@ -3,6 +3,7 @@ import datetime
 import os
 import io
 import sys
+import time
 from typing import List
 import getopt
 
@@ -61,16 +62,19 @@ params = AlgorithmParams(
     start_adaptive_lam1=0.5,
     adaptive_tau=0.75,
     adaptive_tau_small=0.45,
-    save_history=True,
+    save_history=False,
     excel_history=False
 )
 
 has_opts: bool = False
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "hpxi:", ["iterations=", "plots", "excel"])
+captured_io = io.StringIO()
+sys.stdout = captured_io
 
-    help_string: str = f'Usage: main.py -p <show plots, default {params.show_plots}> -x <excel history, slow, default {params.excel_history}> -i <iterations count, default {params.max_iters}>'
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "hpxsi:", ["iterations=", "plots", "excel", "history"])
+
+    help_string: str = f'Usage: main.py -s <collect history, slow but required for plots and stas, default {params.save_history}> -p <show plots, default {params.show_plots}> -x <excel history, slow, default {params.excel_history}> -i <iterations count, default {params.max_iters}>'
 
     has_opts = len(sys.argv) > 1
     if has_opts:
@@ -83,23 +87,29 @@ try:
             elif opt in ("-i", "--iterations"):
                 params.max_iters = int(arg)
                 print(f'Max iters set to {params.max_iters}')
+            elif opt in ("-s", "--history"):
+                params.save_history = True
+                print(f'History collection and saving (csv) enabled.')
             elif opt in ("-x", "--excel"):
                 params.excel_history = True
-                print(f'Excel history enabled (may be slow!)')
+                print(f'Excel history saving enabled (may be slow!)')
             elif opt in ("-p", "--plots"):
                 params.show_plots = True
-                print(f'Plots should be shown (require GUI mode)')
+                print(f'Plots should be shown (require GUI mode and history collection)')
 
 except getopt.GetoptError:
     print('getopt.GetoptError exception!')
-    pass
 
 if not has_opts:
     print('No command line options mode - default for interactive usage. Possible options below.')
     print(help_string)
 
-captured_io = io.StringIO()
+sys.stdout = sys.__stdout__
+print(captured_io.getvalue())
 sys.stdout = captured_io
+
+# captured_io = io.StringIO()
+# sys.stdout = captured_io
 
 # region Simple 2d func min
 
@@ -539,6 +549,7 @@ def initAlgs():
 
     tseng_adaptive = TsengAdaptive(problem,
                                    eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                   save_history = params.save_history,
                                    min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng (A)")
 
     tseng_adaptive_bregproj = TsengAdaptive(problem, stop_condition=params.stop_by,
@@ -627,6 +638,8 @@ def initAlgs():
 # endregion
 
 # region Run all algs and save data and results
+start = time.monotonic()
+
 saved_history_dir = "storage/stats2021-12"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
@@ -678,6 +691,7 @@ else:
     algs_to_test = initAlgs()
     for alg in algs_to_test:
         alg.do()
+
         BasicAlgoTests.PrintAlgRunStats(alg)
         alg_history_list.append(alg.history)
 
@@ -725,38 +739,51 @@ f.close()
 #     hp = os.path.join(saved_history_dir, 'history', str(idx))
 #     h.saveToDir(hp)
 
+finish = time.monotonic()
+
+final_timing_str = f'Total time of calculation, history saving etc. (without plotting): {(finish - start):.0f} sec.'
+
+print(final_timing_str)
+
+f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "a+")
+f.write(final_timing_str)
+f.close()
+
 # endregion
 
 
 # region Plot and save graphs
 if params.save_plots or params.show_plots:
-    grapher = AlgStatGrapher()
-    grapher.plot_by_history(
-        alg_history_list=alg_history_list,
-        x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
-        styles=params.styles, start_iter=params.plot_start_iter,
-        x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
-    )
+    if not params.save_history:
+        print("Graphics generation is impossible if history is not collected!")
+    else:
+        grapher = AlgStatGrapher()
+        grapher.plot_by_history(
+            alg_history_list=alg_history_list,
+            x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
+            styles=params.styles, start_iter=params.plot_start_iter,
+            x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
+        )
 
-    if params.x_limits is not None:
-        plt.xlim(params.x_limits)
+        if params.x_limits is not None:
+            plt.xlim(params.x_limits)
 
-    if params.y_limits is not None:
-        plt.ylim(params.y_limits)
+        if params.y_limits is not None:
+            plt.ylim(params.y_limits)
 
-    if params.save_plots:
-        dpi = 300.
+        if params.save_plots:
+            dpi = 300.
 
-        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
-        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
+            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
+            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
-        plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
+            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
 
-    if params.show_plots:
-        plt.title(problem.hr_name, loc='center')
-        plt.show()
+        if params.show_plots:
+            plt.title(problem.hr_name, loc='center')
+            plt.show()
 
-    exit(0)
+        exit(0)
 
 # endregion
 

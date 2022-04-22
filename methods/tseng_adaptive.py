@@ -16,9 +16,9 @@ class TsengAdaptive(IterGradTypeMethod):
                  lam: float = 0.1, tau: float = 0.95, *,
                  min_iters: int = 0, max_iters=5000,
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition, save_history=save_history)
         self.tau = tau
         self.lam0 = lam
 
@@ -74,8 +74,8 @@ class TsengAdaptive(IterGradTypeMethod):
             else:
                 delta_A_norm = np.linalg.norm(delta_A, 2)
 
-            # if self.iter>100 and self.iter % 10 == 0:
-            #     self.lam *= 1.1
+            if self.iter>100 and self.iter % 10 == 0:
+                self.lam *= 1.1
 
             if delta_A_norm >= self.zero_delta:
                 t = self.tau * self.D / delta_A_norm

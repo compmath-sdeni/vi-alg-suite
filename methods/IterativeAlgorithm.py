@@ -11,7 +11,7 @@ from utils.alg_history import AlgHistory
 class IterativeAlgorithm:
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
                  min_iters: int = 0, max_iters: int = 5000, hr_name: str = None,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True):
         self.iter: int = 0
         self.projections_count: int = 0
         self.operator_count: int = 0
@@ -23,6 +23,7 @@ class IterativeAlgorithm:
         self.max_iters = max_iters
         self.zero_delta = 1e-20
         self.stop_condition = stop_condition
+        self.save_history = save_history
 
         self.x: Union[np.ndarray, float] = self.problem.x0.copy()
 
@@ -41,7 +42,7 @@ class IterativeAlgorithm:
         self.min_iters: int = min_iters
         self.hr_name = hr_name if hr_name else type(self).__name__
 
-        self.history = AlgHistory(self.N)
+        self.history = AlgHistory(self.N, self.max_iters+2 if self.save_history else 2)
         self.history.alg_name = self.hr_name
         self.history.alg_class = self.__class__.__name__
 
@@ -53,24 +54,27 @@ class IterativeAlgorithm:
 
     def setHistoryData(self, *, x: np.ndarray = None, y: np.ndarray = None,
                        step_delta_norm: float = None, goal_func_value: float = None, goal_func_from_average: float = None):
+
+        history_item_index: int = self.iter if self.save_history else (0 if self.iter == 0 else 1)
+
         if x is not None:
-            self.history.x[self.iter] = x
+            self.history.x[history_item_index] = x
 
         if y is not None:
-            self.history.y[self.iter] = y
+            self.history.y[history_item_index] = y
 
         if step_delta_norm is not None:
-            self.history.step_delta_norm[self.iter] = step_delta_norm
+            self.history.step_delta_norm[history_item_index] = step_delta_norm
 
             # we have no step error info on the step-0 - copy it from step 1
             if self.iter == 1:
                 self.history.step_delta_norm[0] = step_delta_norm
 
         if goal_func_value is not None:
-            self.history.goal_func_value[self.iter] = goal_func_value
+            self.history.goal_func_value[history_item_index] = goal_func_value
 
         if goal_func_from_average is not None:
-            self.history.goal_func_from_average[self.iter] = goal_func_from_average
+            self.history.goal_func_from_average[history_item_index] = goal_func_from_average
 
             # if self.iter == 3:
             #     self.history.goal_func_from_average[2] = goal_func_from_average
@@ -88,18 +92,24 @@ class IterativeAlgorithm:
         self.operator_count: int = 0
 
         self.totalTime = 0
-        self.history.iter_time_ns[self.iter] = 0
-        self.history.lam[self.iter] = self.lam
+
+        self.history.iter_time_ns[0] = 0
+        self.history.lam[0] = self.lam
+
+        if not self.save_history:
+            self.history.extra_indicators = [None, None]
 
         if self.problem.xtest is not None:
-            self.history.real_error[self.iter] = np.linalg.norm(
-                self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+            self.history.real_error[0] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
 
         self.doPostStep()
 
         extra = self.problem.GetExtraIndicators(self.x, averaged_x=self.averaged_result)
         if extra:
-            self.history.extra_indicators.append(extra)
+            if self.save_history:
+                self.history.extra_indicators.append(extra)
+            else:
+                self.history.extra_indicators[0] = extra
 
         return self
 
@@ -116,20 +126,30 @@ class IterativeAlgorithm:
             finish = time.process_time_ns()
             self.iterEndTime = time.process_time()
 
+            history_index: int = self.iter if self.save_history else 1
+
             self.history.projections_count = self.projections_count
             self.history.operator_count = self.operator_count
 
             self.history.iters_count = self.iter + 1
-            self.totalTime = (finish - start) + (self.history.iter_time_ns[self.iter - 1] if self.iter > 0 else 0)
-            self.history.iter_time_ns[self.iter] = self.totalTime
-            self.history.lam[self.iter] = self.lam
+
+            if self.save_history:
+                self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index-1] if self.iter > 0 else 0)
+            else:
+                self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index] if self.iter > 0 else 0)
+
+            self.history.iter_time_ns[history_index] = self.totalTime
+            self.history.lam[history_index] = self.lam
 
             if self.problem.xtest is not None:
-                self.history.real_error[self.iter] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+                self.history.real_error[history_index] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
 
             extra = self.problem.GetExtraIndicators(self.x, averaged_x=self.averaged_result)
             if extra:
-                self.history.extra_indicators.append(extra)
+                if self.save_history:
+                    self.history.extra_indicators.append(extra)
+                else:
+                    self.history.extra_indicators[history_index] = extra
 
             self.doPostStep()
 
