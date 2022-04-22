@@ -83,6 +83,8 @@ try:
         for opt, arg in opts:
             if opt == '-h':
                 print(help_string)
+                sys.stdout = sys.__stdout__
+                print(captured_io.getvalue())
                 exit(0)
             elif opt in ("-i", "--iterations"):
                 params.max_iters = int(arg)
