@@ -60,7 +60,9 @@ params = AlgorithmParams(
     start_adaptive_lam1=0.5,
     adaptive_tau=0.75,
     adaptive_tau_small=0.45,
-    show_plots=False
+    show_plots=False,
+    save_history=True,
+    excel_history=False,
 )
 
 try:

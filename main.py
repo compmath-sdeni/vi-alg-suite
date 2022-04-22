@@ -54,19 +54,52 @@ from utils.test_alghos import BasicAlgoTests
 params = AlgorithmParams(
     eps=1e-5,
     min_iters=10,
-    max_iters=2000,
+    max_iters=500,
     lam=0.01,
     lam_KL=0.005,
     start_adaptive_lam=0.5,
     start_adaptive_lam1=0.5,
     adaptive_tau=0.75,
-    adaptive_tau_small=0.45
+    adaptive_tau_small=0.45,
+    save_history=True,
+    excel_history=False
 )
 
+has_opts: bool = False
+
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ha:p:", ["algorithms=", "problem="])
+    opts, args = getopt.getopt(sys.argv[1:], "hpxi:", ["iterations=", "plots", "excel"])
+
+    help_string: str = f'Usage: main.py -p <show plots, default {params.show_plots}> -x <excel history, slow, default {params.excel_history}> -i <iterations count, default {params.max_iters}>'
+
+    has_opts = len(sys.argv) > 1
+    if has_opts:
+        print(f'Command line options passed: {len(sys.argv) - 1}')
+
+        for opt, arg in opts:
+            if opt == '-h':
+                print(help_string)
+                exit(0)
+            elif opt in ("-i", "--iterations"):
+                params.max_iters = int(arg)
+                print(f'Max iters set to {params.max_iters}')
+            elif opt in ("-x", "--excel"):
+                params.excel_history = True
+                print(f'Excel history enabled (may be slow!)')
+            elif opt in ("-p", "--plots"):
+                params.show_plots = True
+                print(f'Plots should be shown (require GUI mode)')
+
 except getopt.GetoptError:
-    print('no command line options mode.')
+    print('getopt.GetoptError exception!')
+    pass
+
+if not has_opts:
+    print('No command line options mode - default for interactive usage. Possible options below.')
+    print(help_string)
+
+
+exit()
 
 captured_io = io.StringIO()
 sys.stdout = captured_io
@@ -608,7 +641,7 @@ print(f"eps: {params.eps}; tau1: {params.adaptive_tau}; tau2: {params.adaptive_t
       f"start_lam: {params.start_adaptive_lam}; start_lam1: {params.start_adaptive_lam1}; "
       f"lam: {params.lam}; lam_KL: {params.lam_KL}")
 
-if params.save_history:
+if params.save_history and params.excel_history:
     writer = pd.ExcelWriter(
         os.path.join(saved_history_dir, f"history-{test_mnemo}.xlsx"),
         engine='openpyxl')
@@ -652,10 +685,13 @@ else:
         alg_history_list.append(alg.history)
 
         if params.save_history:
-            # formatting params - precision is ignored for some reason...
-            with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
-                df: pandas.DataFrame = alg.history.toPandasDF()
-                df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
+
+            # save to excel
+            if params.excel_history:
+                # formatting params - precision is ignored for some reason...
+                with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
+                    df: pandas.DataFrame = alg.history.toPandasDF()
+                    df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
 
             # save to csv without cutting data (without ...)
             with np.printoptions(threshold=sys.maxsize, precision=3, linewidth=sys.maxsize, floatmode='fixed'):
@@ -675,7 +711,8 @@ if params.test_time:
     for k in timings:
         print(f"{k}: {timings[k]}")
 
-if params.save_history:
+if params.save_history and params.excel_history:
+    # save excel file
     writer.save()
     writer.close()
 
@@ -725,8 +762,6 @@ if params.save_plots or params.show_plots:
     exit(0)
 
 # endregion
-
-
 
 # table - time for getting to epsilon error
 # for 1 and 2 - "real error"

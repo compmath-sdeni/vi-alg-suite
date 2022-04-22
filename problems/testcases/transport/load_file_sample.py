@@ -15,7 +15,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                    data_path: str,
                    net_file_name: str = 'sample_net.tntp',
                    demands_file_name: str = 'sample_trips.tntp',
-                   pos_file_name: str = None, zero_cutoff: float = 0.5):
+                   pos_file_name: str = None, zero_cutoff: float = 0.5, max_iters: int = None):
 
     tnet = TransportationNetwork()
     # tnet.load_network_graph(
@@ -85,12 +85,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     print(f"Initial flow on edges:")
     print((tnet.Q @ algorithm_params.x0)[:10])
 
-    algorithm_params.save_history = False
-
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.eps = 1e-8
-    algorithm_params.max_iters = 50000
+
+    if max_iters is not None:
+        algorithm_params.max_iters = max_iters
 
     algorithm_params.lam = 0.1
     algorithm_params.lam_medium = 0.00001

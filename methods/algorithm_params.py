@@ -40,6 +40,7 @@ class AlgorithmParams:
                  save_plots: bool = True,
                  show_plots: bool = True,
                  save_history: bool = True,
+                 excel_history: bool = True,
                  test_time: bool = False,
                  test_time_count: int = 10,
                  stop_by: StopCondition = StopCondition.STEP_SIZE
@@ -73,6 +74,7 @@ class AlgorithmParams:
         self.show_plots = show_plots
         self.plot_start_iter = plot_start_iter
         self.save_history = save_history
+        self.excel_history = excel_history
 
         self.stop_by = stop_by
 
@@ -107,6 +109,7 @@ class AlgorithmParams:
                 f"save_plots:{self.save_plots}\n",
                 f"show_plots:{self.show_plots}\n",
                 f"save_history:{self.save_history}\n",
+                f"excel_history:{self.excel_history}\n",
                 f"stop_by:{self.stop_by}\n",
                 f"test_time:{self.test_time}\n",
                 f"test_time_count:{self.test_time_count}\n",
