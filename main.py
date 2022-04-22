@@ -68,13 +68,15 @@ params = AlgorithmParams(
 
 has_opts: bool = False
 
+show_output: bool = False
+
 captured_io = io.StringIO()
 sys.stdout = captured_io
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hpxsi:", ["iterations=", "plots", "excel", "history"])
+    opts, args = getopt.getopt(sys.argv[1:], "hpxsoi:", ["iterations=", "plots", "excel", "history", "output"])
 
-    help_string: str = f'Usage: main.py -s <collect history, slow but required for plots and stas, default {params.save_history}> -p <show plots, default {params.show_plots}> -x <excel history, slow, default {params.excel_history}> -i <iterations count, default {params.max_iters}>'
+    help_string: str = f'Usage: main.py -s <collect history, slow but required for plots and stas, default {params.save_history}> -p <show plots, default {params.show_plots}> -x <excel history, slow, default {params.excel_history}> -i <iterations count, default {params.max_iters}>, -o <show output in stdout>'
 
     has_opts = len(sys.argv) > 1
     if has_opts:
@@ -92,6 +94,9 @@ try:
             elif opt in ("-s", "--history"):
                 params.save_history = True
                 print(f'History collection and saving (csv) enabled.')
+            elif opt in ("-o", "--outout"):
+                show_output = True
+                print(f'Show output enabled.')
             elif opt in ("-x", "--excel"):
                 params.excel_history = True
                 print(f'Excel history saving enabled (may be slow!)')
@@ -730,7 +735,9 @@ if params.save_history and params.excel_history:
     writer.close()
 
 sys.stdout = sys.__stdout__
-print(captured_io.getvalue())
+
+if show_output:
+    print(captured_io.getvalue())
 
 f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "w")
 f.write(captured_io.getvalue())
