@@ -78,9 +78,12 @@ class TsengAdaptive(IterGradTypeMethod):
                 t = self.tau * self.D / delta_A_norm
                 if self.lam >= t:
                     self.lam = t
-                else:
-                    if self.iter > 100 and self.iter % 10 == 0 and self.lam < t*0.1:
-                        self.lam = t * 0.1
+            #     else:
+            #         if self.iter > 100 and self.iter % 10 == 0 and self.lam < t/5.:
+            #             self.lam = t/5.
+            #
+            # if self.lam < 0.0001:
+            #     self.lam = 0.0001
 
     def doPostStep(self):
         if self.iter > 0:

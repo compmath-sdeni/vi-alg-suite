@@ -697,7 +697,10 @@ if params.test_time:
 else:
     algs_to_test = initAlgs()
     for alg in algs_to_test:
-        alg.do()
+        try:
+            alg.do()
+        except Exception as e:
+            print(e)
 
         BasicAlgoTests.PrintAlgRunStats(alg)
         alg_history_list.append(alg.history)
