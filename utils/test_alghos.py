@@ -106,7 +106,7 @@ class BasicAlgoTests:
     def PrintAlgRunStats(alg_object: IterativeAlgorithm):
         last_history_index: int = alg_object.history.iters_count - 1 if alg_object.save_history else 1
         print(f"{alg_object.hr_name} finished. "
-              f"Iters: {alg_object.history.iters_count}; Projections: {alg_object.history.projections_count}; Operators calc: {alg_object.history.operator_count}; Time: {alg_object.history.iter_time_ns[last_history_index] / 1e+9} sec.; "
+              f"Iters: {alg_object.iter}; Projections: {alg_object.projections_count}; Operators calc: {alg_object.operator_count}; Time: {alg_object.totalTime / 1e+9} sec.; "
               f"\nLast step: {alg_object.history.step_delta_norm[last_history_index]}; "
               f"Exact error: {alg_object.history.real_error[last_history_index]}; "
               f"Goal function: {alg_object.history.goal_func_value[last_history_index]}; "

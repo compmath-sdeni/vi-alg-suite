@@ -55,31 +55,32 @@ class IterativeAlgorithm:
     def setHistoryData(self, *, x: np.ndarray = None, y: np.ndarray = None,
                        step_delta_norm: float = None, goal_func_value: float = None, goal_func_from_average: float = None):
 
-        history_item_index: int = self.iter if self.save_history else (0 if self.iter == 0 else 1)
+        if self.save_history:
+            history_item_index: int = self.iter if self.save_history else (0 if self.iter == 0 else 1)
 
-        if x is not None:
-            self.history.x[history_item_index] = x
+            if x is not None:
+                self.history.x[history_item_index] = x
 
-        if y is not None:
-            self.history.y[history_item_index] = y
+            if y is not None:
+                self.history.y[history_item_index] = y
 
-        if step_delta_norm is not None:
-            self.history.step_delta_norm[history_item_index] = step_delta_norm
+            if step_delta_norm is not None:
+                self.history.step_delta_norm[history_item_index] = step_delta_norm
 
-            # we have no step error info on the step-0 - copy it from step 1
-            if self.iter == 1:
-                self.history.step_delta_norm[0] = step_delta_norm
+                # we have no step error info on the step-0 - copy it from step 1
+                if self.iter == 1:
+                    self.history.step_delta_norm[0] = step_delta_norm
 
-        if goal_func_value is not None:
-            self.history.goal_func_value[history_item_index] = goal_func_value
+            if goal_func_value is not None:
+                self.history.goal_func_value[history_item_index] = goal_func_value
 
-        if goal_func_from_average is not None:
-            self.history.goal_func_from_average[history_item_index] = goal_func_from_average
+            if goal_func_from_average is not None:
+                self.history.goal_func_from_average[history_item_index] = goal_func_from_average
 
-            # if self.iter == 3:
-            #     self.history.goal_func_from_average[2] = goal_func_from_average
-            #     self.history.goal_func_from_average[1] = goal_func_from_average
-            #     self.history.goal_func_from_average[0] = goal_func_from_average
+                # if self.iter == 3:
+                #     self.history.goal_func_from_average[2] = goal_func_from_average
+                #     self.history.goal_func_from_average[1] = goal_func_from_average
+                #     self.history.goal_func_from_average[0] = goal_func_from_average
 
 
     def doPostStep(self):
@@ -126,30 +127,33 @@ class IterativeAlgorithm:
             finish = time.process_time_ns()
             self.iterEndTime = time.process_time()
 
-            history_index: int = self.iter if self.save_history else 1
-
-            self.history.projections_count = self.projections_count
-            self.history.operator_count = self.operator_count
-
-            self.history.iters_count = self.iter + 1
-
             if self.save_history:
-                self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index-1] if self.iter > 0 else 0)
-            else:
-                self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index] if self.iter > 0 else 0)
+                history_index: int = self.iter if self.save_history else 1
 
-            self.history.iter_time_ns[history_index] = self.totalTime
-            self.history.lam[history_index] = self.lam
+                self.history.projections_count = self.projections_count
+                self.history.operator_count = self.operator_count
 
-            if self.problem.xtest is not None:
-                self.history.real_error[history_index] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+                self.history.iters_count = self.iter + 1
 
-            extra = self.problem.GetExtraIndicators(self.x, averaged_x=self.averaged_result)
-            if extra:
                 if self.save_history:
-                    self.history.extra_indicators.append(extra)
+                    self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index-1] if self.iter > 0 else 0)
                 else:
-                    self.history.extra_indicators[history_index] = extra
+                    self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index] if self.iter > 0 else 0)
+
+                self.history.iter_time_ns[history_index] = self.totalTime
+                self.history.lam[history_index] = self.lam
+
+                if self.problem.xtest is not None:
+                    self.history.real_error[history_index] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+
+                extra = self.problem.GetExtraIndicators(self.x, averaged_x=self.averaged_result)
+                if extra:
+                    if self.save_history:
+                        self.history.extra_indicators.append(extra)
+                    else:
+                        self.history.extra_indicators[history_index] = extra
+            else:
+                self.totalTime += (finish - start)
 
             self.doPostStep()
 
