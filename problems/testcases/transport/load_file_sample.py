@@ -29,12 +29,13 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     tnet.load_network_graph(
         os.path.join(data_path, net_file_name),
         os.path.join(data_path, demands_file_name),
-        max_od_paths_count=10,
-        max_path_edges=25,
-        saved_paths_file=os.path.join(data_path, 'saved_paths_cnt10_depth25.npy'),
+        max_od_paths_count=5,
+        max_path_edges=30,
+        saved_paths_file=os.path.join(data_path, 'saved_paths_cnt5_depth30.npy'),
+        cached_paths_file=os.path.join(data_path, 'saved_paths_cntmax_depthmax.npy'),
         pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
-    tnet.show(limit=50)
+    tnet.show(limit=10)
 
     # tnet.draw()
     # plt.show()
