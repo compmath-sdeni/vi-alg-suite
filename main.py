@@ -247,7 +247,7 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
+problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=None,
                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
                                           net_file_name='SiouxFalls_net.tntp',
                                           demands_file_name='SiouxFalls_trips.tntp')
