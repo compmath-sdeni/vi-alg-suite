@@ -22,8 +22,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     tnet.show()
 
-    # tnet.draw()
-    # plt.show()
+    tnet.draw()
+    plt.show()
 
     d = tnet.get_demands_vector()
 
@@ -67,17 +67,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.eps = 1e-8
     algorithm_params.max_iters = 1000
 
-    algorithm_params.lam = 0.024
+    algorithm_params.lam = 0.05
     algorithm_params.lam_medium = 0.0000001
     algorithm_params.lam_KL = 0.1
 
     algorithm_params.min_iters = 3
 
-    algorithm_params.start_adaptive_lam = 1.0
-    algorithm_params.start_adaptive_lam1 = 1.0
+    algorithm_params.start_adaptive_lam = 0.1
+    algorithm_params.start_adaptive_lam1 = 0.1
 
-    algorithm_params.adaptive_tau = 0.9
-    algorithm_params.adaptive_tau_small = 0.45
+    algorithm_params.adaptive_tau = 0.5
+    algorithm_params.adaptive_tau_small = 0.25
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
@@ -90,7 +90,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.plot_start_iter = 3
 
     problem = TrafficEquilibrium(
-        Gf=Gf, d=d, W=W, C=Rn(n),
+        Gf=Gf, d=d, W=W, C=Rn(n), Q=Q,
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ traffic equilibrium ' +

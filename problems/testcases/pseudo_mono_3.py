@@ -19,7 +19,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # not needed - set in problem
     # real_solution = np.array([0.0 for i in range(N)])
 
-    algorithm_params.lam = 0.9 / 5.0679
+    algorithm_params.lam = 0.5 / 5.0679
     algorithm_params.lam_KL = algorithm_params.lam / 2
 
     algorithm_params.start_adaptive_lam = 1.

@@ -12,9 +12,10 @@ from matplotlib import pyplot as plt
 
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
-                   data_path: str,
+                   data_path: str, problem_name: str = '',
                    net_file_name: str = 'sample_net.tntp',
                    demands_file_name: str = 'sample_trips.tntp',
+                   max_od_paths_count: int = 3, max_path_edges = 10,
                    pos_file_name: str = None, zero_cutoff: float = 0.5, max_iters: int = None):
 
     tnet = TransportationNetwork()
@@ -29,10 +30,10 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     tnet.load_network_graph(
         os.path.join(data_path, net_file_name),
         os.path.join(data_path, demands_file_name),
-        max_od_paths_count=5,
-        max_path_edges=30,
-        saved_paths_file=os.path.join(data_path, 'saved_paths_cnt5_depth30.npy'),
-        cached_paths_file=os.path.join(data_path, 'saved_paths_cntmax_depthmax.npy'),
+        max_od_paths_count=max_od_paths_count,
+        max_path_edges=max_path_edges,
+        saved_paths_file=os.path.join(data_path, f'saved_paths_{problem_name}_cnt{max_od_paths_count}_depth{max_path_edges}.npy'),
+        cached_paths_file=os.path.join(data_path, f'cached_paths_{problem_name}_cnt{max_od_paths_count}_depth{max_path_edges}.npy'),
         pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
     tnet.show(limit=10)
@@ -93,7 +94,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     if max_iters is not None:
         algorithm_params.max_iters = max_iters
 
-    algorithm_params.lam = 0.1
+    algorithm_params.lam = 0.01
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 
@@ -116,7 +117,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     algorithm_params.plot_start_iter = 3
 
     problem = TrafficEquilibrium(
-        Gf=Gf, d=d, W=W, Q=Q, C=Rn(n),
+        network=tnet,
+        # Gf=Gf, d=d, W=W, Q=Q,
+        C=Rn(n),
         zero_cutoff=zero_cutoff,
         x0=algorithm_params.x0,
         x_test=real_solution,

@@ -62,13 +62,13 @@ params = AlgorithmParams(
     start_adaptive_lam1=0.5,
     adaptive_tau=0.75,
     adaptive_tau_small=0.45,
-    save_history=False,
-    excel_history=False
+    save_history=True,
+    excel_history=True
 )
 
 has_opts: bool = False
 
-show_output: bool = False
+show_output: bool = True
 
 captured_io = io.StringIO()
 sys.stdout = captured_io
@@ -110,6 +110,7 @@ except getopt.GetoptError:
 if not has_opts:
     print('No command line options mode - default for interactive usage. Possible options below.')
     print(help_string)
+    print('')
 
 sys.stdout = sys.__stdout__
 print(captured_io.getvalue())
@@ -243,11 +244,9 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
-# problem = load_file_sample.prepareProblem(algorithm_params=params,
-#                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
-#                                           pos_file_name='sample_pos.txt')
-
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=None,
+problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
+                                          max_iters=150, problem_name='SiouxFalls',
+                                          max_od_paths_count=3, max_path_edges=9,
                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
                                           net_file_name='SiouxFalls_net.tntp',
                                           demands_file_name='SiouxFalls_trips.tntp')
@@ -540,8 +539,8 @@ problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=N
 # region Init all algs
 
 def initAlgs():
-    korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters)
-    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters)
+    korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Korpele")
+    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Korpele (A)")
 
     tseng = Tseng(problem, stop_condition=params.stop_by,
                   eps=params.eps, lam=params.lam,
@@ -610,17 +609,16 @@ def initAlgs():
 
 
     algs_to_test = [
-        # korpele,
-        # korpele_adapt,
+#       korpele,
+#       korpele_adapt,
 #        tseng,
-        tseng_adaptive,
+#        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
         # extrapol_from_past_adaptive,
         # extrapol_from_past_adaptive_bregproj,
-        # malitsky_tam,
-
-#        malitsky_tam_adaptive,
+#        malitsky_tam,
+        malitsky_tam_adaptive,
         # malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,
@@ -646,7 +644,7 @@ def initAlgs():
 # region Run all algs and save data and results
 start = time.monotonic()
 
-saved_history_dir = "storage/stats2021-12"
+saved_history_dir = f"storage/stats{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)

@@ -6,7 +6,11 @@ from problems.traffic_equilibrium import TrafficEquilibrium
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 def G(x: np.ndarray) -> np.ndarray:
-    return np.array([1, x[1]])
+    # "original" variant - sol. 25, 5
+    return np.array([50., 45. + x[1]])
+
+    # "improved" variant - sol. 10, 20
+    # return np.array([50., 40. + x[1] * 0.5])
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     n = 2
@@ -14,11 +18,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         [0, 1]
     ])
 
+    # edges to paths incidence matrix
+    Q = np.array([
+        [1, 0],
+        [0, 1],
+    ], dtype=float)
+
     d = np.array([30.])
 
-    real_solution = np.array([0., 1.])
+    real_solution = np.array([25., 5.])
 
-    algorithm_params.x0 = np.array([1./n for i in range(n)])
+    algorithm_params.x0 = np.array([15., 15.])
     algorithm_params.x1 = algorithm_params.x0.copy()
     # endregion
 
@@ -48,7 +58,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.plot_start_iter = 3
 
     return TrafficEquilibrium(
-        Gf=G, d=d, W=W, C=Rn(n),
+        Gf=G, d=d, W=W, C=Rn(n), Q=Q,
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ traffic - Pigu \ sample ' +

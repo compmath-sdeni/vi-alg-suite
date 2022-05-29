@@ -6,6 +6,7 @@ import numpy as np
 
 from constraints.classic_simplex import ClassicSimplex
 from methods.projections.simplex_projection_prom import vec2simplexV2
+from problems.testcases.transport.transportation_network import TransportationNetwork
 from problems.viproblem import VIProblem
 from problems.visual_params import VisualParams
 from constraints.convex_set_constraint import ConvexSetConstraints
@@ -13,10 +14,11 @@ from constraints.convex_set_constraint import ConvexSetConstraints
 
 class TrafficEquilibrium(VIProblem):
     def __init__(self, *,
-                 Gf: Callable[[np.ndarray], np.ndarray],  # Cost function for paths, dependent on traffic
-                 d: np.ndarray,  # demands for source-destination pairs
-                 W: List[np.ndarray],  # paths to demands incidence matrix
-                 Q: np.ndarray,  # paths to edges correspondence matrix
+                 Gf: Callable[[np.ndarray], np.ndarray] = None,  # Cost function for paths, dependent on traffic
+                 d: np.ndarray = None,  # demands for source-destination pairs
+                 W: List[np.ndarray] = None,  # paths to demands incidence matrix
+                 Q: np.ndarray = None,  # paths to edges correspondence matrix
+                 network: TransportationNetwork = None,
                  x0: Union[np.ndarray] = None,
                  C: ConvexSetConstraints,
                  hr_name: str = None,
@@ -29,13 +31,22 @@ class TrafficEquilibrium(VIProblem):
         super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method, zero_cutoff=zero_cutoff)
 
-        self.Gf = Gf
-        self.d = d
-        self.W = W
-        self.Q = Q
-        self.flow_eps = flow_eps
+        self.network = network
 
-        self.n: int = len(W)  # paths count
+        if network is not None:
+            self.d = network.get_demands_vector()
+            self.Q = network.Q
+            self.Gf = network.get_cost_function()
+            self.W = network.get_paths_to_demands_incidence()
+            self.n = network.Q.shape[1]
+        else:
+            self.Gf = Gf
+            self.d = d
+            self.W = W
+            self.Q = Q
+            self.n: int = len(W)  # paths count
+
+        self.flow_eps = flow_eps
 
     def F(self, x: np.ndarray) -> float:
         # GAP
@@ -66,6 +77,9 @@ class TrafficEquilibrium(VIProblem):
             res[self.W[i]] = proj_part
 
         return res
+
+    def updateStructure(self, x: Union[np.ndarray, float]):
+        pass
 
     def getIndividualLoss(self, x: np.ndarray) -> float:
         return self.Gf(x).max()

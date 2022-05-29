@@ -103,8 +103,26 @@ class TransportationNetwork:
         else:
             pos = nx.planar_layout(self.graph)
 
+        edge_labels = {}
+        for e in self.graph.edges:
+            data = self.graph.edges[e[0], e[1], e[2]]
+            pw = data['pow']
+            lbl = ''
+            if pw != 1:
+                lbl = f"{data['frf']}(1+{data['k']}(y/{data['cap']})^{data['pow']})"
+            else:
+                frf = data['frf']
+                ky = frf * data['k'] / data['cap']
+                if math.fabs(ky - math.floor(ky)) < 0.0000000001:
+                    ky = math.floor(ky)
+                if math.fabs(frf - math.floor(frf)) < 0.0000000001:
+                    frf = math.floor(frf)
+                lbl = f"{frf}+{ky}y"
+
+            edge_labels[(e[0], e[1])] = lbl
+
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
-        nx.draw_networkx_edge_labels(self.graph, pos)
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=edge_labels)
 
     def recalc_derived_data(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3,
                             max_path_edges: int = 10, cached_paths_file: str = None):
@@ -128,22 +146,46 @@ class TransportationNetwork:
                 cost += 1
         return cost
 
-    def select_best_paths(self, *, od_index: int, od_paths: List, count: int, max_edges_count: int):
-        def get_path_cost(path):
+    def select_best_paths(self, *, od_index: int, od_paths: List, count: int, max_edges_count: int, flow: np.ndarray = None):
+        # TODO: get path flow!
+        def get_path_cost(path, y: float = None):
             cost = 0
             for edg_key in path:
                 e = self.graph.edges[self.keyed_edges[edg_key]]
 
-                small_cost = self.get_edge_cost_by_flow(e, 1.0)
-                big_cost = self.get_edge_cost_by_flow(e, 100000.)
+                if y is None:
+                    small_cost = self.get_edge_cost_by_flow(e, 1.0)
+                    big_cost = self.get_edge_cost_by_flow(e, 100000.)
 
-                cost += small_cost * 10 + math.log(big_cost)
+                    cost += small_cost * 10 + math.log(big_cost)
+                else:
+                    self.get_edge_cost_by_flow(e, y)
 
             return cost
 
         sorted_paths = sorted(od_paths, key=get_path_cost)
 
         return sorted_paths[:count]
+
+    def _set_best_paths(self, possible_paths, max_od_paths_count, max_path_edges):
+        start = time.process_time()
+        self.paths_count = 0
+        self.paths = []
+        total_cnt = 0
+        for idx, paths_for_pair_edge_ids in enumerate(possible_paths):
+            total_cnt += len(paths_for_pair_edge_ids)
+            if len(paths_for_pair_edge_ids) > max_od_paths_count:
+                suitable_paths = self.select_best_paths(od_index=idx, od_paths=paths_for_pair_edge_ids,
+                                                        count=max_od_paths_count,
+                                                        max_edges_count=max_path_edges)
+            else:
+                suitable_paths = paths_for_pair_edge_ids
+
+            self.paths_count += len(suitable_paths)
+            self.paths.append(suitable_paths)
+
+        end = time.process_time()
+        print(f"Selected {self.paths_count} 'best' paths of {total_cnt} in {end - start} sec.")
 
     def calc_paths(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3, max_path_edges: int = 10,
                    cached_paths_file: str = None):
@@ -156,57 +198,48 @@ class TransportationNetwork:
                 self.paths_count += len(p)
             end = time.process_time()
             print(f"Loaded {self.paths_count} paths in {end - start} sec.")
-        elif cached_paths_file and os.path.exists(cached_paths_file):
-            start = time.process_time()
-            paths = np.load(cached_paths_file, allow_pickle=True)
-            end = time.process_time()
-            print(f"Loaded from cache {self.paths_count} paths in {end - start} sec.")
-
-            start = time.process_time()
-            for idx, paths_for_pair_edge_ids in enumerate(paths):
-                if len(paths_for_pair_edge_ids) > max_od_paths_count:
-                    suitable_paths = self.select_best_paths(od_index=idx, od_paths=paths_for_pair_edge_ids,
-                                                            count=max_od_paths_count,
-                                                            max_edges_count=max_path_edges)
-                else:
-                    suitable_paths = paths_for_pair_edge_ids
-
-                self.paths_count += len(suitable_paths)
-                self.paths.append(suitable_paths)
-
-            end = time.process_time()
-            print(f"Filtered from cache {self.paths_count} paths in {end - start} sec.")
-
-            if saved_paths_file:
-                np.save(saved_paths_file, self.paths, allow_pickle=True)
-
         else:
-            start = time.process_time()
-            for d in self.demand:
-                paths_for_pair_edge_ids: List = []
-                paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_path_edges))
-                if len(paths) > max_od_paths_count:
-                    cost_ordered_paths = sorted(paths, key=self.estimate_path_cost)
-                    best_paths = cost_ordered_paths[:max_od_paths_count]
-                else:
-                    best_paths = paths
+            if cached_paths_file and os.path.exists(cached_paths_file):
+                # Load all possible paths of max edge count from "cache"
+                start = time.process_time()
+                paths = np.load(cached_paths_file, allow_pickle=True)
+                end = time.process_time()
+                print(f"Loaded {len(paths)} possible paths from cache in {end - start} sec.")
+            else:
+                # calculate all simple paths of max. edges count and save to cache
+                start = time.process_time()
+                paths = []
+                cnt = 0
+                for d in self.demand:
+                    paths_for_pair_edge_ids: List = []
 
-                for p in best_paths:
-                    edge_keys = np.ndarray((len(p),), dtype=int)
-                    i = 0
-                    for e in p:
-                        edge_keys[i] = e[2]
-                        i += 1
-                    paths_for_pair_edge_ids.append(edge_keys)
-                    self.paths_count += 1
+                    # startp = time.process_time()
+                    possible_paths = list(nx.all_simple_edge_paths(self.graph, d[0], d[1], cutoff=max_path_edges))
+                    # endp = time.process_time()
+                    # print(f"Found {len(possible_paths)} simple paths of {max_path_edges} edges max from {d[0]} to {d[1]}")
 
-                self.paths.append(paths_for_pair_edge_ids)
+                    for p in possible_paths:
+                        edge_keys = np.ndarray((len(p),), dtype=int)
+                        i = 0
+                        for e in p:
+                            edge_keys[i] = e[2]
+                            i += 1
+                        paths_for_pair_edge_ids.append(edge_keys)
+                        cnt += 1
 
-            end = time.process_time()
-            print(f"Calculated {self.paths_count} paths in {end - start} sec.")
+                    paths.append(paths_for_pair_edge_ids)
 
+                end = time.process_time()
+                print(f"Calculated {cnt} possible paths of {max_path_edges} edges max in {end - start} sec.")
+
+                if cached_paths_file:
+                    np.save(cached_paths_file, paths, allow_pickle=True)
+
+            # select supposedly best paths
+            self._set_best_paths(paths, max_od_paths_count, max_path_edges)
             if saved_paths_file:
                 np.save(saved_paths_file, self.paths, allow_pickle=True)
+                print(f"Saved {self.paths_count} 'best' paths.")
 
     def get_demands_vector(self) -> np.ndarray:
         return np.array([d[2] for d in self.demand])

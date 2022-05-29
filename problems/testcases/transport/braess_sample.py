@@ -73,7 +73,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.plot_start_iter = 3
 
     return TrafficEquilibrium(
-        Gf=Ge, d=d, W=W, C=Rn(n),
+        Gf=Ge, d=d, W=W, C=Rn(n),Q=Q,
         x0=algorithm_params.x0,
         x_test=real_solution,
         hr_name='$ traffic equilibrium ' +

@@ -54,7 +54,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam1 = 1.5 / ht.norm
 
     # for adaptive malitsky-tam
-    algorithm_params.adaptive_tau = 0.9
+    algorithm_params.adaptive_tau = 0.5
     # for adaptive tseng
     algorithm_params.adaptive_tau_small = 0.45
 

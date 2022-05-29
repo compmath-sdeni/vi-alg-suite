@@ -228,12 +228,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.test_time_count = 1
     algorithm_params.stop_by = StopCondition.STEP_SIZE
 
-    algorithm_params.save_history = False
+    algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-5
     algorithm_params.max_iters = 5000
-    algorithm_params.min_iters = 5000
+    algorithm_params.min_iters = 500
 
     algorithm_params.lam = 0.5 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.0  # 0.45 / np.linalg.norm(P, 2)
