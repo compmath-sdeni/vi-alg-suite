@@ -35,9 +35,11 @@ from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, minmax_game_1, pagerank_1
+    sle_saddle_regression_100_100000, pagerank_1
 
 from problems.funcndmin import FuncNDMin
+
+from problems.testcases.zero_sum_game import minmax_game_1, minmax_game_2, blotto_game, minmax_game_test_1
 
 from problems.testcases.transport import \
     pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample, test_three_sample, test_sample_1_2, \
@@ -222,21 +224,30 @@ sys.stdout = captured_io
 # endregion
 
 
-# region Test problem initialization
+# region Standart test problems
 
 # problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 # problem = harker_test.prepareProblem(algorithm_params=params)
-# problem = minmax_game_1.prepareProblem(algorithm_params=params)
 
+# endregion
+
+# region MinMaxGames
+# problem = minmax_game_test_1.prepareProblem(algorithm_params=params)
+problem = minmax_game_2.prepareProblem(algorithm_params=params)
+# endregion
+
+# region PageRank and SLE
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
 # problem = sle_saddle_hardcoded.prepareProblem(algorithm_params=params)
 # problem = sle_saddle_random_one.prepareProblem(algorithm_params=params)
+# endregion
 
+# region Traffic equilibrium
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
 
@@ -244,12 +255,12 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-                                          max_iters=150, problem_name='SiouxFalls',
-                                          max_od_paths_count=3, max_path_edges=9,
-                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
-                                          net_file_name='SiouxFalls_net.tntp',
-                                          demands_file_name='SiouxFalls_trips.tntp')
+# problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
+#                                           max_iters=150, problem_name='SiouxFalls',
+#                                           max_od_paths_count=3, max_path_edges=9,
+#                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
+#                                           net_file_name='SiouxFalls_net.tntp',
+#                                           demands_file_name='SiouxFalls_trips.tntp')
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -261,7 +272,6 @@ problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0
 # sys.stdout = captured_io
 # exit(0)
 # endregion
-
 
 # region SLAE with HR and HP projection
 # def_lam = 0.005
@@ -573,9 +583,9 @@ def initAlgs():
 
     extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
-                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
+                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="EfP (A)")
+                                                             hr_name="Alg. 1 - E")
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -595,16 +605,16 @@ def initAlgs():
 
     malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
-                                                lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
+                                                lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
-                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="MT (A)")
+                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 3* (A)", projection_type=ProjectionType.BREGMAN)
+                                                hr_name="Alg. 2 - KL", projection_type=ProjectionType.BREGMAN)
 
 
 
@@ -615,11 +625,11 @@ def initAlgs():
 #        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
-        # extrapol_from_past_adaptive,
-        # extrapol_from_past_adaptive_bregproj,
+        extrapol_from_past_adaptive,
+        extrapol_from_past_adaptive_bregproj,
 #        malitsky_tam,
         malitsky_tam_adaptive,
-        # malitsky_tam_adaptive_bregproj,
+        malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,
@@ -644,13 +654,16 @@ def initAlgs():
 # region Run all algs and save data and results
 start = time.monotonic()
 
-saved_history_dir = f"storage/stats{datetime.datetime.today().strftime('%Y-%m')}"
+saved_history_dir = f"storage/stats/MODS2022-{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)
 
 problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
 params.saveToDir(os.path.join(saved_history_dir, "params"))
+
+print(f"Problem: {problem.GetFullDesc()}")
+
 print(f"eps: {params.eps}; tau1: {params.adaptive_tau}; tau2: {params.adaptive_tau_small}; "
       f"start_lam: {params.start_adaptive_lam}; start_lam1: {params.start_adaptive_lam1}; "
       f"lam: {params.lam}; lam_KL: {params.lam_KL}")
@@ -726,6 +739,7 @@ else:
         # np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count - 1])
 
 if params.test_time:
+    print(f"Averaged time over {params.test_time_count} runs. Stop conditions: {params.stop_by} with epsilon {params.eps}")
     for k in timings:
         print(f"{k}: {timings[k]}")
 

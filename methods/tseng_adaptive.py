@@ -18,7 +18,8 @@ class TsengAdaptive(IterGradTypeMethod):
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
                  stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition, save_history=save_history)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition,
+                         save_history=save_history)
         self.tau = tau
         self.lam0 = lam
 
@@ -65,7 +66,7 @@ class TsengAdaptive(IterGradTypeMethod):
             self.px = self.x
 
             if self.projection_type == ProjectionType.BREGMAN:
-                self.x = np.exp(((np.log(self.y) + 1) - self.lam * delta_A)-1.)
+                self.x = np.exp(((np.log(self.y) + 1) - self.lam * delta_A) - 1.)
             else:
                 self.x = self.y - self.lam * delta_A
 
@@ -91,7 +92,8 @@ class TsengAdaptive(IterGradTypeMethod):
         else:  # calc gap from x0
             val_for_gap = self.x
 
-        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.y), goal_func_from_average=self.problem.F(val_for_gap))
+        self.setHistoryData(x=self.x, step_delta_norm=self.D, goal_func_value=self.problem.F(self.y),
+                            goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         stop_condition_met = False
@@ -119,3 +121,6 @@ class TsengAdaptive(IterGradTypeMethod):
     def currentStateString(self) -> str:
         return "{0}: x: {1}; lam: {2}; F(x): {3}".format(self.iter, self.problem.XToString(self.x), self.lam,
                                                          self.problem.FValToString(self.problem.F(self.x)))
+
+    def isAdaptive(self) -> bool:
+        return True

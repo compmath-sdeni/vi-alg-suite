@@ -92,6 +92,10 @@ class MinMaxGame(VIProblem):
         self.P = np.loadtxt("{0}/{1}".format(path, 'P.txt'))
         self.xtest = np.loadtxt("{0}/{1}".format(path, 'x_test.txt'))
 
+    def GetFullDesc(self):
+        res = super().GetHRName()
+        return f"{res}; m: {self.m}, n: {self.n}, Pmin: {np.min(self.P)}, Pmax: {np.max(self.P)}, Pavg: {np.average(self.P)}"
+
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
         return {
             'Game value': self.getGameValue(x),

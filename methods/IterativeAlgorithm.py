@@ -3,7 +3,7 @@ from typing import Union, Dict
 
 import numpy as np
 
-from methods.algorithm_params import StopCondition
+from methods.algorithm_params import StopCondition, AlgorithmParams
 from problems.viproblem import VIProblem
 from utils.alg_history import AlgHistory
 
@@ -42,7 +42,7 @@ class IterativeAlgorithm:
         self.min_iters: int = min_iters
         self.hr_name = hr_name if hr_name else type(self).__name__
 
-        self.history = AlgHistory(self.N, self.max_iters+2 if self.save_history else 2)
+        self.history = AlgHistory(self.N, self.max_iters + 2 if self.save_history else 2)
         self.history.alg_name = self.hr_name
         self.history.alg_class = self.__class__.__name__
 
@@ -53,7 +53,8 @@ class IterativeAlgorithm:
         pass
 
     def setHistoryData(self, *, x: np.ndarray = None, y: np.ndarray = None,
-                       step_delta_norm: float = None, goal_func_value: float = None, goal_func_from_average: float = None):
+                       step_delta_norm: float = None, goal_func_value: float = None,
+                       goal_func_from_average: float = None):
 
         history_item_index: int = self.iter if self.save_history else (0 if self.iter == 0 else 1)
 
@@ -80,7 +81,6 @@ class IterativeAlgorithm:
             #     self.history.goal_func_from_average[2] = goal_func_from_average
             #     self.history.goal_func_from_average[1] = goal_func_from_average
             #     self.history.goal_func_from_average[0] = goal_func_from_average
-
 
     def doPostStep(self):
         pass
@@ -134,7 +134,8 @@ class IterativeAlgorithm:
             self.history.iters_count = self.iter + 1
 
             if self.save_history:
-                self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index-1] if self.iter > 0 else 0)
+                self.totalTime = (finish - start) + (
+                    self.history.iter_time_ns[history_index - 1] if self.iter > 0 else 0)
             else:
                 self.totalTime = (finish - start) + (self.history.iter_time_ns[history_index] if self.iter > 0 else 0)
 
@@ -142,7 +143,8 @@ class IterativeAlgorithm:
             self.history.lam[history_index] = self.lam
 
             if self.problem.xtest is not None:
-                self.history.real_error[history_index] = np.linalg.norm(self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
+                self.history.real_error[history_index] = np.linalg.norm(
+                    self.problem.xtest - self.x[:self.problem.xtest.shape[0]])
 
             extra = self.problem.GetExtraIndicators(self.x, averaged_x=self.averaged_result)
             if extra:
@@ -179,3 +181,6 @@ class IterativeAlgorithm:
 
     def GetHRName(self):
         return self.hr_name if self.hr_name is not None else self.__class__.__name__
+
+    def isAdaptive(self) -> bool:
+        return False

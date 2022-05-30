@@ -135,3 +135,6 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
     def currentStateString(self) -> str:
         return "{0}: x: {1}; lam: {2}; F(x): {3}".format(self.iter, self.problem.XToString(self.x), self.lam,
                                                          self.problem.FValToString(self.problem.F(self.x)))
+
+    def isAdaptive(self) -> bool:
+        return True

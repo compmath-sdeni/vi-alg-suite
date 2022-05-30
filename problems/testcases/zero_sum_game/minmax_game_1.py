@@ -3,12 +3,8 @@ import nashpy as nash
 from numpy import inf
 
 from constraints.allspace import Rn
-from constraints.ConvexSetsIntersection import ConvexSetsIntersection
-from constraints.hyperplane import Hyperplane
-from constraints.hyperrectangle import Hyperrectangle
 from methods.algorithm_params import AlgorithmParams, StopCondition
 from problems.minmax_game import MinMaxGame
-from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 
@@ -143,44 +139,14 @@ def generateRandomFloatDefiniteGameTwoStrat(m: int, n: int, *, a: float = -10, b
     return (res, eq_row, eq_col, game_value)
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
-    # region Random problem nxm
-    # m = 100
-    # n = 150
-    #
-    # # P = np.random.randint(-10, 10, size=(m, n)).astype(float)
-    # P = (np.random.rand(m, n)) * 2 - 1.
-    # #P = np.random.normal(-5., 20., (m, n))
-    # real_solution = None
-    #
-    # # np.save(f'minmax_P_{m}x{n}', P)
-    # # P = np.load(f'minmax_P_{m}x{n}.npy')
-    #
-    # algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / m for i in range(m)])))
-    # # algorithm_params.x0 = np.array([1., 0., 0., 0., 0., 1., 0., 0., 0., 0.])
-    #
-    # algorithm_params.x1 = algorithm_params.x0.copy()
-
-    # algorithm_params.y_limits = [0.05, 15]
-    # endregion
-
-    # region Test problem one - 3x3
-    # n = 3
-    # m = 3
-    # P = np.array([[1,-1,-1], [-1,-1,3],[-1,3,-1]])
-    # real_solution = np.array([0.5, 0.25, 0.25, 0.5, 0.25, 0.25])
-    #
-    # algorithm_params.x0 = np.concatenate((np.array([1./m for i in range(m)]), np.array([1./n for i in range(n)])))
-    # algorithm_params.x1 = algorithm_params.x0.copy()
-    # endregion
-
-    # region Test random fully defined game with known solution
-    n = 150
-    m = 100
-    eq_row = 3
-    eq_col = n-4
+    # Random fully defined game with known solution
+    n = 50
+    m = 25
+    eq_row = 11
+    eq_col = n-9
     game_val = 0.
 
-    A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-2., b=2.,
+    A, eq_row, eq_col, game_val = generateRandomFloatDefiniteGame(m, n, a=-3., b=3.,
                                                                  game_value=game_val, eq_row=eq_row, eq_col=eq_col)
     P = -A.transpose()
     np.save(f'matrix_game_pure_float_P_{m}x{n}_gv={game_val}_i={eq_row}_j={eq_col}', P)
@@ -195,7 +161,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.x0 = np.concatenate((np.array([1. / m for i in range(m)]), np.array([1. / n for i in range(n)])))
     algorithm_params.x1 = algorithm_params.x0.copy()
-    # endregion
 
     # region Test Blotto game (non-zero value, 4x5)
     # # max_x(min_y((x,Ay)) <=> min_x(max_y(-A^Tx,y))
@@ -233,7 +198,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.eps = 1e-5
     algorithm_params.max_iters = 5000
-    algorithm_params.min_iters = 500
+    algorithm_params.min_iters = 50
 
     algorithm_params.lam = 0.5 / np.linalg.norm(P, 2)
     algorithm_params.lam_medium = 0.0  # 0.45 / np.linalg.norm(P, 2)
@@ -266,7 +231,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         P=P, C=Rn(n + m),
         x0=algorithm_params.x0,
         x_test=real_solution,
-        hr_name='$ min \ max (Px,y) ' +
+        hr_name='$ min \ max (Px,y) - with pure strat.' +
 #                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
 #                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +
                 #                f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +

@@ -84,6 +84,10 @@ class Problem:
     def GetHRName(self):
         return self.hr_name if self.hr_name is not None else self.__class__.__name__
 
+    def GetFullDesc(self):
+        res = self.GetHRName()
+        return res
+
     def GetLambdaOverride(self):
         return self.lam_override
 
