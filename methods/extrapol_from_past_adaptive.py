@@ -52,7 +52,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.lam = self.lam0
 
         # self.cum_y = self.y # start average from y0
-        self.cum_y = np.zeros_like(self.y) # start average from y1
+        self.cum_y = np.zeros_like(self.y)  # start average from y1
         self.averaged_result = None
 
         # self.hist_for_avg = np.zeros((self.max_iters + 1, self.y.shape[0]))
@@ -71,7 +71,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.averaged_result = self.cum_y / self.iter
 
         # the first time we get here, iter = 1. So, to start average from y1 and not from y0, we need iter-1
-#        self.hist_for_avg[self.iter-1] = self.y
+        #        self.hist_for_avg[self.iter-1] = self.y
 
         pAy = self.Ay
         self.Ay = self.problem.A(self.y)
@@ -93,7 +93,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.operator_count += 1
 
         if self.D + self.D2 >= self.zero_delta:
-            if self.projection_type.BREGMAN:
+            if self.projection_type == ProjectionType.BREGMAN:
                 delta_A = np.linalg.norm(self.Ay - pAy, inf)
             else:
                 delta_A = np.linalg.norm(self.Ay - pAy)
@@ -120,7 +120,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
             # val_for_gap2 = t.sum(axis=0) / d
         else:  # calc gap from y0
             val_for_gap = self.y
-#            val_for_gap2 = val_for_gap
+        #            val_for_gap2 = val_for_gap
 
         # if self.problem.F(self.x_min_gap) > self.problem.F(self.y):
         #     self.x_min_gap = self.y
@@ -152,3 +152,6 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
     def currentStateString(self) -> str:
         return "{0}: x: {1}; lam: {2}; F(x): {3}".format(self.iter, self.problem.XToString(self.x), self.lam,
                                                          self.problem.FValToString(self.problem.F(self.x)))
+
+    def isAdaptive(self) -> bool:
+        return True

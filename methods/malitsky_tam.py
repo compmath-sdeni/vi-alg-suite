@@ -67,7 +67,7 @@ class MalitskyTam(IterGradTypeMethod):
         self.Ax = self.problem.A(self.x)
         self.operator_count += 1
 
-        if self.projection_type.BREGMAN:
+        if self.projection_type == ProjectionType.BREGMAN:
             self.D = np.linalg.norm(self.x - self.px, 1)
             self.D2 = np.linalg.norm(self.px - self.ppx, 1)
         else:
