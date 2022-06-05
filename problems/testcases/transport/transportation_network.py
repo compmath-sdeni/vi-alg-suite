@@ -33,6 +33,8 @@ class TransportationNetwork:
                  demands_file: str = None,
                  edges_list: Sequence[Tuple[int, int, Mapping]] = None,
                  demand: List[Tuple[int, int, float]] = None,
+                 max_od_paths_count: int = 3,
+                 max_path_edges: int = 10,
                  nodes_coords: List[Tuple[int, float, float]] = None) -> None:
 
         self.paths_count = 0
@@ -42,6 +44,10 @@ class TransportationNetwork:
         self.total_demand: float = 0
         self.nodes_coords = nodes_coords
         self.keyed_edges = {}
+        self.all_possible_paths_cache: List[List[np.ndarray]] = None
+
+        self.max_od_paths_count = max_od_paths_count
+        self.max_path_edges = max_path_edges
 
         if network_graph_file:
             self.load_network_graph(network_graph_file)
@@ -61,7 +67,7 @@ class TransportationNetwork:
             self.demand: List[Tuple[int, int, float]] = []
 
         if edges_list and demand:
-            self.recalc_derived_data()
+            self.calc_paths()
 
     def show(self, *, limit: int = 7, print_edges_data: bool = False):
         print(self.graph)
@@ -136,13 +142,13 @@ class TransportationNetwork:
         nx.draw(self.graph, pos, labels={node: node for node in self.graph.nodes()})
         nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=edge_labels)
 
-    def recalc_derived_data(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3,
-                            max_path_edges: int = 10, cached_paths_file: str = None):
-        self.calc_paths(saved_paths_file=saved_paths_file,
-                        max_od_paths_count=max_od_paths_count, max_path_edges=max_path_edges,
-                        cached_paths_file=cached_paths_file)
-
-        self.Q = self._calc_edges_to_paths_incidence_()
+    # def recalc_derived_data(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3,
+    #                         max_path_edges: int = 10, cached_paths_file: str = None):
+    #     self.calc_paths(saved_paths_file=saved_paths_file,
+    #                     max_od_paths_count=max_od_paths_count, max_path_edges=max_path_edges,
+    #                     cached_paths_file=cached_paths_file)
+    #
+    #     self.Q = self._calc_edges_to_paths_incidence_()
 
     def estimate_path_cost(self, path: Iterable):
         cost: float = 0.
@@ -158,8 +164,8 @@ class TransportationNetwork:
                 cost += 1
         return cost
 
-    def select_best_paths(self, *, od_index: int, od_paths: List, count: int, max_edges_count: int, flow: np.ndarray = None):
-        # TODO: get path flow!
+    def select_best_paths_for_pair(self, *, od_paths: List, count: int, traffic_on_edges: np.ndarray = None):
+        # TODO: use traffic!
         def get_path_cost(path, y: float = None):
             cost = 0
             for edg_key in path:
@@ -179,30 +185,34 @@ class TransportationNetwork:
 
         return sorted_paths[:count]
 
-    def _set_best_paths(self, possible_paths, max_od_paths_count, max_path_edges):
+    def select_best_paths(self, possible_paths, max_od_paths_count, max_path_edges, traffic_on_edges):
         start = time.process_time()
-        self.paths_count = 0
-        self.paths = []
+        paths_count = 0
+        paths = []
         total_cnt = 0
         for idx, paths_for_pair_edge_ids in enumerate(possible_paths):
             total_cnt += len(paths_for_pair_edge_ids)
             if len(paths_for_pair_edge_ids) > max_od_paths_count:
-                suitable_paths = self.select_best_paths(od_index=idx, od_paths=paths_for_pair_edge_ids,
-                                                        count=max_od_paths_count,
-                                                        max_edges_count=max_path_edges)
+                suitable_paths = self.select_best_paths_for_pair(od_paths=paths_for_pair_edge_ids,
+                                                        count=max_od_paths_count, traffic_on_edges=traffic_on_edges)
             else:
                 suitable_paths = paths_for_pair_edge_ids
 
-            self.paths_count += len(suitable_paths)
-            self.paths.append(suitable_paths)
+            paths_count += len(suitable_paths)
+            paths.append(suitable_paths)
 
         end = time.process_time()
-        print(f"Selected {self.paths_count} 'best' paths of {total_cnt} in {end - start} sec.")
+        print(f"Selected {paths_count} 'best' paths of {total_cnt} in {end - start} sec.")
+        return (paths, paths_count)
 
     def calc_paths(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3, max_path_edges: int = 10,
-                   cached_paths_file: str = None):
+                   cached_paths_file: str = None, traffic_on_edges: np.ndarray = None):
         self.paths = []
         self.paths_count = 0
+        self.Q = None
+        self.max_od_paths_count = max_od_paths_count
+        self.max_path_edges = max_path_edges
+
         if saved_paths_file and os.path.exists(saved_paths_file):
             start = time.process_time()
             self.paths = np.load(saved_paths_file, allow_pickle=True)
@@ -211,12 +221,16 @@ class TransportationNetwork:
             end = time.process_time()
             print(f"Loaded {self.paths_count} paths in {end - start} sec.")
         else:
-            if cached_paths_file and os.path.exists(cached_paths_file):
+            if self.all_possible_paths_cache is not None:
+                paths = self.all_possible_paths_cache
+            elif cached_paths_file and os.path.exists(cached_paths_file):
                 # Load all possible paths of max edge count from "cache"
                 start = time.process_time()
                 paths = np.load(cached_paths_file, allow_pickle=True)
                 end = time.process_time()
                 print(f"Loaded {len(paths)} possible paths from cache in {end - start} sec.")
+
+                self.all_possible_paths_cache = paths
             else:
                 # calculate all simple paths of max. edges count and save to cache
                 start = time.process_time()
@@ -244,14 +258,18 @@ class TransportationNetwork:
                 end = time.process_time()
                 print(f"Calculated {cnt} possible paths of {max_path_edges} edges max in {end - start} sec.")
 
+                self.all_possible_paths_cache = paths
+
                 if cached_paths_file:
                     np.save(cached_paths_file, paths, allow_pickle=True)
 
             # select supposedly best paths
-            self._set_best_paths(paths, max_od_paths_count, max_path_edges)
+            self.paths, self.paths_count = self.select_best_paths(paths, max_od_paths_count, max_path_edges, traffic_on_edges=traffic_on_edges)
             if saved_paths_file:
                 np.save(saved_paths_file, self.paths, allow_pickle=True)
                 print(f"Saved {self.paths_count} 'best' paths.")
+
+        self.Q = self._calc_edges_to_paths_incidence_()
 
     def get_demands_vector(self) -> np.ndarray:
         return np.array([d[2] for d in self.demand])
@@ -364,7 +382,7 @@ class TransportationNetwork:
         if demands_file_path:
             self.load_demands(demands_file_path)
 
-        self.recalc_derived_data(saved_paths_file=saved_paths_file, max_od_paths_count=max_od_paths_count,
+        self.calc_paths(saved_paths_file=saved_paths_file, max_od_paths_count=max_od_paths_count,
                                  max_path_edges=max_path_edges, cached_paths_file=cached_paths_file)
 
     def get_edge_cost_by_flow(self, e, flow):
@@ -382,6 +400,8 @@ class TransportationNetwork:
         capacity_inv = np.ndarray((N,), dtype=float)
         power = np.ndarray((N,), dtype=float)
 
+        has_non_one_power = False
+
         # for i, e in enumerate(self.graph.edges.data()):
         for k, edg_key in self.keyed_edges.items():
             e = self.graph.edges[edg_key]
@@ -390,7 +410,11 @@ class TransportationNetwork:
             capacity_inv[k] = 1. / e[str(EdgeParams.CAP)]
             power[k] = e[str(EdgeParams.POW)]
 
-        def cost(x: np.ndarray) -> np.ndarray:
-            return self.Q.T @ (free_flows * (1.0 + koeffs * np.power(((self.Q @ x) * capacity_inv), power)))
+        if np.all(np.isclose(power, np.ones_like(power))):
+            def cost(x: np.ndarray) -> np.ndarray:
+                return self.Q.T @ (free_flows * (1.0 + koeffs * (self.Q @ x) * capacity_inv))
+        else:
+            def cost(x: np.ndarray) -> np.ndarray:
+                return self.Q.T @ (free_flows * (1.0 + koeffs * np.power(((self.Q @ x) * capacity_inv), power)))
 
         return cost

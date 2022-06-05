@@ -78,8 +78,12 @@ class TrafficEquilibrium(VIProblem):
 
         return res
 
-    def updateStructure(self, x: Union[np.ndarray, float]):
-        pass
+    def updateStructure(self, x: Union[np.ndarray, float]) -> bool:
+        self.network.calc_paths()
+        self.Q = self.network.Q
+        self.W = self.network.get_paths_to_demands_incidence()
+        self.Gf = self.network.get_cost_function()
+        self.n = self.network.Q.shape[1]
 
     def getIndividualLoss(self, x: np.ndarray) -> float:
         return self.Gf(x).max()

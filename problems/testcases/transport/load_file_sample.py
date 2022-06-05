@@ -16,6 +16,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                    net_file_name: str = 'sample_net.tntp',
                    demands_file_name: str = 'sample_trips.tntp',
                    max_od_paths_count: int = 3, max_path_edges = 10,
+                   save_paths: bool = False,
                    pos_file_name: str = None, zero_cutoff: float = 0.5, max_iters: int = None):
 
     tnet = TransportationNetwork()
@@ -32,8 +33,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
         os.path.join(data_path, demands_file_name),
         max_od_paths_count=max_od_paths_count,
         max_path_edges=max_path_edges,
-        saved_paths_file=os.path.join(data_path, f'saved_paths_{problem_name}_cnt{max_od_paths_count}_depth{max_path_edges}.npy'),
-        cached_paths_file=os.path.join(data_path, f'cached_paths_{problem_name}_cnt{max_od_paths_count}_depth{max_path_edges}.npy'),
+        saved_paths_file=os.path.join(data_path, f'saved_paths_{problem_name}_cnt{max_od_paths_count}_depth{max_path_edges}.npy') if save_paths else None,
+        cached_paths_file=os.path.join(data_path, f'cached_paths_{problem_name}_depth{max_path_edges}.npy'),
         pos_file=os.path.join(data_path, pos_file_name) if pos_file_name is not None else None)
 
     tnet.show(limit=10)
@@ -118,7 +119,6 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     problem = TrafficEquilibrium(
         network=tnet,
-        # Gf=Gf, d=d, W=W, Q=Q,
         C=Rn(n),
         zero_cutoff=zero_cutoff,
         x0=algorithm_params.x0,

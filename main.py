@@ -255,7 +255,8 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
-problem = load_file_sample.prepareProblem(algorithm_params=params,
+problem = load_file_sample.prepareProblem(algorithm_params=params, max_path_edges=15, max_od_paths_count=2,
+                                          problem_name="SlavaTest",
                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
                                           )
 
@@ -626,13 +627,13 @@ def initAlgs():
 #       korpele,
 #       korpele_adapt,
 #        tseng,
-#        tseng_adaptive,
+        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
-#        extrapol_from_past_adaptive,
+        extrapol_from_past_adaptive,
 #        extrapol_from_past_adaptive_bregproj,
         malitsky_tam,
-#        malitsky_tam_adaptive,
+        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,
