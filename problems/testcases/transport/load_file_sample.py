@@ -38,8 +38,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     tnet.show(limit=10)
 
-    # tnet.draw()
-    # plt.show()
+    tnet.draw()
+    plt.show()
 
     d = tnet.get_demands_vector()
 

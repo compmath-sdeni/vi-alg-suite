@@ -67,11 +67,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.eps = 1e-8
     algorithm_params.max_iters = 1000
 
-    algorithm_params.lam = 0.05
+    algorithm_params.lam = 0.03
     algorithm_params.lam_medium = 0.0000001
     algorithm_params.lam_KL = 0.1
 
-    algorithm_params.min_iters = 3
+    algorithm_params.min_iters = 200
+    algorithm_params.max_iters = 200
 
     algorithm_params.start_adaptive_lam = 0.1
     algorithm_params.start_adaptive_lam1 = 0.1

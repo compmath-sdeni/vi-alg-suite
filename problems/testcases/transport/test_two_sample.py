@@ -89,9 +89,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.eps = 1e-10
-    algorithm_params.max_iters = 1000
+    algorithm_params.max_iters = 200
 
-    algorithm_params.lam = 0.0131
+    algorithm_params.lam = 0.025
     algorithm_params.lam_medium = 0.00001
     algorithm_params.lam_KL = 0.1
 

@@ -111,13 +111,25 @@ class TransportationNetwork:
             if pw != 1:
                 lbl = f"{data['frf']}(1+{data['k']}(y/{data['cap']})^{data['pow']})"
             else:
-                frf = data['frf']
-                ky = frf * data['k'] / data['cap']
-                if math.fabs(ky - math.floor(ky)) < 0.0000000001:
-                    ky = math.floor(ky)
-                if math.fabs(frf - math.floor(frf)) < 0.0000000001:
-                    frf = math.floor(frf)
-                lbl = f"{frf}+{ky}y"
+                lbl = f"{data['frf']}(1+{data['k']}(y/{data['cap']})^{data['pow']})"
+                # cutoff = 0.0000001
+                # frf = data['frf']
+                # ky = frf * data['k'] / data['cap']
+                # if math.fabs(ky - math.floor(ky)) < cutoff:
+                #     ky = math.floor(ky)
+                # if math.fabs(frf - math.floor(frf)) < cutoff:
+                #     frf = math.floor(frf)
+                #
+                # if frf >= cutoff:
+                #     lbl = f"{frf}"
+                #
+                # if ky >= cutoff:
+                #     if lbl:
+                #         lbl += '+'
+                #     if ky != 1:
+                #         lbl = f"{ky}y"
+                #     else:
+                #         lbl = f"y"
 
             edge_labels[(e[0], e[1])] = lbl
 

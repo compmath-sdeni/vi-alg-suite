@@ -235,7 +235,7 @@ sys.stdout = captured_io
 
 # region MinMaxGames
 # problem = minmax_game_test_1.prepareProblem(algorithm_params=params)
-problem = minmax_game_2.prepareProblem(algorithm_params=params)
+# problem = minmax_game_2.prepareProblem(algorithm_params=params)
 # endregion
 
 # region PageRank and SLE
@@ -249,14 +249,18 @@ problem = minmax_game_2.prepareProblem(algorithm_params=params)
 
 # region Traffic equilibrium
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
-# problem = braess_sample.prepareProblem(algorithm_params=params)
+#problem = braess_sample.prepareProblem(algorithm_params=params)
 
 # problem = load_file_sample.prepareProblem(algorithm_params=params,
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
+problem = load_file_sample.prepareProblem(algorithm_params=params,
+                                          data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
+                                          )
+
 # problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-#                                           max_iters=150, problem_name='SiouxFalls',
+#                                           max_iters=5000, problem_name='SiouxFalls',
 #                                           max_od_paths_count=3, max_path_edges=9,
 #                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
 #                                           net_file_name='SiouxFalls_net.tntp',
@@ -549,8 +553,8 @@ problem = minmax_game_2.prepareProblem(algorithm_params=params)
 # region Init all algs
 
 def initAlgs():
-    korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Korpele")
-    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Korpele (A)")
+    korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Kor")
+    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Kor (A)")
 
     tseng = Tseng(problem, stop_condition=params.stop_by,
                   eps=params.eps, lam=params.lam,
@@ -625,11 +629,11 @@ def initAlgs():
 #        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
-        extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_bregproj,
-#        malitsky_tam,
-        malitsky_tam_adaptive,
-        malitsky_tam_adaptive_bregproj,
+#        extrapol_from_past_adaptive,
+#        extrapol_from_past_adaptive_bregproj,
+        malitsky_tam,
+#        malitsky_tam_adaptive,
+#        malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,

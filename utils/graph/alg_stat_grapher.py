@@ -128,9 +128,9 @@ class AlgStatGrapher:
         else:
             graph_styles = self.initParamsArray(algs_count, y_dims,
                                             [
-                                                'y--',
+                                                'k-',
                                                 'y-',
-                                                'k--',
+                                                'b-',
                                                 'k-',
                                                 'y-',
                                                 'r-',
