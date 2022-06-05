@@ -60,6 +60,10 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         return super().__iter__()
 
     def doStep(self):
+        # if self.iter>0 and self.iter % 10 == 0:
+        #     self.problem.updateStructure(self.x)
+        #     self.Ax = self.problem.A(self.x)
+
         self.ppx = self.px
         self.px = self.x.copy()
 

@@ -79,7 +79,9 @@ class TrafficEquilibrium(VIProblem):
         return res
 
     def updateStructure(self, x: Union[np.ndarray, float]) -> bool:
-        self.network.calc_paths()
+        traffic_on_edges = self.Q @ x
+        self.network.calc_paths(traffic_on_edges=traffic_on_edges)
+
         self.Q = self.network.Q
         self.W = self.network.get_paths_to_demands_incidence()
         self.Gf = self.network.get_cost_function()

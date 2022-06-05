@@ -166,18 +166,18 @@ class TransportationNetwork:
 
     def select_best_paths_for_pair(self, *, od_paths: List, count: int, traffic_on_edges: np.ndarray = None):
         # TODO: use traffic!
-        def get_path_cost(path, y: float = None):
+        def get_path_cost(path):
             cost = 0
             for edg_key in path:
                 e = self.graph.edges[self.keyed_edges[edg_key]]
 
-                if y is None:
+                if traffic_on_edges is None:
                     small_cost = self.get_edge_cost_by_flow(e, 1.0)
                     big_cost = self.get_edge_cost_by_flow(e, 100000.)
 
                     cost += small_cost * 10 + math.log(big_cost)
                 else:
-                    self.get_edge_cost_by_flow(e, y)
+                    self.get_edge_cost_by_flow(e, traffic_on_edges[edg_key])
 
             return cost
 
@@ -185,7 +185,7 @@ class TransportationNetwork:
 
         return sorted_paths[:count]
 
-    def select_best_paths(self, possible_paths, max_od_paths_count, max_path_edges, traffic_on_edges):
+    def select_best_paths(self, possible_paths, max_od_paths_count, traffic_on_edges):
         start = time.process_time()
         paths_count = 0
         paths = []
@@ -202,16 +202,24 @@ class TransportationNetwork:
             paths.append(suitable_paths)
 
         end = time.process_time()
-        print(f"Selected {paths_count} 'best' paths of {total_cnt} in {end - start} sec.")
+        print(f"select_best_paths: selected {paths_count} 'best' paths of {total_cnt} in {end - start} sec.")
         return (paths, paths_count)
 
-    def calc_paths(self, *, saved_paths_file: str = None, max_od_paths_count: int = 3, max_path_edges: int = 10,
+    def calc_paths(self, *, saved_paths_file: str = None, max_od_paths_count: int = None, max_path_edges: int = None,
                    cached_paths_file: str = None, traffic_on_edges: np.ndarray = None):
         self.paths = []
         self.paths_count = 0
         self.Q = None
-        self.max_od_paths_count = max_od_paths_count
-        self.max_path_edges = max_path_edges
+
+        if max_od_paths_count:
+            self.max_od_paths_count = max_od_paths_count
+        else:
+            max_od_paths_count = self.max_od_paths_count
+
+        if max_path_edges:
+            self.max_path_edges = max_path_edges
+        else:
+            max_path_edges = self.max_path_edges
 
         if saved_paths_file and os.path.exists(saved_paths_file):
             start = time.process_time()
@@ -219,7 +227,7 @@ class TransportationNetwork:
             for p in self.paths:
                 self.paths_count += len(p)
             end = time.process_time()
-            print(f"Loaded {self.paths_count} paths in {end - start} sec.")
+            print(f"calc_paths: loaded {self.paths_count} paths in {end - start} sec.")
         else:
             if self.all_possible_paths_cache is not None:
                 paths = self.all_possible_paths_cache
@@ -228,7 +236,7 @@ class TransportationNetwork:
                 start = time.process_time()
                 paths = np.load(cached_paths_file, allow_pickle=True)
                 end = time.process_time()
-                print(f"Loaded {len(paths)} possible paths from cache in {end - start} sec.")
+                print(f"calc_paths: loaded {len(paths)} possible paths from cache in {end - start} sec.")
 
                 self.all_possible_paths_cache = paths
             else:
@@ -256,7 +264,7 @@ class TransportationNetwork:
                     paths.append(paths_for_pair_edge_ids)
 
                 end = time.process_time()
-                print(f"Calculated {cnt} possible paths of {max_path_edges} edges max in {end - start} sec.")
+                print(f"calc_paths: calculated {cnt} possible paths of {max_path_edges} edges max in {end - start} sec.")
 
                 self.all_possible_paths_cache = paths
 
@@ -264,10 +272,10 @@ class TransportationNetwork:
                     np.save(cached_paths_file, paths, allow_pickle=True)
 
             # select supposedly best paths
-            self.paths, self.paths_count = self.select_best_paths(paths, max_od_paths_count, max_path_edges, traffic_on_edges=traffic_on_edges)
+            self.paths, self.paths_count = self.select_best_paths(paths, max_od_paths_count, traffic_on_edges)
             if saved_paths_file:
                 np.save(saved_paths_file, self.paths, allow_pickle=True)
-                print(f"Saved {self.paths_count} 'best' paths.")
+                print(f"calc_paths: saved {self.paths_count} 'best' paths.")
 
         self.Q = self._calc_edges_to_paths_incidence_()
 

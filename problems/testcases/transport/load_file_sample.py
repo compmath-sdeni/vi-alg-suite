@@ -16,7 +16,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                    net_file_name: str = 'sample_net.tntp',
                    demands_file_name: str = 'sample_trips.tntp',
                    max_od_paths_count: int = 3, max_path_edges = 10,
-                   save_paths: bool = False,
+                   save_paths: bool = False, show_graph: bool = False,
                    pos_file_name: str = None, zero_cutoff: float = 0.5, max_iters: int = None):
 
     tnet = TransportationNetwork()
@@ -39,8 +39,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     tnet.show(limit=10)
 
-    tnet.draw()
-    plt.show()
+    if show_graph:
+        tnet.draw()
+        plt.show()
 
     d = tnet.get_demands_vector()
 
