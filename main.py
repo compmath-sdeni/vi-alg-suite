@@ -676,7 +676,7 @@ print(f"eps: {params.eps}; tau1: {params.adaptive_tau}; tau2: {params.adaptive_t
 if params.save_history and params.excel_history:
     writer = pd.ExcelWriter(
         os.path.join(saved_history_dir, f"history-{test_mnemo}.xlsx"),
-        engine='openpyxl')
+        engine='xlsxwriter')
 
 timings = {}
 alg_history_list = []
@@ -750,7 +750,7 @@ if params.test_time:
 
 if params.save_history and params.excel_history:
     # save excel file
-    writer.save()
+    # writer.save()
     writer.close()
 
 sys.stdout = sys.__stdout__

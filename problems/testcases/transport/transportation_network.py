@@ -2,7 +2,7 @@ import math
 import os
 import sys
 import time
-from collections import Iterable
+from collections.abc import Iterable
 from enum import Enum, unique
 from operator import itemgetter
 
@@ -269,12 +269,12 @@ class TransportationNetwork:
                 self.all_possible_paths_cache = paths
 
                 if cached_paths_file:
-                    np.save(cached_paths_file, paths, allow_pickle=True)
+                    np.save(cached_paths_file, np.array(paths, dtype=object), allow_pickle=True)
 
             # select supposedly best paths
             self.paths, self.paths_count = self.select_best_paths(paths, max_od_paths_count, traffic_on_edges)
             if saved_paths_file:
-                np.save(saved_paths_file, self.paths, allow_pickle=True)
+                np.save(saved_paths_file, np.array(self.paths, dtype=object), allow_pickle=True)
                 print(f"calc_paths: saved {self.paths_count} 'best' paths.")
 
         self.Q = self._calc_edges_to_paths_incidence_()

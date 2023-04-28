@@ -4,7 +4,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="49">
+          <list size="51">
             <item index="0" class="java.lang.String" itemvalue="tzlocal" />
             <item index="1" class="java.lang.String" itemvalue="greenlet" />
             <item index="2" class="java.lang.String" itemvalue="python-coveralls" />
@@ -54,6 +54,8 @@
             <item index="46" class="java.lang.String" itemvalue="Sphinx" />
             <item index="47" class="java.lang.String" itemvalue="pyramid" />
             <item index="48" class="java.lang.String" itemvalue="pytz" />
+            <item index="49" class="java.lang.String" itemvalue="cvxpy" />
+            <item index="50" class="java.lang.String" itemvalue="openpyxl" />
           </list>
         </value>
       </option>
