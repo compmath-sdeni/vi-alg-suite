@@ -34,8 +34,10 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
+from problems.nagurna_simplest import BloodBankingOne
+
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, pagerank_1
+    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear
 
 from problems.funcndmin import FuncNDMin
 
@@ -46,6 +48,9 @@ from problems.testcases.transport import \
     test_sample_1_3
 
 from problems.testcases.slar_random import getSLE
+
+from problems.testcases.blood_delivery import blood_delivery_simplest
+
 from utils.alg_history import AlgHistory
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
 
@@ -68,6 +73,7 @@ params = AlgorithmParams(
     excel_history=True
 )
 
+# region system setup
 has_opts: bool = False
 
 show_output: bool = True
@@ -120,6 +126,8 @@ sys.stdout = captured_io
 
 # captured_io = io.StringIO()
 # sys.stdout = captured_io
+
+# endregion
 
 # region Simple 2d func min
 
@@ -221,8 +229,9 @@ sys.stdout = captured_io
 #               xtest=real_solution
 #               )
 
-# endregion
+# problem = func_nd_min_mean_linear.prepareProblem(algorithm_params=params)
 
+# endregion
 
 # region Standart test problems
 
@@ -260,12 +269,12 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
 #                                           )
 
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-                                          max_iters=1500, problem_name='SiouxFalls',
-                                          max_od_paths_count=2, max_path_edges=10,
-                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
-                                          net_file_name='SiouxFalls_net.tntp',
-                                          demands_file_name='SiouxFalls_trips.tntp')
+# problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
+#                                           max_iters=1500, problem_name='SiouxFalls',
+#                                           max_od_paths_count=2, max_path_edges=10,
+#                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
+#                                           net_file_name='SiouxFalls_net.tntp',
+#                                           demands_file_name='SiouxFalls_trips.tntp')
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -276,6 +285,12 @@ problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0
 # print(captured_io.getvalue())
 # sys.stdout = captured_io
 # exit(0)
+# endregion
+
+# region BloodDeliveryNetwork
+
+problem = blood_delivery_simplest.prepareProblem(algorithm_params=params)
+
 # endregion
 
 # region SLAE with HR and HP projection
@@ -626,7 +641,7 @@ def initAlgs():
     algs_to_test = [
 #       korpele,
 #       korpele_adapt,
-#        tseng,
+        tseng,
 #        tseng_adaptive,
         # tseng_adaptive_bregproj,
         # extrapol_from_past,
