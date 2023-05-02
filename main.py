@@ -49,6 +49,7 @@ from problems.testcases.transport import \
 
 from problems.testcases.slar_random import getSLE
 
+from problems.blood_supply_net_problem import BloodSupplyNetwork
 from problems.testcases.blood_delivery import blood_delivery_simplest
 
 from utils.alg_history import AlgHistory
