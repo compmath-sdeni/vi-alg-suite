@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from constraints.hyperrectangle import Hyperrectangle
 from methods.algorithm_params import AlgorithmParams, StopCondition
@@ -74,18 +75,59 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
                              r=[(lambda f: 2 * f, lambda f: 2)],
 
                              # E(t) - expected value, E'(t) - derivative of expected value
-                             shortage=[
+                             expected_shortage=[
                                  (
-                                     lambda t: 0 if t <= 0 else (2.5 - t + t*t/2.0 if t < 5 else 0), # E(Delta-)
-                                     lambda t: 0 if t <= 0 else (t/5 - 1 if t < 5 else 0),  # E'(Delta-)
+                                     lambda t: 2.5 if t <= 0 else (2.5 - t + t*t/10.0 if t < 5 else 0), # E(Delta-)
+                                     lambda t: -1 if t <= 0 else (t/5 - 1 if t < 5 else 0),  # E'(Delta-)
                                  )],
 
-                             surplus=[
+                             expected_surplus=[
                                  (
                                      lambda t: 0,  # E(Delta+)
                                      lambda t: 0,  # E'(Delta+)
-                                 )]
+                                 )],
+                             edge_loss=[1, 1, 1, 1, 1, 1]
                              )
+
+
+
+
+    x = []
+    y = []
+    for t in np.linspace(0,6,100):
+        net.recalc_link_flows_and_demands(np.array([t]))
+        l = net.get_loss(np.array([t]))
+        x.append(t)
+        y.append(l)
+
+    plt.plot(x,y)
+    plt.show()
+
+    x = algorithm_params.x0
+    net.recalc_link_flows_and_demands(x)
+    l = net.get_loss(x)
+    grad = net.get_loss_grad(x)
+    print(f"Loss near zero: {l}; Grad: {grad}")
+
+    x = np.array([1.49])
+    net.recalc_link_flows_and_demands(x)
+    l = net.get_loss(x)
+    grad = net.get_loss_grad(x)
+    print(f"Loss min: {l}; Grad: {grad}")
+
+    x = np.array([1.3])
+    net.recalc_link_flows_and_demands(x)
+    l = net.get_loss(x)
+    grad = net.get_loss_grad(x)
+    print(f"Loss 1.3: {l}; Grad: {grad}")
+
+    x = np.array([1.6])
+    net.recalc_link_flows_and_demands(x)
+    l = net.get_loss(x)
+    grad = net.get_loss_grad(x)
+    print(f"Loss 1.6: {l}; Grad: {grad}")
+
+    net.plot(show_flows=True)
 
     problem = BloodSupplyNetworkProblem(network=net,
         x0=algorithm_params.x0,
