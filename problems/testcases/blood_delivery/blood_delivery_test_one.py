@@ -32,12 +32,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 100
-    algorithm_params.stop_by = StopCondition.EXACT_SOL_DIST
+    algorithm_params.stop_by = StopCondition.STEP_SIZE
 
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-16
+    algorithm_params.eps = 1e-6
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
@@ -50,7 +50,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     hr = Hyperrectangle(1, [[0, 5]])
     constraints = hr
 
-    net = BloodSupplyNetwork(n_C=1, n_B=1, n_Cmp=1, n_S=1, n_D=1, n_R=1, theta=1, lam_minus=100, lam_plus=0,
+    net = BloodSupplyNetwork(n_C=1, n_B=1, n_Cmp=1, n_S=1, n_D=1, n_R=1, theta=1, lam_minus=[100], lam_plus=[0],
                              edges=[(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)],
                              paths=[
                                  [0, 1, 2, 3, 4, 5]
@@ -94,14 +94,27 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     x = []
     y = []
-    for t in np.linspace(0,6,100):
+    gr = []
+    for t in np.linspace(0.0, 3.0,100):
         net.recalc_link_flows_and_demands(np.array([t]))
         l = net.get_loss(np.array([t]))
+        gl = net.get_loss_grad(np.array([t]))
         x.append(t)
         y.append(l)
+        gr.append(gl)
 
-    plt.plot(x,y)
+    # plot loss and grad with y from -5 to 300 and show legend
+    plt.plot(x, y, label='Loss')
+    plt.plot(x, gr, label='Grad')
+
+    # also plot line y = 0
+    plt.plot([0, 3], [0, 0], label='y = 0')
+
+    plt.ylim(-100, 300)
+    plt.legend()
     plt.show()
+
+
 
     x = algorithm_params.x0
     net.recalc_link_flows_and_demands(x)

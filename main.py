@@ -292,9 +292,9 @@ sys.stdout = captured_io
 # problem = blood_delivery_simplest.prepareProblem(algorithm_params=params)
 problem = blood_delivery_test_one.prepareProblem(algorithm_params=params)
 
-sys.stdout = sys.__stdout__
-print(captured_io.getvalue())
-exit(0)
+# sys.stdout = sys.__stdout__
+# print(captured_io.getvalue())
+# exit(0)
 
 # endregion
 

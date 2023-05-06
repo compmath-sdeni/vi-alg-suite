@@ -27,7 +27,8 @@ class BloodSupplyNetwork:
     def __init__(self, *, n_C: int, n_B: int, n_Cmp: int, n_S: int, n_D: int, n_R: int,
                  edges: Sequence[tuple], c: Sequence[tuple], z: Sequence[tuple], r: Sequence[tuple],
                  expected_shortage: Sequence[tuple], expected_surplus: Sequence[tuple], edge_loss: Sequence[float],
-                 lam_minus: float, lam_plus: float, theta: float, paths: Sequence[Sequence[int]] = None
+                 lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
+                 paths: Sequence[Sequence[int]] = None
                  ):
         self.nodes_count = n_C + n_B + n_Cmp + n_S + n_D + n_R
         self.n_C = n_C
@@ -59,18 +60,6 @@ class BloodSupplyNetwork:
         self.n_p = len(self.paths)
         self.n_L = len(edges)
 
-        # list of lists of paths grouped by demand point (indices of paths)
-        wk_dict = {}
-        for j in range(self.n_p):
-            last_edge_idx = paths[j][len(paths[j]) - 1]
-            dest_node = self.edges[last_edge_idx][1]
-            if dest_node not in wk_dict:
-                wk_dict[dest_node] = []
-
-            wk_dict[dest_node].append(j)
-
-        self.wk_dict = wk_dict
-
         self.projected_demands = np.zeros(self.n_R)
 
         self.build_static_params()
@@ -83,10 +72,12 @@ class BloodSupplyNetwork:
         for j in range(self.n_p):
             print(f"m_{j}: {self.path_loss[j]}")
 
-
     # koeffs and network structure information are static - need to be calculated only once
     def build_static_params(self):
         self.deltas = np.zeros((self.n_L, self.n_p))
+
+        # dictionary of demand_point node id (integer, number of the node in network) ->
+        # demand_point_index (zero-based index of the demand point)
         self.demand_points_dic = {}
 
         demand_point_index = 0
@@ -101,6 +92,13 @@ class BloodSupplyNetwork:
                 self.demand_points_dic[dest_node] = demand_point_index
                 demand_point_index += 1
 
+        # list of demand_point_index -> list of paths to that demand point
+        self.wk_list = [[] for _ in range(self.n_R)]
+        for j in range(self.n_p):
+            last_edge_idx = self.paths[j][len(self.paths[j]) - 1]
+            dest_node = self.edges[last_edge_idx][1]
+            demand_point_index = self.demand_points_dic[dest_node]
+            self.wk_list[demand_point_index].append(j)
 
         self.path_loss = np.ones(self.n_p)
         self.alphaij = np.copy(self.deltas)
@@ -170,20 +168,20 @@ class BloodSupplyNetwork:
         loss = 0
         for j in range(self.n_p):
             oper_cost += self.C_hat_i(x[j], j)
-            waste_cost +=  self.Z_hat_i(x[j], j)
+            waste_cost += self.Z_hat_i(x[j], j)
             risk_cost += self.R_hat_i(x[j], j)
 
         loss += oper_cost + waste_cost + self.theta * risk_cost
 
         for k in range(self.n_R):
-            t = self.lam_minus * self.E_delta_minus(k)
+            t = self.lam_minus[k] * self.E_delta_minus(k)
             loss += t
-            t = self.lam_plus * self.E_delta_plus(k)
+            t = self.lam_plus[k] * self.E_delta_plus(k)
             loss += t
 
         return loss
 
-    def get_loss_grad(self, x:np.ndarray, *, recalc_link_flows: bool = False) -> np.ndarray:
+    def get_loss_grad(self, x: np.ndarray, *, recalc_link_flows: bool = False) -> np.ndarray:
         if recalc_link_flows:
             self.recalc_link_flows_and_demands(x)
 
@@ -191,15 +189,29 @@ class BloodSupplyNetwork:
         for l in range(self.n_p):
             oper_cost_diff = 0
             waste_cost_diff = 0
-            risk_cost_diff = 0
-
-            loss = 0
 
             for i in self.paths[l]:
                 fi = self.link_flows[i]
-                oper_cost_diff += (self.c[i][0](fi) + self.c[i][1](fi)*fi) * self.alphaij[i][l]
+                oper_cost_diff += (self.c[i][0](fi) + self.c[i][1](fi) * fi) * self.alphaij[i][l]
+                waste_cost_diff += (self.z[i][0](fi) + self.z[i][1](fi) * fi) * self.alphaij[i][l]
 
-            grad[l] = oper_cost_diff
+            i_star = self.paths[l][0]
+            fi_star = self.link_flows[i_star]
+            risk_cost_diff = self.theta * (self.r[i_star][0](fi_star) + self.r[i_star][1](
+                fi_star) * fi_star)  # not needed! *self.alphaij[i, l]
+
+            last_edge_idx = self.paths[l][len(self.paths[l]) - 1]
+            dest_node = self.edges[last_edge_idx][1]
+            demand_point_index = self.demand_points_dic[dest_node]
+
+            v_k_l = self.projected_demands[demand_point_index]
+            s = self.expected_shortage[demand_point_index][1](v_k_l)
+            shortage_cost_diff = self.lam_minus[demand_point_index] * s * self.path_loss[l]
+
+            s = self.expected_surplus[demand_point_index][1](v_k_l)
+            surplus_cost_diff = self.lam_plus[demand_point_index] * s * self.path_loss[l]
+
+            grad[l] = oper_cost_diff + waste_cost_diff + risk_cost_diff + shortage_cost_diff + surplus_cost_diff
 
         return grad
 
@@ -215,39 +227,39 @@ class BloodSupplyNetwork:
         node_idx += 1
 
         for i in range(self.n_C):
-            G.add_node(node_idx, label=f"C{i+1}")
-            pos[node_idx] = [i/self.n_C + 1/(self.n_C + 1), 50]
-            labels[node_idx] = f"C{i+1}"
+            G.add_node(node_idx, label=f"C{i + 1}")
+            pos[node_idx] = [i / self.n_C + 1 / (self.n_C + 1), 50]
+            labels[node_idx] = f"C{i + 1}"
             node_idx += 1
 
         for i in range(self.n_B):
-            G.add_node(node_idx, label=f"B{i+1}")
-            pos[node_idx] = [i / self.n_B +  1/(self.n_B + 1) , 40]
-            labels[node_idx] = f"B{i+1}"
+            G.add_node(node_idx, label=f"B{i + 1}")
+            pos[node_idx] = [i / self.n_B + 1 / (self.n_B + 1), 40]
+            labels[node_idx] = f"B{i + 1}"
             node_idx += 1
 
         for i in range(self.n_Cmp):
-            G.add_node(node_idx, label=f"P{i+1}")
-            pos[node_idx] = [i / self.n_Cmp + 1/(self.n_Cmp + 1), 30]
-            labels[node_idx] = f"P{i+1}"
+            G.add_node(node_idx, label=f"P{i + 1}")
+            pos[node_idx] = [i / self.n_Cmp + 1 / (self.n_Cmp + 1), 30]
+            labels[node_idx] = f"P{i + 1}"
             node_idx += 1
 
         for i in range(self.n_S):
-            G.add_node(node_idx, label=f"S{i+1}")
-            pos[node_idx] = [i / self.n_S + 1/(self.n_S + 1), 20]
-            labels[node_idx] = f"S{i+1}"
+            G.add_node(node_idx, label=f"S{i + 1}")
+            pos[node_idx] = [i / self.n_S + 1 / (self.n_S + 1), 20]
+            labels[node_idx] = f"S{i + 1}"
             node_idx += 1
 
         for i in range(self.n_D):
-            G.add_node(node_idx, label=f"D{i+1}")
-            pos[node_idx] = [i / self.n_D  + 1/(self.n_D + 1), 10]
-            labels[node_idx] = f"D{i+1}"
+            G.add_node(node_idx, label=f"D{i + 1}")
+            pos[node_idx] = [i / self.n_D + 1 / (self.n_D + 1), 10]
+            labels[node_idx] = f"D{i + 1}"
             node_idx += 1
 
         for i in range(self.n_R):
-            G.add_node(node_idx, label=f"R{i+1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
-            pos[node_idx] = [i / self.n_R  + 1/(self.n_R + 1), 0]
-            labels[node_idx] = f"R{i+1} ({self.projected_demands[i]})"
+            G.add_node(node_idx, label=f"R{i + 1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
+            pos[node_idx] = [i / self.n_R + 1 / (self.n_R + 1), 0]
+            labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]})"
             node_idx += 1
 
         for i, e in enumerate(self.edges):
@@ -258,7 +270,7 @@ class BloodSupplyNetwork:
     def plot(self, show_flows: bool = False):
         G, pos, labels = self.to_nx_graph()
 
-        nx.draw_networkx_nodes(G, pos, node_size=600)
+        nx.draw_networkx_nodes(G, pos, node_size=300)
         nx.draw_networkx_labels(G, pos, labels)
 
         nx.draw_networkx_edges(G, pos, arrows=True)
@@ -268,7 +280,6 @@ class BloodSupplyNetwork:
             nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 
         plt.show()
-
 
 
 class BloodSupplyNetworkProblem(VIProblem):
@@ -291,16 +302,14 @@ class BloodSupplyNetworkProblem(VIProblem):
         self.defaultProjection = np.zeros(self.arity)
 
     def F(self, x: np.ndarray) -> float:
-        e = 2.5 - x if x < 2.5 else 0
-        return 11 * x[0] ** 2 + 38 * x + 100 * e
+        return self.net.get_loss(x)
 
     def GradF(self, x: np.ndarray) -> np.ndarray:
         return self.A(x)
 
     def A(self, x: np.ndarray) -> np.ndarray:
-        e = 0 if x[0] <= 0 else (1 if x[0] >= 5 else x[0] / 5)
-        v = 22 * x[0] + 100 * (e - 1) + 38
-        return np.array([v])
+        self.net.recalc_link_flows_and_demands(x)
+        return self.net.get_loss_grad(x)
 
     def Project(self, x: np.array) -> np.array:
         return self.C.project(x)
