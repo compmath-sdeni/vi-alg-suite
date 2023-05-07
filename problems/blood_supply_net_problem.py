@@ -263,7 +263,7 @@ class BloodSupplyNetwork:
             node_idx += 1
 
         for i, e in enumerate(self.edges):
-            G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}")
+            G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}", edge_index=f"{i+1}")
 
         return G, pos, labels
 
@@ -276,7 +276,7 @@ class BloodSupplyNetwork:
         nx.draw_networkx_edges(G, pos, arrows=True)
 
         if show_flows:
-            edge_labels = nx.get_edge_attributes(G, 'weight')
+            edge_labels = nx.get_edge_attributes(G, 'edge_index')
             nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 
         plt.show()
