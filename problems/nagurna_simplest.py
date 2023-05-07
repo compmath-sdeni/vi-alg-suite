@@ -10,7 +10,7 @@ from problems.visual_params import VisualParams
 from constraints.convex_set_constraint import ConvexSetConstraints
 
 
-class BloodBankingOne(VIProblem):
+class BloodDeliveryHardcodedOne(VIProblem):
     def __init__(self,
                  *,
                  x0: Union[np.ndarray, float] = None,

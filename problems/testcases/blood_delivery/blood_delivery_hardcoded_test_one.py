@@ -2,7 +2,7 @@ import numpy as np
 
 from constraints.hyperrectangle import Hyperrectangle
 from methods.algorithm_params import AlgorithmParams, StopCondition
-from problems.nagurna_simplest import BloodBankingOne
+from problems.nagurna_simplest import BloodDeliveryHardcodedOne
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
@@ -29,12 +29,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 100
-    algorithm_params.stop_by = StopCondition.EXACT_SOL_DIST
+    algorithm_params.stop_by = StopCondition.STEP_SIZE
 
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-16
+    algorithm_params.eps = 1e-6
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.REAL_ERROR
@@ -47,7 +47,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     hr = Hyperrectangle(1, [[0, 5]])
     constraints = hr
 
-    problem = BloodBankingOne(
+    problem = BloodDeliveryHardcodedOne(
                 C=constraints,
                 x0=algorithm_params.x0,
                 hr_name='$BloodDelivery simplest {0}D$'.format(N),

@@ -34,7 +34,7 @@ from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
-from problems.nagurna_simplest import BloodBankingOne
+from problems.nagurna_simplest import BloodDeliveryHardcodedOne
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
     sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear
@@ -49,7 +49,7 @@ from problems.testcases.transport import \
 
 from problems.testcases.slar_random import getSLE
 
-from problems.testcases.blood_delivery import blood_delivery_simplest, blood_delivery_test_one
+from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one, blood_delivery_test_one
 
 from utils.alg_history import AlgHistory
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
@@ -289,8 +289,8 @@ sys.stdout = captured_io
 
 # region BloodDeliveryNetwork
 
-# problem = blood_delivery_simplest.prepareProblem(algorithm_params=params)
-problem = blood_delivery_test_one.prepareProblem(algorithm_params=params)
+# problem = blood_delivery_hardcoded_test_one.prepareProblem(algorithm_params=params)
+problem = blood_delivery_test_one.prepareProblem(algorithm_params=params, show_network = False)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
