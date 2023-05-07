@@ -49,7 +49,8 @@ from problems.testcases.transport import \
 
 from problems.testcases.slar_random import getSLE
 
-from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one, blood_delivery_test_one
+from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one, blood_delivery_test_one, \
+    blood_delivery_test_two
 
 from utils.alg_history import AlgHistory
 from utils.graph.alg_stat_grapher import AlgStatGrapher, XAxisType, YAxisType
@@ -290,7 +291,9 @@ sys.stdout = captured_io
 # region BloodDeliveryNetwork
 
 # problem = blood_delivery_hardcoded_test_one.prepareProblem(algorithm_params=params)
-problem = blood_delivery_test_one.prepareProblem(algorithm_params=params, show_network = False)
+# problem = blood_delivery_test_one.prepareProblem(algorithm_params=params, show_network = False)
+
+problem = blood_delivery_test_two.prepareProblem(algorithm_params=params, show_network=True)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())

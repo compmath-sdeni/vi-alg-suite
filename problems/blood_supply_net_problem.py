@@ -259,11 +259,11 @@ class BloodSupplyNetwork:
         for i in range(self.n_R):
             G.add_node(node_idx, label=f"R{i + 1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
             pos[node_idx] = [i / self.n_R + 1 / (self.n_R + 1), 0]
-            labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]})"
+            labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]:.2f})"
             node_idx += 1
 
         for i, e in enumerate(self.edges):
-            G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=self.link_flows[i])
+            G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}")
 
         return G, pos, labels
 
