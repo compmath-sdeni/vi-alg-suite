@@ -7,7 +7,15 @@ from problems.blood_supply_net_problem import BloodSupplyNetwork, BloodSupplyNet
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
 
-def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network = True):
+def get_uniform_rand_shortage_expectation_func(a: float, b: float):
+    return lambda v: 0 if v >= b else ((0.5 * (a + b) - v) if v <= a else 0.5 * (b - v) * (b - v) / (b - a))
+
+
+def get_uniform_rand_shortage_expectation_derivative(a: float, b: float):
+    return lambda v: -1 if v < a else (0 if v > b else (v - b) / (b - a))
+
+
+def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network=True):
     N = 1
     def_lam = 0.0002
 
@@ -47,13 +55,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
 
     real_solution = np.zeros(n_paths)
 
-    net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.7, lam_minus=[100, 100, 100], lam_plus=[0, 0, 0],
+    net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.0, lam_minus=[100, 100, 100],
+                             lam_plus=[0, 0, 0],
                              edges=[(0, 1), (0, 2),
                                     (1, 3), (1, 4), (2, 3), (2, 4),
                                     (3, 5), (4, 6),
                                     (5, 7), (6, 8),
                                     (7, 9), (7, 10), (8, 9), (8, 10),
-                                    (9, 11), (9, 12), (9,13), (10, 11), (10, 12), (10,13)
+                                    (9, 11), (9, 12), (9, 13), (10, 11), (10, 12), (10, 13)
                                     ],
                              paths=[
                                  [0, 2, 6, 8, 10, 14],
@@ -87,28 +96,28 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                                  [1, 4, 6, 8, 11, 19],
                                  [1, 4, 6, 8, 11, 18],
                                  [1, 4, 6, 8, 11, 17]
-                                ],
+                             ],
                              c=[
-                                 (lambda f: 6*f + 15, lambda f: 6),
-                                 (lambda f: 6*f + 15, lambda f: 6),
-                                 (lambda f: 6*f + 15, lambda f: 6),
-                                 (lambda f: 6*f + 15, lambda f: 6),
-                                 (lambda f: 6*f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 6*f + 15, lambda f: 6)
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0),
+                                 (lambda f: 0 * f + 0, lambda f: 0)
                              ],
                              z=[
                                  (lambda f: 0, lambda f: 0),
@@ -141,19 +150,18 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              # E(t) - expected value, E'(t) - derivative of expected value
                              expected_shortage=[
                                  (
-                                     lambda t: 2.5 if t <= 0 else (2.5 - t + t*t/10.0 if t < 5 else 0), # E(Delta-)
-                                     lambda t: -1 if t <= 0 else (t/5 - 1 if t < 5 else 0),  # E'(Delta-)
+                                     get_uniform_rand_shortage_expectation_func(5, 10),  # E(Delta-)
+                                     get_uniform_rand_shortage_expectation_derivative(5, 10),  # E'(Delta-)
                                  ),
                                  (
-                                     lambda t: 2.5 if t <= 0 else (2.5 - t + t * t / 10.0 if t < 5 else 0),  # E(Delta-)
-                                     lambda t: -1 if t <= 0 else (t / 5 - 1 if t < 5 else 0),  # E'(Delta-)
+                                     get_uniform_rand_shortage_expectation_func(40, 50),  # E(Delta-)
+                                     get_uniform_rand_shortage_expectation_derivative(40, 50),  # E'(Delta-)
                                  ),
                                  (
-                                     lambda t: 2.5 if t <= 0 else (2.5 - t + t * t / 10.0 if t < 5 else 0),  # E(Delta-)
-                                     lambda t: -1 if t <= 0 else (t / 5 - 1 if t < 5 else 0),  # E'(Delta-)
+                                     get_uniform_rand_shortage_expectation_func(25, 40),  # E(Delta-)
+                                     get_uniform_rand_shortage_expectation_derivative(25, 40)  # E'(Delta-)
                                  )
                              ],
-
                              expected_surplus=[
                                  (
                                      lambda t: 0,  # E(Delta+)
@@ -171,7 +179,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              edge_loss=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
                              )
 
+    # region plot distributions
+    f1  = get_uniform_rand_shortage_expectation_func(5, 10)
+    f2 = get_uniform_rand_shortage_expectation_derivative(5, 10)
+    x = np.linspace(0, 20, 500)
+    y1 = [f1(t) for t in x]
+    y2 = [f2(t) for t in x]
 
+    plt.plot(x, y1)
+    plt.plot(x, y2)
+    plt.show()
+    # endregion
 
     if show_network:
         x = np.ones(n_paths)
@@ -183,9 +201,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
         net.plot(show_flows=True)
 
     problem = BloodSupplyNetworkProblem(network=net,
-        x0=algorithm_params.x0,
-        hr_name='$BloodDelivery simplest {0}D$'.format(N),
-        xtest=real_solution
-    )
+                                        x0=algorithm_params.x0,
+                                        hr_name='$BloodDelivery simplest {0}D$'.format(N),
+                                        xtest=real_solution
+                                        )
 
     return problem

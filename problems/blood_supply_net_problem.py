@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Dict, Optional
 from typing import Callable, Sequence
 
 import numpy as np
@@ -361,3 +361,6 @@ class BloodSupplyNetworkProblem(VIProblem):
             np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
 
         return path_to_save
+
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
+        return {'v': self.net.projected_demands}
