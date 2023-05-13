@@ -15,6 +15,14 @@ def get_uniform_rand_shortage_expectation_derivative(a: float, b: float):
     return lambda v: -1 if v < a else (0 if v > b else (v - b) / (b - a))
 
 
+def get_uniform_rand_surplus_expectation_func(a: float, b: float):
+    return lambda v: 0 if v <= a else ((v - 0.5 * (a + b)) if v >= b else 0.5 * (v - a) * (v - a) / (b - a))
+
+
+def get_uniform_rand_surplus_expectation_derivative(a: float, b: float):
+    return lambda v: 0 if v <= a else (1 if v > b else (v - a) / (b - a))
+
+
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network=True):
     N = 1
     def_lam = 0.0002
@@ -56,7 +64,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     real_solution = np.zeros(n_paths)
 
     net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.0, lam_minus=[100, 100, 100],
-                             lam_plus=[0, 0, 0],
+                             lam_plus=[100, 100, 100],
                              edges=[(0, 1), (0, 2),
                                     (1, 3), (1, 4), (2, 3), (2, 4),
                                     (3, 5), (4, 6),
@@ -164,24 +172,24 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              ],
                              expected_surplus=[
                                  (
-                                     lambda t: 0,  # E(Delta+)
-                                     lambda t: 0,  # E'(Delta+)
+                                     get_uniform_rand_surplus_expectation_func(5, 10),  # E(Delta+)
+                                     get_uniform_rand_surplus_expectation_derivative(5, 10),  # E'(Delta+)
                                  ),
                                  (
-                                     lambda t: 0,  # E(Delta+)
-                                     lambda t: 0,  # E'(Delta+)
+                                     get_uniform_rand_surplus_expectation_func(40, 50),  # E(Delta+)
+                                     get_uniform_rand_surplus_expectation_derivative(40, 50),  # E'(Delta+)
                                  ),
                                  (
-                                     lambda t: 0,  # E(Delta+)
-                                     lambda t: 0,  # E'(Delta+)
+                                     get_uniform_rand_surplus_expectation_func(25, 40),  # E(Delta+)
+                                     get_uniform_rand_surplus_expectation_derivative(25, 40)  # E'(Delta+)
                                  )
                              ],
                              edge_loss=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
                              )
 
     # region plot distributions
-    f1  = get_uniform_rand_shortage_expectation_func(5, 10)
-    f2 = get_uniform_rand_shortage_expectation_derivative(5, 10)
+    f1  = get_uniform_rand_surplus_expectation_func(5, 10)
+    f2 = get_uniform_rand_surplus_expectation_derivative(5, 10)
     x = np.linspace(0, 20, 500)
     y1 = [f1(t) for t in x]
     y2 = [f2(t) for t in x]
