@@ -25,7 +25,7 @@ def get_uniform_rand_surplus_expectation_derivative(a: float, b: float):
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network=True):
     N = 1
-    def_lam = 0.0002
+    def_lam = 0.0001
 
     n_paths = 24
     algorithm_params.x0 = np.zeros(n_paths)
@@ -43,7 +43,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     algorithm_params.adaptive_tau = 0.5 * 0.9
     algorithm_params.adaptive_tau_small = 0.33 * 0.9
 
-    algorithm_params.max_iters = 4000
+    algorithm_params.max_iters = 500
     algorithm_params.min_iters = 3
 
     algorithm_params.test_time = False
@@ -63,8 +63,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
 
     real_solution = np.zeros(n_paths)
 
-    net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.0, lam_minus=[100, 100, 100],
-                             lam_plus=[100, 100, 100],
+    net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.7, lam_minus=[2200, 3000, 3000],
+                             lam_plus=[50, 60, 50],
                              edges=[(0, 1), (0, 2),
                                     (1, 3), (1, 4), (2, 3), (2, 4),
                                     (3, 5), (4, 6),
@@ -106,48 +106,48 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                                  [1, 4, 6, 8, 11, 17]
                              ],
                              c=[
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0),
-                                 (lambda f: 0 * f + 0, lambda f: 0)
+                                 (lambda f: 6 * f + 15, lambda f: 6),
+                                 (lambda f: 9 * f + 11, lambda f: 9),
+                                 (lambda f: 0.7 * f + 1, lambda f: 0.7),
+                                 (lambda f: 1.2 * f + 1, lambda f: 1.2),
+                                 (lambda f: 1 * f + 3, lambda f: 1),
+                                 (lambda f: 0.8 * f + 2, lambda f: 0.8),
+                                 (lambda f: 2.5 * f + 2, lambda f: 2.5),
+                                 (lambda f: 3 * f + 5, lambda f: 3),
+                                 (lambda f: 0.8 * f + 6, lambda f: 0.8),
+                                 (lambda f: 0.5 * f + 3, lambda f: 0.5),
+                                 (lambda f: 0.3 * f + 1, lambda f: 0.3),
+                                 (lambda f: 0.5 * f + 2, lambda f: 0.5),
+                                 (lambda f: 0.4 * f + 2, lambda f: 0.4),
+                                 (lambda f: 0.6 * f + 1, lambda f: 0.6),
+                                 (lambda f: 1.3 * f + 3, lambda f: 1.3),
+                                 (lambda f: 0.8 * f + 2, lambda f: 0.8),
+                                 (lambda f: 0.5 * f + 3, lambda f: 0.5),
+                                 (lambda f: 0.7 * f + 2, lambda f: 0.7),
+                                 (lambda f: 0.6 * f + 4, lambda f: 0.6),
+                                 (lambda f: 1.1 * f + 5, lambda f: 1.1)
                              ],
                              z=[
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0),
-                                 (lambda f: 0, lambda f: 0)
+                                 (lambda f: 0.8 * f, lambda f: 0.8),
+                                 (lambda f: 0.7 * f, lambda f: 0.7),
+                                 (lambda f: 0.6 * f, lambda f: 0.6),
+                                 (lambda f: 0.8 * f, lambda f: 0.8),
+                                 (lambda f: 0.6 * f, lambda f: 0.6),
+                                 (lambda f: 0.8 * f, lambda f: 0.8),
+                                 (lambda f: 0.5 * f, lambda f: 0.5),
+                                 (lambda f: 0.8 * f, lambda f: 0.8),
+                                 (lambda f: 0.4 * f, lambda f: 0.4),
+                                 (lambda f: 0.7 * f, lambda f: 0.7),
+                                 (lambda f: 0.3 * f, lambda f: 0.3),
+                                 (lambda f: 0.4 * f, lambda f: 0.4),
+                                 (lambda f: 0.3 * f, lambda f: 0.3),
+                                 (lambda f: 0.4 * f, lambda f: 0.4),
+                                 (lambda f: 0.7 * f, lambda f: 0.7),
+                                 (lambda f: 0.4 * f, lambda f: 0.4),
+                                 (lambda f: 0.5 * f, lambda f: 0.5),
+                                 (lambda f: 0.7 * f, lambda f: 0.7),
+                                 (lambda f: 0.4 * f, lambda f: 0.4),
+                                 (lambda f: 0.5 * f, lambda f: 0.5)
                              ],
 
                              r=[
@@ -184,19 +184,19 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                                      get_uniform_rand_surplus_expectation_derivative(25, 40)  # E'(Delta+)
                                  )
                              ],
-                             edge_loss=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                             edge_loss=[.97, .99, 1, .99, 1, 1, .92, .96, .98, 1, 1, 1, 1, 1, 1, 1, .98, 1, 1, .98]
                              )
 
     # region plot distributions
-    f1  = get_uniform_rand_surplus_expectation_func(5, 10)
-    f2 = get_uniform_rand_surplus_expectation_derivative(5, 10)
-    x = np.linspace(0, 20, 500)
-    y1 = [f1(t) for t in x]
-    y2 = [f2(t) for t in x]
-
-    plt.plot(x, y1)
-    plt.plot(x, y2)
-    plt.show()
+    # f1  = get_uniform_rand_surplus_expectation_func(5, 10)
+    # f2 = get_uniform_rand_surplus_expectation_derivative(5, 10)
+    # x = np.linspace(0, 20, 500)
+    # y1 = [f1(t) for t in x]
+    # y2 = [f2(t) for t in x]
+    #
+    # plt.plot(x, y1)
+    # plt.plot(x, y2)
+    # plt.show()
     # endregion
 
     if show_network:
