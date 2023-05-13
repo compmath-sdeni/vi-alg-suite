@@ -295,7 +295,7 @@ sys.stdout = captured_io
 
 # problem = blood_delivery_test_two.prepareProblem(algorithm_params=params, show_network=True)
 
-problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False)
+problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=True)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())

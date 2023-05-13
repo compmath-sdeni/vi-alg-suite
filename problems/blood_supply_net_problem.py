@@ -64,6 +64,8 @@ class BloodSupplyNetwork:
 
         self.build_static_params()
 
+        self.G, self.pos, self.labels = self.to_nx_graph()
+
         for i in range(self.n_L):
             print(f"alpha_{i}: {self.edge_loss[i]}")
             for j in range(self.n_p):
@@ -215,14 +217,14 @@ class BloodSupplyNetwork:
 
         return grad
 
-    def to_nx_graph(self):
+    def to_nx_graph(self, *, use_flows_and_demands: bool = False):
         G = nx.DiGraph()
         pos = dict()
         labels = dict()
 
         node_idx = 0
         G.add_node(node_idx, label=f"1")
-        pos[node_idx] = [0.5, 60]
+        pos[node_idx] = [0.583, 60]
         labels[node_idx] = "1"
         node_idx += 1
 
@@ -263,21 +265,25 @@ class BloodSupplyNetwork:
             node_idx += 1
 
         for i, e in enumerate(self.edges):
-            G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}", edge_index=f"{i+1}")
+            if use_flows_and_demands:
+                G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}", edge_index=f"{i+1}")
+            else:
+                G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{0}",
+                           edge_index=f"{i + 1}")
+
+        print(pos)
 
         return G, pos, labels
 
     def plot(self, show_flows: bool = False):
-        G, pos, labels = self.to_nx_graph()
+        nx.draw_networkx_nodes(self.G, self.pos, node_size=300)
+        nx.draw_networkx_labels(self.G, self.pos, self.labels)
 
-        nx.draw_networkx_nodes(G, pos, node_size=300)
-        nx.draw_networkx_labels(G, pos, labels)
-
-        nx.draw_networkx_edges(G, pos, arrows=True)
+        nx.draw_networkx_edges(self.G, self.pos, arrows=True)
 
         if show_flows:
-            edge_labels = nx.get_edge_attributes(G, 'edge_index')
-            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+            edge_labels = nx.get_edge_attributes(self.G, 'edge_index')
+            nx.draw_networkx_edge_labels(self.G, self.pos, edge_labels=edge_labels, label_pos=0.7, font_size=12)
 
         plt.show()
 
