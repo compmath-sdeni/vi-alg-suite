@@ -30,7 +30,7 @@ class BloodSupplyNetwork:
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
                  paths: Sequence[Sequence[int]] = None
                  ):
-        self.nodes_count = n_C + n_B + n_Cmp + n_S + n_D + n_R
+        self.nodes_count = 1 + n_C + n_B + n_Cmp + n_S + n_D + n_R  # also we have virtual node 0 - source node, "regional division"
         self.n_C = n_C
         self.n_B = n_B
         self.n_Cmp = n_Cmp
@@ -39,6 +39,13 @@ class BloodSupplyNetwork:
         self.n_R = n_R
 
         self.edges = edges
+
+        self.adj_dict = {}
+        for idx, e in enumerate(self.edges):
+            if e[0] not in self.adj_dict:
+                self.adj_dict[e[0]] = {e[1] : idx}
+            else:
+                self.adj_dict[e[0]][e[1]] = idx
 
         self.c = c
         self.z = z
@@ -53,18 +60,35 @@ class BloodSupplyNetwork:
         self.lam_plus = lam_plus
         self.theta = theta
 
-        self.paths = paths
-
-        self.path_loss = np.ones(len(paths))
-
-        self.n_p = len(self.paths)
         self.n_L = len(edges)
 
         self.projected_demands = np.zeros(self.n_R)
 
-        self.build_static_params()
+        self.build_demand_points_dict()
 
         self.G, self.pos, self.labels = self.to_nx_graph()
+
+        if paths is None:
+            demand_points = [k for k in self.demand_points_dic.keys()]
+            self.paths = []
+            print("Calculated paths:")
+            for path in nx.all_simple_paths(self.G, source=0, target=demand_points):
+                path_edge_indices = []
+                v1 = path[0]
+                for i in range(1, len(path)):
+                    v2 = path[i]
+                    path_edge_indices.append(self.adj_dict[v1][v2])
+                    v1 = v2
+                self.paths.append(path_edge_indices)
+
+                print(f"{len(self.paths)}: {path_edge_indices}")
+        else:
+            self.paths = paths
+
+        self.path_loss = np.ones(len(self.paths))
+        self.n_p = len(self.paths)
+
+        self.build_static_params()
 
         for i in range(self.n_L):
             print(f"alpha_{i}: {self.edge_loss[i]}")
@@ -74,25 +98,21 @@ class BloodSupplyNetwork:
         for j in range(self.n_p):
             print(f"m_{j}: {self.path_loss[j]}")
 
+
+    # dictionary of demand_point node id (integer, number of the node in network) ->
+    # demand_point_index (zero-based index of the demand point)
+    # actually with current node indexing, can be replaced with a simple shift formula
+    def build_demand_points_dict(self):
+        nodes_cnt = self.nodes_count
+        current_demand_node = nodes_cnt - self.n_R
+
+        self.demand_points_dic = {}
+        for i in range(self.n_R):
+            self.demand_points_dic[current_demand_node + i] = i
+
     # koeffs and network structure information are static - need to be calculated only once
     def build_static_params(self):
         self.deltas = np.zeros((self.n_L, self.n_p))
-
-        # dictionary of demand_point node id (integer, number of the node in network) ->
-        # demand_point_index (zero-based index of the demand point)
-        self.demand_points_dic = {}
-
-        demand_point_index = 0
-        for j, p in enumerate(self.paths):
-            for i in p:
-                self.deltas[i, j] = 1
-
-            last_edge_idx = p[len(p) - 1]
-            dest_node = self.edges[last_edge_idx][1]
-
-            if dest_node not in self.demand_points_dic:
-                self.demand_points_dic[dest_node] = demand_point_index
-                demand_point_index += 1
 
         # list of demand_point_index -> list of paths to that demand point
         self.wk_list = [[] for _ in range(self.n_R)]
@@ -369,4 +389,4 @@ class BloodSupplyNetworkProblem(VIProblem):
         return path_to_save
 
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
-        return {'v': self.net.projected_demands}
+        return {'v': self.net.projected_demands, 'f': self.net.link_flows}
