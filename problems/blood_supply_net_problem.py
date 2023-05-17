@@ -99,6 +99,38 @@ class BloodSupplyNetwork:
             print(f"m_{j}: {self.path_loss[j]}")
 
 
+    # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs, 
+    # edge operational costs, risks and expectations
+    def sanity_check(self):
+        v = [6.06, 44.05, 30.99]
+        f = [54.72, 43.90, 30.13, 22.42, 19.57, 23.46, 49.39, 42.00, 43.63, 39.51, 29.68, 13.08, 26.20, 13.31, 5.78,
+             25.78, 24.32, .29, 18.28, 7.29]
+
+        edge_loss = [0.97, 0.99, 1.00, 0.99, 1.00, 1.00, 0.92, 0.96, 0.98, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
+                     0.98, 1.00, 1.00, 0.98]
+        total_edge_oper_cost = [lambda t:6 * t ** 2 + 15 * t, lambda t:9 * t ** 2 + 11 * t, lambda t:0.7 * t ** 2 + t, lambda t:1.2 * t ** 2 + t,
+                          lambda t:1 * t ** 2 + 3 * t, lambda t:0.8 * t ** 2 + 2 * t, lambda t:2.5 * t ** 2 + 2 * t, lambda t:3 * t ** 2 + 5 * t,
+                          lambda t:0.8 * t ** 2 + 6 * t, lambda t:0.5 * t ** 2 + 3 * t, lambda t:0.3 * t ** 2 + t, lambda t:0.5 * t ** 2 + 2 * t,
+                          lambda t:0.4 * t ** 2 + 2 * t, lambda t:0.6 * t ** 2 + t, lambda t:1.3 * t ** 2 + 3 * t, lambda t:0.8 * t ** 2 + 2 * t,
+                          lambda t:0.5 * t ** 2 + 3 * t, lambda t:0.7 * t ** 2 + 2 * t, lambda t:0.6 * t ** 2 + 4 * t, lambda t:1.1 * t ** 2 + 5 * t]
+        total_edge_waste_cost = [lambda t:0.8 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.6 * t ** 2, lambda t:0.8 * t ** 2, lambda t:0.6 * t ** 2, lambda t:0.8 * t ** 2,
+                           lambda t:0.5 * t ** 2, lambda t:0.8 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.3 * t ** 2, lambda t:0.4 * t ** 2,
+                           lambda t:0.3 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.5 * t ** 2, lambda t:0.7 * t ** 2,
+                           lambda t:0.4 * t ** 2, lambda t:0.5 * t ** 2]
+
+        nodes_in_flow = np.zeros(self.nodes_count)
+        nodes_out_flow = np.zeros(self.nodes_count)
+
+        for i, e in enumerate(self.edges):
+            nodes_in_flow[e[1]] += f[i] * edge_loss[i]
+            nodes_out_flow[e[0]] += f[i]
+
+        print(f"In-flow: {nodes_in_flow}")
+        print(f"Out-flow: {nodes_out_flow}")
+        print(f"Divergency: {nodes_in_flow - nodes_out_flow}")
+        print("Looks like data is not fully consistent!!!")
+
+
     # dictionary of demand_point node id (integer, number of the node in network) ->
     # demand_point_index (zero-based index of the demand point)
     # actually with current node indexing, can be replaced with a simple shift formula
@@ -109,6 +141,11 @@ class BloodSupplyNetwork:
         self.demand_points_dic = {}
         for i in range(self.n_R):
             self.demand_points_dic[current_demand_node + i] = i
+
+        self.last_layer_links = []
+        for i, e in enumerate(self.edges):
+            if e[1] in self.demand_points_dic:
+                self.last_layer_links.append(i)
 
     # koeffs and network structure information are static - need to be calculated only once
     def build_static_params(self):
@@ -139,15 +176,20 @@ class BloodSupplyNetwork:
 
         for j in range(self.n_p):
             p = self.paths[j]
+            pflow = x[j]
             # link flows
             for i in p:
-                self.link_flows[i] += self.alphaij[i, j] * x[j]
+                self.link_flows[i] += pflow
+                pflow *= self.edge_loss[i]
+                # self.link_flows[i] += self.alphaij[i, j] * x[j]
 
-            last_edge_idx = p[len(p) - 1]
-            dest_node = self.edges[last_edge_idx][1]
+            self.projected_demands[self.demand_points_dic[self.edges[i][1]]] += pflow
 
-            # projected demands
-            self.projected_demands[self.demand_points_dic[dest_node]] += self.path_loss[j] * x[j]
+            # last_edge_idx = p[len(p) - 1]
+            # dest_node = self.edges[last_edge_idx][1]
+            #
+            # # projected demands
+            # self.projected_demands[self.demand_points_dic[dest_node]] += self.path_loss[j] * x[j]
 
     def C_hat_i(self, path_flow: float, path_index: int) -> float:
         s = 0
@@ -202,6 +244,39 @@ class BloodSupplyNetwork:
             loss += t
 
         return loss
+
+    def get_loss_by_link_flows(self) -> float:
+        oper_cost = 0
+        waste_cost = 0
+        risk_cost = 0
+
+        loss = 0
+        for i in range(self.n_L):
+            fi = self.link_flows[i]
+            oper_cost += fi * self.c[i][0](fi)
+
+            waste_cost += fi * self.z[i][0](fi)
+
+        for i in range(self.n_C):
+            fi = self.link_flows[i]
+            risk_cost += fi * self.r[i][0](fi)
+
+        loss += oper_cost + waste_cost + self.theta * risk_cost
+
+        for k in range(self.n_R):
+            t = self.lam_minus[k] * self.E_delta_minus(k)
+            loss += t
+            t = self.lam_plus[k] * self.E_delta_plus(k)
+            loss += t
+
+        return loss
+
+    def get_demands_by_link_flows(self) -> Sequence[float]:
+        v = [0 for _ in range(self.n_R)]
+        for i in self.last_layer_links:
+            v[self.demand_points_dic[self.edges[i][1]]] += self.link_flows[i]*self.edge_loss[i]
+        return v
+
 
     def get_loss_grad(self, x: np.ndarray, *, recalc_link_flows: bool = False) -> np.ndarray:
         if recalc_link_flows:
@@ -389,4 +464,4 @@ class BloodSupplyNetworkProblem(VIProblem):
         return path_to_save
 
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
-        return {'v': self.net.projected_demands, 'f': self.net.link_flows}
+        return {'v': self.net.projected_demands, 'demand_by_link_flows': self.net.get_demands_by_link_flows(), 'f': self.net.link_flows}
