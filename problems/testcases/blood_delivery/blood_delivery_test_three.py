@@ -196,8 +196,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     # plt.show()
     # endregion
 
-    net.sanity_check()
-    return
+    # net.sanity_check()
+    # return
 
     net.link_flows = np.array([54.72, 43.90, 30.13, 22.42, 19.57, 23.46, 49.39, 42.00, 43.63, 39.51, 29.68, 13.08, 26.20, 13.31, 5.78, 25.78, 24.32, .29, 18.28, 7.29])
     l = net.get_loss_by_link_flows()

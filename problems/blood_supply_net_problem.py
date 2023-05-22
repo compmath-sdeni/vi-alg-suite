@@ -11,6 +11,8 @@ from problems.viproblem import VIProblem
 from problems.visual_params import VisualParams
 from constraints.convex_set_constraint import ConvexSetConstraints
 
+import json
+
 import networkx as nx
 
 
@@ -43,7 +45,7 @@ class BloodSupplyNetwork:
         self.adj_dict = {}
         for idx, e in enumerate(self.edges):
             if e[0] not in self.adj_dict:
-                self.adj_dict[e[0]] = {e[1] : idx}
+                self.adj_dict[e[0]] = {e[1]: idx}
             else:
                 self.adj_dict[e[0]][e[1]] = idx
 
@@ -98,8 +100,7 @@ class BloodSupplyNetwork:
         for j in range(self.n_p):
             print(f"m_{j}: {self.path_loss[j]}")
 
-
-    # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs, 
+    # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs,
     # edge operational costs, risks and expectations
     def sanity_check(self):
         v = [6.06, 44.05, 30.99]
@@ -108,15 +109,23 @@ class BloodSupplyNetwork:
 
         edge_loss = [0.97, 0.99, 1.00, 0.99, 1.00, 1.00, 0.92, 0.96, 0.98, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
                      0.98, 1.00, 1.00, 0.98]
-        total_edge_oper_cost = [lambda t:6 * t ** 2 + 15 * t, lambda t:9 * t ** 2 + 11 * t, lambda t:0.7 * t ** 2 + t, lambda t:1.2 * t ** 2 + t,
-                          lambda t:1 * t ** 2 + 3 * t, lambda t:0.8 * t ** 2 + 2 * t, lambda t:2.5 * t ** 2 + 2 * t, lambda t:3 * t ** 2 + 5 * t,
-                          lambda t:0.8 * t ** 2 + 6 * t, lambda t:0.5 * t ** 2 + 3 * t, lambda t:0.3 * t ** 2 + t, lambda t:0.5 * t ** 2 + 2 * t,
-                          lambda t:0.4 * t ** 2 + 2 * t, lambda t:0.6 * t ** 2 + t, lambda t:1.3 * t ** 2 + 3 * t, lambda t:0.8 * t ** 2 + 2 * t,
-                          lambda t:0.5 * t ** 2 + 3 * t, lambda t:0.7 * t ** 2 + 2 * t, lambda t:0.6 * t ** 2 + 4 * t, lambda t:1.1 * t ** 2 + 5 * t]
-        total_edge_waste_cost = [lambda t:0.8 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.6 * t ** 2, lambda t:0.8 * t ** 2, lambda t:0.6 * t ** 2, lambda t:0.8 * t ** 2,
-                           lambda t:0.5 * t ** 2, lambda t:0.8 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.3 * t ** 2, lambda t:0.4 * t ** 2,
-                           lambda t:0.3 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.7 * t ** 2, lambda t:0.4 * t ** 2, lambda t:0.5 * t ** 2, lambda t:0.7 * t ** 2,
-                           lambda t:0.4 * t ** 2, lambda t:0.5 * t ** 2]
+        total_edge_oper_cost = [lambda t: 6 * t ** 2 + 15 * t, lambda t: 9 * t ** 2 + 11 * t,
+                                lambda t: 0.7 * t ** 2 + t, lambda t: 1.2 * t ** 2 + t,
+                                lambda t: 1 * t ** 2 + 3 * t, lambda t: 0.8 * t ** 2 + 2 * t,
+                                lambda t: 2.5 * t ** 2 + 2 * t, lambda t: 3 * t ** 2 + 5 * t,
+                                lambda t: 0.8 * t ** 2 + 6 * t, lambda t: 0.5 * t ** 2 + 3 * t,
+                                lambda t: 0.3 * t ** 2 + t, lambda t: 0.5 * t ** 2 + 2 * t,
+                                lambda t: 0.4 * t ** 2 + 2 * t, lambda t: 0.6 * t ** 2 + t,
+                                lambda t: 1.3 * t ** 2 + 3 * t, lambda t: 0.8 * t ** 2 + 2 * t,
+                                lambda t: 0.5 * t ** 2 + 3 * t, lambda t: 0.7 * t ** 2 + 2 * t,
+                                lambda t: 0.6 * t ** 2 + 4 * t, lambda t: 1.1 * t ** 2 + 5 * t]
+        total_edge_waste_cost = [lambda t: 0.8 * t ** 2, lambda t: 0.7 * t ** 2, lambda t: 0.6 * t ** 2,
+                                 lambda t: 0.8 * t ** 2, lambda t: 0.6 * t ** 2, lambda t: 0.8 * t ** 2,
+                                 lambda t: 0.5 * t ** 2, lambda t: 0.8 * t ** 2, lambda t: 0.4 * t ** 2,
+                                 lambda t: 0.7 * t ** 2, lambda t: 0.3 * t ** 2, lambda t: 0.4 * t ** 2,
+                                 lambda t: 0.3 * t ** 2, lambda t: 0.4 * t ** 2, lambda t: 0.7 * t ** 2,
+                                 lambda t: 0.4 * t ** 2, lambda t: 0.5 * t ** 2, lambda t: 0.7 * t ** 2,
+                                 lambda t: 0.4 * t ** 2, lambda t: 0.5 * t ** 2]
 
         nodes_in_flow = np.zeros(self.nodes_count)
         nodes_out_flow = np.zeros(self.nodes_count)
@@ -129,7 +138,6 @@ class BloodSupplyNetwork:
         print(f"Out-flow: {nodes_out_flow}")
         print(f"Divergency: {nodes_in_flow - nodes_out_flow}")
         print("Looks like data is not fully consistent!!!")
-
 
     # dictionary of demand_point node id (integer, number of the node in network) ->
     # demand_point_index (zero-based index of the demand point)
@@ -274,9 +282,8 @@ class BloodSupplyNetwork:
     def get_demands_by_link_flows(self) -> Sequence[float]:
         v = [0 for _ in range(self.n_R)]
         for i in self.last_layer_links:
-            v[self.demand_points_dic[self.edges[i][1]]] += self.link_flows[i]*self.edge_loss[i]
+            v[self.demand_points_dic[self.edges[i][1]]] += self.link_flows[i] * self.edge_loss[i]
         return v
-
 
     def get_loss_grad(self, x: np.ndarray, *, recalc_link_flows: bool = False) -> np.ndarray:
         if recalc_link_flows:
@@ -312,61 +319,72 @@ class BloodSupplyNetwork:
 
         return grad
 
-    def to_nx_graph(self, *, use_flows_and_demands: bool = False):
+    def to_nx_graph(self, *, use_flows_and_demands: bool = False, x_left=0, x_right=1, y_bottom=0, y_top=60):
         G = nx.DiGraph()
         pos = dict()
         labels = dict()
 
+        w = x_right - x_left
+        h = y_top - y_bottom
+        h_step = h / 6
+        row_y = y_top
+
         node_idx = 0
         G.add_node(node_idx, label=f"1")
-        pos[node_idx] = [0.583, 60]
+        pos[node_idx] = [(x_left+x_right) / 2 + 0.08*w, row_y]
         labels[node_idx] = "1"
         node_idx += 1
 
+        row_y -= h_step
+
         for i in range(self.n_C):
             G.add_node(node_idx, label=f"C{i + 1}")
-            pos[node_idx] = [i / self.n_C + 1 / (self.n_C + 1), 50]
+            pos[node_idx] = [i / self.n_C + 1 / (self.n_C + 1), row_y]
             labels[node_idx] = f"C{i + 1}"
             node_idx += 1
 
+        row_y -= h_step
         for i in range(self.n_B):
             G.add_node(node_idx, label=f"B{i + 1}")
-            pos[node_idx] = [i / self.n_B + 1 / (self.n_B + 1), 40]
+            pos[node_idx] = [i / self.n_B + 1 / (self.n_B + 1), row_y]
             labels[node_idx] = f"B{i + 1}"
             node_idx += 1
 
+        row_y -= h_step
         for i in range(self.n_Cmp):
             G.add_node(node_idx, label=f"P{i + 1}")
-            pos[node_idx] = [i / self.n_Cmp + 1 / (self.n_Cmp + 1), 30]
+            pos[node_idx] = [i / self.n_Cmp + 1 / (self.n_Cmp + 1), row_y]
             labels[node_idx] = f"P{i + 1}"
             node_idx += 1
 
+        row_y -= h_step
         for i in range(self.n_S):
             G.add_node(node_idx, label=f"S{i + 1}")
-            pos[node_idx] = [i / self.n_S + 1 / (self.n_S + 1), 20]
+            pos[node_idx] = [i / self.n_S + 1 / (self.n_S + 1), row_y]
             labels[node_idx] = f"S{i + 1}"
             node_idx += 1
 
+        row_y -= h_step
         for i in range(self.n_D):
             G.add_node(node_idx, label=f"D{i + 1}")
-            pos[node_idx] = [i / self.n_D + 1 / (self.n_D + 1), 10]
+            pos[node_idx] = [i / self.n_D + 1 / (self.n_D + 1), row_y]
             labels[node_idx] = f"D{i + 1}"
             node_idx += 1
 
+        row_y -= h_step
         for i in range(self.n_R):
             G.add_node(node_idx, label=f"R{i + 1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
-            pos[node_idx] = [i / self.n_R + 1 / (self.n_R + 1), 0]
+            pos[node_idx] = [i / self.n_R + 1 / (self.n_R + 1), row_y]
             labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]:.2f})"
             node_idx += 1
 
         for i, e in enumerate(self.edges):
             if use_flows_and_demands:
-                G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}", edge_index=f"{i+1}")
+                G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{self.link_flows[i]:.2f}",
+                           edge_index=f"{i + 1}")
             else:
                 G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{0}",
                            edge_index=f"{i + 1}")
-
-        print(pos)
 
         return G, pos, labels
 
@@ -461,7 +479,23 @@ class BloodSupplyNetworkProblem(VIProblem):
         if self.xtest is not None:
             np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
 
+        problem_setup_dict = {
+            'edges_count': len(self.net.edges),
+            'nodes_count': self.net.nodes_count,
+            'n_C': self.net.n_C,
+            'n_B': self.net.n_B,
+            'n_Cmp': self.net.n_Cmp,
+            'n_S': self.net.n_S,
+            'n_D': self.net.n_D,
+            'n_R': self.net.n_R
+        }
+
+        with open(f"{path_to_save}/network.json", "w") as file:
+            json.dump(problem_setup_dict, file)
+
         return path_to_save
 
-    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> Optional[Dict]:
-        return {'v': self.net.projected_demands, 'demand_by_link_flows': self.net.get_demands_by_link_flows(), 'f': self.net.link_flows}
+    def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> \
+    Optional[Dict]:
+        return {'v': self.net.projected_demands, 'demand_by_link_flows': self.net.get_demands_by_link_flows(),
+                'f': self.net.link_flows}
