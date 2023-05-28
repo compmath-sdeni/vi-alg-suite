@@ -48,7 +48,9 @@ def jax_checks():
     # plot the function and its derivative
     x = jnp.linspace(-10, 10, 100)
     plt.plot(x, sigmoid(x), label="sigmoid")
-    df = vmap(grad(sigmoid))
+
+    df_single = grad(sigmoid)
+    df = vmap(df_single)
     plt.plot(x, df(x), label="derivative")
 
     # the same but using a loop

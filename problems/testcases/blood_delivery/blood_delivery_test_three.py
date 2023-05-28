@@ -6,6 +6,10 @@ from methods.algorithm_params import AlgorithmParams, StopCondition
 from problems.blood_supply_net_problem import BloodSupplyNetwork, BloodSupplyNetworkProblem
 from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 
+import jax.numpy as jnp
+from jax import grad as jgrad
+from jax import jit, vmap
+
 
 def get_uniform_rand_shortage_expectation_func(a: float, b: float):
     return lambda v: 0 if v >= b else ((0.5 * (a + b) - v) if v <= a else 0.5 * (b - v) * (b - v) / (b - a))
@@ -61,6 +65,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     algorithm_params.plot_start_iter = 0
     algorithm_params.time_scale_divider = 1e+9
 
+    def aaa(x):
+        return x**2+3
+
     net = BloodSupplyNetwork(n_C=2, n_B=2, n_Cmp=2, n_S=2, n_D=2, n_R=3, theta=0.75, lam_minus=[2200, 3000, 3000],
                              lam_plus=[50, 60, 50],
                              edges=[(0, 1), (0, 2),
@@ -104,8 +111,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              #     [1, 5, 7, 9, 13, 19]
                              # ],
                              c=[
-                                 (lambda f: 6 * f + 15, lambda f: 6),
-                                 (lambda f: 9 * f + 11, lambda f: 9),
+                                 (lambda f: eval("6 * f + 15"), lambda x: eval("6") ),
+                                 (lambda f: eval("9 * f + 11"), lambda f: eval("9")),
                                  (lambda f: 0.7 * f + 1, lambda f: 0.7),
                                  (lambda f: 1.2 * f + 1, lambda f: 1.2),
                                  (lambda f: 1 * f + 3, lambda f: 1),
