@@ -1,7 +1,9 @@
 import dash
+import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 from dash import html, dcc
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 import networkx as nx
 
 from methods.algorithm_params import AlgorithmParams
@@ -11,6 +13,9 @@ from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one,
 
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
+
+active_edge = None
+active_node = None
 
 def prepare_problem():
     params = AlgorithmParams(
@@ -35,14 +40,16 @@ def prepare_problem():
 if __name__ == "__main__":
     G, pos, labels = prepare_problem()
 
+dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
+
 # Create the Dash application
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 #                , external_stylesheets=["netedit.css"]
 
 # Define the Dash layout
-app.layout = html.Div(
+app.layout = html.Div([
     html.Div(
-    style={"height":"96vh", "display": "flex", "justify-content": "space-between"},
+    style={"height":"96vh", "display": "flex", "justifyContent": "space-between", "width": "100%"},
     children=[
         # div containing the graph, should take half of the screen
         html.Div(style={"width": "50%", "border": "1px solid green"}, children = [
@@ -80,56 +87,63 @@ app.layout = html.Div(
         )]),
 
         html.Div(style={"width": "50%", "border": "1px solid gray", "padding":"8px"}, children = [
-            html.Div([
-                html.H2("Edge Manipulation"),
-                html.Div([
-                    html.Label("New Edge"),
-                    dcc.Input(id='source-node-input', type='text', placeholder="Source node"),
-                    dcc.Input(id='target-node-input', type='text', placeholder="Target node"),
-                    html.Button("Add Edge", id='add-edge-button'),
+            dbc.Card([
+                html.H2("Edge Manipulation", className="bg-primary text-white p-2 mb-2 text-center"),
+                dbc.Row(
+                    [
+                        dbc.Col([
+                            dbc.Input(id='source-node-input', type='text', placeholder="Source node", className="form-control"),
+                        ]),
+                        dbc.Col([
+                            dbc.Input(id='target-node-input', type='text', placeholder="Target node", className="form-control"),
+                        ]),
+                        dbc.Col([
+                            dbc.Button("Add Edge", id='add-edge-button', className="btn btn-primary"),
+                        ]),
+                        dbc.Col([
+                            html.Button("Remove Edge", id='remove-edge-button', className="btn btn-danger"),
+                        ]),
+
+                    ], className="form-row"),
+                dbc.Row(
+                    [
+                        dbc.Col([
+                            dcc.Input(id='edge-weight-input', type='text', placeholder="weight", className="form-control"),
+                        ]),
+                        dbc.Col([
+                            html.Button("Set Weight", id='set-weight-button', className="btn btn-info"),
+                        ])
+                    ])
                 ]),
-                html.Div([
-                    html.Label("Remove Edge"),
-                    dcc.Input(id='edge-input', type='text', placeholder="Source-Target"),
-                    html.Button("Remove Edge", id='remove-edge-button'),
-                ]),
-                html.Div([
-                    html.Label("Set Edge Weight"),
-                    dcc.Input(id='edge-weight-input', type='text', placeholder="Source-Target-Weight"),
-                    html.Button("Set Weight", id='set-weight-button'),
-                ]),
-            ]),
 
             html.Div(id='console-output'),
-            html.Div(),
-            html.Button("Save", id="save-button", disabled=True),
-        ]),
-
         ])
+    ])
+], className="dbc container-fluid"
 )
 
 
 @app.callback(Output('console-output', 'children'),
               [Input('graph_presenter', 'tapEdgeData'), Input('graph_presenter', 'tapNodeData')]
               )
-def onEdgeClick(edgeData, nodeData):
-    print(dash.ctx.triggered)
-    if edgeData:
-        return "You recently clicked/tapped the edge between " + \
+def onGraphElementClick(edgeData, nodeData):
+    global active_edge, active_node
+
+    context = dash.ctx.triggered
+    print(f"Context: {context}")
+    print(f"Edge data: {edgeData}")
+    print(f"Node data: {nodeData}")
+    if context[0]['prop_id'] == 'graph_presenter.tapEdgeData' and edgeData:
+        active_edge = edgeData
+        active_node = None
+
+        return "onGraphElementClick: clicked/tapped the edge between " + \
             edgeData['source'].upper() + " and " + edgeData['target'].upper()
-    elif nodeData:
-        G.add_node()
-        return "You recently clicked/tapped the node " + nodeData['id'].upper()
+    elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
+        active_node = nodeData
+        active_edge = None
+        return "onGraphElementClick: clicked/tapped the node " + nodeData['id'].upper()
 
-
-@app.callback(
-    Output("save-button", "disabled"),
-    Input("graph_presenter", "elements"),
-)
-def enable_save_button(elements):
-    if elements:
-        return False
-    return True
 
 
 # @app.callback(
@@ -140,21 +154,42 @@ def enable_save_button(elements):
 #     return elements
 
 
-# app.callback(
-#     Output('graph_presenter', 'elements'),
-#     [
-#         Input('add-edge-button', 'n_clicks'),
-#         Input('remove-edge-button', 'n_clicks'),
-#         Input('set-weight-button', 'n_clicks')
-#     ],
-#     [
-#         State('edge-input', 'value'),
-#         State('edge-weight-input', 'value'),
-#         State('source-node-input', 'value'),
-#         State('target-node-input', 'value'),
-#         State('graph_presenter', 'elements')
-#     ]
-# )
+@app.callback(
+    Output('graph_presenter', 'elements'),
+    [
+        Input('remove-edge-button', 'n_clicks')
+    ],
+    [
+        State('graph_presenter', 'elements')
+    ]
+)
+def remove_edge_callback(n_clicks, elements):
+    global active_edge
+
+    if n_clicks is None:
+        raise PreventUpdate
+
+    if active_edge is None:
+        raise PreventUpdate
+
+    print(f"remove_edge_callback: removing edge {active_edge}")
+
+    source = active_edge['source']
+    target = active_edge['target']
+
+    print(f"Removing edge between {source} and {target}")
+
+    # for elem in elements:
+    #     print(f"elem: {elem}")
+
+    # remove edge from networkx graph
+    G.remove_edge(int(source), int(target))
+
+    elements = [elem for elem in elements if ((not 'source' in elem['data']) or (not (elem['data']['source'] == source and elem['data']['target'] == target)))]
+
+    return elements
+
+
 #
 #
 # def graph_modify(
