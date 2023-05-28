@@ -24,5 +24,5 @@ def pytorch_checks():
 
 
 if __name__ == "__main__":
-    # matplotlib_checks()
+    matplotlib_checks()
     pytorch_checks()
