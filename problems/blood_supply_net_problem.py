@@ -11,7 +11,7 @@ from problems.viproblem import VIProblem
 from problems.visual_params import VisualParams
 from constraints.convex_set_constraint import ConvexSetConstraints
 
-import json
+import pickle
 
 import networkx as nx
 
@@ -25,6 +25,7 @@ import networkx as nx
 # * Shortage penalty lambda_-, surplus penalty lambda_+ and risk weight \theta
 # Optionally precomputed paths can be passed as well, where each path is a list indices from edge list.
 
+# https://machinelearningmastery.com/calculating-derivatives-in-pytorch/
 class BloodSupplyNetwork:
     def __init__(self, *, n_C: int, n_B: int, n_Cmp: int, n_S: int, n_D: int, n_R: int,
                  edges: Sequence[tuple], c: Sequence[tuple], z: Sequence[tuple], r: Sequence[tuple],
@@ -73,7 +74,6 @@ class BloodSupplyNetwork:
         if paths is None:
             demand_points = [k for k in self.demand_points_dic.keys()]
             self.paths = []
-            print("Calculated paths:")
             for path in nx.all_simple_paths(self.G, source=0, target=demand_points):
                 path_edge_indices = []
                 v1 = path[0]
@@ -82,8 +82,6 @@ class BloodSupplyNetwork:
                     path_edge_indices.append(self.adj_dict[v1][v2])
                     v1 = v2
                 self.paths.append(path_edge_indices)
-
-                print(f"{len(self.paths)}: {path_edge_indices}")
         else:
             self.paths = paths
 
@@ -91,14 +89,6 @@ class BloodSupplyNetwork:
         self.n_p = len(self.paths)
 
         self.build_static_params()
-
-        for i in range(self.n_L):
-            print(f"alpha_{i}: {self.edge_loss[i]}")
-            for j in range(self.n_p):
-                print(f"d_{i}_{j}: {self.deltas[i, j]}, alpha_{i}_{j}: {self.alphaij[i, j]}", sep=' | ', end=' | ')
-
-        for j in range(self.n_p):
-            print(f"m_{j}: {self.path_loss[j]}")
 
     # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs,
     # edge operational costs, risks and expectations
@@ -339,42 +329,42 @@ class BloodSupplyNetwork:
 
         for i in range(self.n_C):
             G.add_node(node_idx, label=f"C{i + 1}")
-            pos[node_idx] = [i / self.n_C + 1 / (self.n_C + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_C + 1 / (self.n_C + 1))*w, row_y]
             labels[node_idx] = f"C{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_B):
             G.add_node(node_idx, label=f"B{i + 1}")
-            pos[node_idx] = [i / self.n_B + 1 / (self.n_B + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_B + 1 / (self.n_B + 1))*w, row_y]
             labels[node_idx] = f"B{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_Cmp):
             G.add_node(node_idx, label=f"P{i + 1}")
-            pos[node_idx] = [i / self.n_Cmp + 1 / (self.n_Cmp + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_Cmp + 1 / (self.n_Cmp + 1))*w, row_y]
             labels[node_idx] = f"P{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_S):
             G.add_node(node_idx, label=f"S{i + 1}")
-            pos[node_idx] = [i / self.n_S + 1 / (self.n_S + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_S + 1 / (self.n_S + 1))*w, row_y]
             labels[node_idx] = f"S{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_D):
             G.add_node(node_idx, label=f"D{i + 1}")
-            pos[node_idx] = [i / self.n_D + 1 / (self.n_D + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_D + 1 / (self.n_D + 1))*w, row_y]
             labels[node_idx] = f"D{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_R):
             G.add_node(node_idx, label=f"R{i + 1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
-            pos[node_idx] = [i / self.n_R + 1 / (self.n_R + 1), row_y]
+            pos[node_idx] = [x_left + (i / self.n_R + 1 / (self.n_R + 1))*w, row_y]
             labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]:.2f})"
             node_idx += 1
 
@@ -399,6 +389,17 @@ class BloodSupplyNetwork:
             nx.draw_networkx_edge_labels(self.G, self.pos, edge_labels=edge_labels, label_pos=0.7, font_size=12)
 
         plt.show()
+
+    def saveToDir(self, *, path_to_save: str):
+        # save network to pickle binary
+        with open(f"{path_to_save}/network.pickle", "wb") as file:
+            pickle.dump(self, file)
+
+
+    @staticmethod
+    def loadFromDir(*, path_to_load: str):
+        with open(f"{path_to_load}/network.pickle", "rb") as file:
+            return pickle.load(file)
 
 
 class BloodSupplyNetworkProblem(VIProblem):
@@ -479,19 +480,8 @@ class BloodSupplyNetworkProblem(VIProblem):
         if self.xtest is not None:
             np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
 
-        problem_setup_dict = {
-            'edges_count': len(self.net.edges),
-            'nodes_count': self.net.nodes_count,
-            'n_C': self.net.n_C,
-            'n_B': self.net.n_B,
-            'n_Cmp': self.net.n_Cmp,
-            'n_S': self.net.n_S,
-            'n_D': self.net.n_D,
-            'n_R': self.net.n_R
-        }
-
-        with open(f"{path_to_save}/network.json", "w") as file:
-            json.dump(problem_setup_dict, file)
+        # if self.net is not None:
+        #     self.net.saveToDir(path_to_save=path_to_save)
 
         return path_to_save
 

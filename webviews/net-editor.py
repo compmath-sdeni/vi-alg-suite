@@ -12,32 +12,28 @@ from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one,
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
 
-# Create the graph using NetworkX
-G = nx.Graph()
-G.add_nodes_from([0, 1, 2, 3, 4, 5])
-G.add_edges_from([(0, 1), (1, 2), (2, 3), (3, 4)])
+def prepare_problem():
+    params = AlgorithmParams(
+        eps=1e-5,
+        min_iters=10,
+        max_iters=500,
+        lam=0.01,
+        lam_KL=0.005,
+        start_adaptive_lam=0.5,
+        start_adaptive_lam1=0.5,
+        adaptive_tau=0.75,
+        adaptive_tau_small=0.45,
+        save_history=True,
+        excel_history=True
+    )
 
-# Initialize node positions
-pos = nx.spring_layout(G)
-print(pos)
-pos = [(100, 100), (200, 100), (100, 200), (200, 200), (100, 300), (200, 300)]
+    problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
 
-params = AlgorithmParams(
-    eps=1e-5,
-    min_iters=10,
-    max_iters=500,
-    lam=0.01,
-    lam_KL=0.005,
-    start_adaptive_lam=0.5,
-    start_adaptive_lam1=0.5,
-    adaptive_tau=0.75,
-    adaptive_tau_small=0.45,
-    save_history=True,
-    excel_history=True
-)
+    return G, pos, labels
 
-problem = blood_delivery_test_two.prepareProblem(algorithm_params=params, show_network=False)
-G, pos, labels = problem.net.to_nx_graph()
+if __name__ == "__main__":
+    G, pos, labels = prepare_problem()
 
 # Create the Dash application
 app = dash.Dash(__name__)
@@ -46,31 +42,36 @@ app = dash.Dash(__name__)
 # Define the Dash layout
 app.layout = html.Div(
     html.Div(
+    style={"height":"96vh", "display": "flex", "justify-content": "space-between"},
     children=[
         # div containing the graph, should take half of the screen
-        html.Div(style={"width": "45%", "display": "inline-block"}, children = [
+        html.Div(style={"width": "50%", "border": "1px solid green"}, children = [
         cyto.Cytoscape(
             id="graph_presenter",
             layout={"name": "preset"},
-            style={"width": "800px", "height": "600px", "border": "2px solid green"},
+            style={"width": "98%", "height": "98%"},
             elements=[
                          {"data": {"id": str(node), "label": "Nod " + str(i)},
                           "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in enumerate(G.nodes())
                      ] + [
-                         {"data": {"source": str(edge[0]), "target": str(edge[1])}} for edge in G.edges()
+                         {"data": {"source": str(edge[0]), "target": str(edge[1]), "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
                      ],
             stylesheet=[
                 {
                     "selector": 'node',
                     "style": {
-                        'background-color': '#038',
+                        'background-color': '#BBBBFF',
+                        'text-halign':'center',
+                        'text-valign':'center',
                         'label': 'data(id)'
                     }
                 },
                 {
                     "selector": 'edge',
                     "style": {
-                        'width': 3,
+                        'source-label': 'data(edge_label)',
+                        'source-text-offset': '20px',
+                        'width': 1,
                         'target-arrow-shape': 'triangle',
                         'curve-style': 'bezier'
                     }
@@ -78,7 +79,7 @@ app.layout = html.Div(
             ]
         )]),
 
-        html.Div(style={"width": "45%", "height":"100%", "display": "inline-block", "border": "1px solid gray", "padding":"8px"}, children = [
+        html.Div(style={"width": "50%", "border": "1px solid gray", "padding":"8px"}, children = [
             html.Div([
                 html.H2("Edge Manipulation"),
                 html.Div([
@@ -105,7 +106,7 @@ app.layout = html.Div(
         ]),
 
         ])
-    )
+)
 
 
 @app.callback(Output('console-output', 'children'),

@@ -23,7 +23,8 @@ def get_uniform_rand_surplus_expectation_derivative(a: float, b: float):
     return lambda v: 0 if v <= a else (1 if v > b else (v - a) / (b - a))
 
 
-def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network=True):
+def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network: bool = False,
+                   print_data: bool = False):
     N = 1
     def_lam = 0.0002
 
@@ -199,23 +200,28 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     # net.sanity_check()
     # return
 
-    net.link_flows = np.array([54.72, 43.90, 30.13, 22.42, 19.57, 23.46, 49.39, 42.00, 43.63, 39.51, 29.68, 13.08, 26.20, 13.31, 5.78, 25.78, 24.32, .29, 18.28, 7.29])
+    net.link_flows = np.array(
+        [54.72, 43.90, 30.13, 22.42, 19.57, 23.46, 49.39, 42.00, 43.63, 39.51, 29.68, 13.08, 26.20, 13.31, 5.78, 25.78,
+         24.32, .29, 18.28, 7.29])
     l = net.get_loss_by_link_flows()
     v = net.get_demands_by_link_flows()
-    print(f"Loss on NA links: {l}\nv on NA links: {v}")
 
-    if show_network:
+    if print_data or show_network:
         x = algorithm_params.x0
         net.recalc_link_flows_and_demands(x)
         l = net.get_loss(x)
         grad = net.get_loss_grad(x)
-        print(f"Loss on x0: {l}")
         net.recalc_link_flows_and_demands(x)
 
+    if print_data:
+        print(f"Loss on x0: {l}")
         print(f"Link flows: {net.link_flows}")
         print(f"Supplies: {net.projected_demands}")
         # print(f"Loss: {l}; Grad: {grad}")
 
+        print(f"Loss on NA links: {l}\nv on NA links: {v}")
+
+    if show_network:
         net.plot(show_flows=True)
 
     problem = BloodSupplyNetworkProblem(network=net,
@@ -223,5 +229,19 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                                         hr_name='$BloodDelivery simplest {0}D$'.format(N),
                                         xtest=real_solution
                                         )
+
+#     problem.saveToDir(path_to_save="../../../storage/data/BloodSupplyChain/")
+
+    if print_data:
+        for i in range(problem.net.n_L):
+            print(f"alpha_{i}: {problem.net.edge_loss[i]}")
+            for j in range(problem.net.n_p):
+                print(f"d_{i}_{j}: {problem.net.deltas[i, j]}, alpha_{i}_{j}: {problem.net.alphaij[i, j]}", sep=' | ', end=' | ')
+
+        for j in range(problem.net.n_p):
+            print(f"m_{j}: {problem.net.path_loss[j]}")
+
+        for i, path in enumerate(problem.net.paths):
+            print(f"Path {i}: {path}")
 
     return problem

@@ -683,7 +683,7 @@ def initAlgs():
 # region Run all algs and save data and results
 start = time.monotonic()
 
-saved_history_dir = f"storage/stats/MODS2022-{datetime.datetime.today().strftime('%Y-%m')}"
+saved_history_dir = f"storage/stats/BloodSupply-{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)
