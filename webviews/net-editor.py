@@ -1,7 +1,13 @@
+import hashlib
+import uuid
+
+import flask
+from flask_login import LoginManager
+from flask_caching import Cache
 import dash
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
-from dash import html, dcc
+from dash import html, dcc, Patch
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import networkx as nx
@@ -11,11 +17,17 @@ from problems.blood_supply_net_problem import BloodSupplyNetwork, BloodSupplyNet
 from problems.testcases.blood_delivery import blood_delivery_hardcoded_test_one, blood_delivery_test_one, \
     blood_delivery_test_two, blood_delivery_test_three
 
+import os
+import dotenv
+
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
 
+# https://community.plotly.com/t/how-to-update-cytoscape-elements-list-of-dics-using-patch/75631
+
 active_edge = None
 active_node = None
+
 
 def prepare_problem():
     params = AlgorithmParams(
@@ -37,111 +49,189 @@ def prepare_problem():
 
     return G, pos, labels
 
-if __name__ == "__main__":
-    G, pos, labels = prepare_problem()
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 
-# Create the Dash application
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
+# Create the Dash application based on Flask server
+server = flask.Flask(__name__)
+app = dash.Dash(__name__, server=server,
+                title='VI algorithms test suite',
+                update_title='Loading...',
+                external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css]
+                )
 #                , external_stylesheets=["netedit.css"]
 
+flask_cache_config = {
+    'CACHE_TYPE': 'SimpleCache'
+    # try 'FileSystemCache' if you don't want to setup redis
+    # 'cache_type': 'redis',
+    # 'cache_redis_url': os.environ.get('REDIS_URL', 'redis://localhost:6379')
+}
+
+cache = Cache(config=flask_cache_config)
+
+# Configure flask login with secret key from environment variable
+server.config.update(SECRET_KEY=os.getenv('WEB_APP_SECRET_KEY'))
+
+login_manager = LoginManager()
+login_manager.init_app(server)
+login_manager.login_view = '/login'
+
 # Define the Dash layout
-app.layout = html.Div(
-    className="dbc container-fluid vh-100",
-    children=[
-        dbc.Row(
-            className="vh-100",
-            children=[
-            # div containing the graph, should take half of the screen
-            dbc.Col(style={"border": "1px solid green"}, children = [
-            cyto.Cytoscape(
-                id="graph_presenter",
-                layout={"name": "preset"},
-                style={"width": "98%", "height": "98%"},
-                elements=[
-                             {"data": {"id": str(node), "label": "Nod " + str(i)},
-                              "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in enumerate(G.nodes())
-                         ] + [
-                             {"data": {"source": str(edge[0]), "target": str(edge[1]), "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
-                         ],
-                stylesheet=[
-                    {
-                        "selector": 'node',
-                        "style": {
-                            'background-color': '#BBBBFF',
-                            'text-halign':'center',
-                            'text-valign':'center',
-                            'label': 'data(id)'
-                        }
-                    },
-                    {
-                        "selector": 'edge',
-                        "style": {
-                            'source-label': 'data(edge_label)',
-                            'source-text-offset': '20px',
-                            'width': 1,
-                            'target-arrow-shape': 'triangle',
-                            'curve-style': 'bezier'
-                        }
-                    }
-                ]
-            )]),
 
-            dbc.Col(style={"border": "1px solid gray"}, children = [
-                html.H2("Edge Manipulation", className="bg-primary text-white p-2 mb-2 text-center"),
-                html.Form(className="form",
-                    children=[
-                        html.Div(className="row align-items-left  mt-2",
-                            children=[
-                                html.Div(className="col-sm-3", children=[
-                                    dcc.Input(id='source-node-input', type='text', placeholder="Source node", className="form-control"),
-                                ]),
-                                html.Div(className="col-sm-3", children=[
-                                    dcc.Input(id='target-node-input', type='text', placeholder="Target node", className="form-control"),
-                                ]),
-                                html.Div(className="col-sm-3", children=[
-                                    dbc.Button("Add Edge", id='add-edge-button', className="btn btn-primary"),
-                                ]),
-                                html.Div(className="col-sm-3", children=[
-                                    html.Button("Remove Edge", id='remove-edge-button', className="btn btn-danger"),
-                                ]),
+def get_layout(G, pos, labels):
+    print("get_layout called - creating initial application layout.")
+    return html.Div(
+        className="dbc container-fluid vh-100",
+        children=[
+            dcc.Store(data='', id='session-id', storage_type='session'),
+            dbc.Row(
+                className="vh-100",
+                children=[
+                    # div containing the graph, should take half of the screen
+                    dbc.Col(style={"border": "1px solid green"}, children=[
+                        cyto.Cytoscape(
+                            id="graph_presenter",
+                            layout={"name": "preset"},
+                            style={"width": "98%", "height": "98%"},
+                            elements=[
+                                         {"data": {"id": str(node), "label": "Nod " + str(i)},
+                                          "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in
+                                         enumerate(G.nodes())
+                                     ] + [
+                                         {"data": {"source": str(edge[0]), "target": str(edge[1]),
+                                                   "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
+                                     ],
+                            stylesheet=[
+                                {
+                                    "selector": 'node',
+                                    "style": {
+                                        'background-color': '#BBBBFF',
+                                        'text-halign': 'center',
+                                        'text-valign': 'center',
+                                        'label': 'data(id)'
+                                    }
+                                },
+                                {
+                                    "selector": 'edge',
+                                    "style": {
+                                        'source-label': 'data(edge_label)',
+                                        'source-text-offset': '20px',
+                                        'width': 1,
+                                        'target-arrow-shape': 'triangle',
+                                        'curve-style': 'bezier'
+                                    }
+                                }
+                            ]
+                        )]),
+
+                    dbc.Col(style={"border": "1px solid gray"}, children=[
+                        html.H4("User and session", className="bg-info text-white p-2 mb-2 text-center"),
+                        html.Div(className="form", children=[
+                            html.Div(id="login-form-block", children=[
+                                html.Div(className="row align-items-left mt-2", children=[
+                                    html.Div(className="col-sm-3", children=[
+                                        dcc.Input(id='email-input', type='text',
+                                                    placeholder="Email", className="form-control"),
+                                    ]),
+                                    html.Div(className="col-sm-3", children=[
+                                        dcc.Input(id='password-input', type='password',
+                                                  placeholder="password", className="form-control"),
+                                    ]),
+                                    html.Div(className="col-sm-3", children=[
+                                        html.Button("Init/continue session", id='login-button',
+                                                    className="btn btn-primary"),
+                                    ]),
+                                ])
                             ]),
-                        html.Div(className="row align-items-left mt-2",
-                                 children=[
-                                     html.Div(className="col-sm-3", children=[
-                                         dcc.Input(id='edge-oper-cost-input', type='text', placeholder="unit operational cost",
-                                                   className="form-control"),
-                                     ]),
-                                     html.Div(className="col-sm-3", children=[
-                                         html.Button("Set", id='set-oper-cost-button', className="btn btn-info"),
-                                     ]),
-                                     html.Div(className="col-sm-3", children=[
-                                         dcc.Input(id='edge-discard-cost-input', type='text',
-                                                   placeholder="unit discard cost",
-                                                   className="form-control"),
-                                     ]),
-                                     html.Div(className="col-sm-3", children=[
-                                         html.Button("Set", id='set-discard-cost-button', className="btn btn-info"),
-                                     ]),
-                                 ]),
-                    ]),
+                            html.Div(id="logout-form-block", style={"display":"none"}, children=[
+                                html.Div(className="row align-items-left mt-2", children=[
+                                    html.Div(className="col-sm-3", children=[
+                                        html.P(id='user-email-show'),
+                                    ]),
+                                    html.Div(className="col-sm-3", children=[
+                                        html.Button("Log out", id='logout-button',
+                                                    className="btn btn-warning"),
+                                    ]),
+                                ])
+                            ]),
+                            html.Div(id="login-error-block", style={"display":"none", "color":"red", "textAlign":"center"})
+                        ]),
 
-                html.Div(id='console-output'),
-            ])
+                        html.H4("Edge Manipulation", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
+                        html.Form(className="form",
+                                  children=[
+                                      html.Div(className="row align-items-left  mt-2",
+                                               children=[
+                                                   html.Div(className="col-sm-3", children=[
+                                                       dcc.Input(id='source-node-input', type='text',
+                                                                 placeholder="Source node", className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       dcc.Input(id='target-node-input', type='text',
+                                                                 placeholder="Target node", className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       dbc.Button("Add Edge", id='add-edge-button',
+                                                                  className="btn btn-primary"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       html.Button("Remove Edge", id='remove-edge-button',
+                                                                   className="btn btn-danger"),
+                                                   ]),
+                                               ]),
+                                      html.Div(className="row align-items-left mt-2",
+                                               children=[
+                                                   html.Div(className="col-sm-3", children=[
+                                                       dcc.Input(id='edge-oper-cost-input', type='text',
+                                                                 placeholder="unit operational cost",
+                                                                 className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       html.Button("Set", id='set-oper-cost-button',
+                                                                   className="btn btn-info"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       dcc.Input(id='edge-discard-cost-input', type='text',
+                                                                 placeholder="unit discard cost",
+                                                                 className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       html.Button("Set", id='set-discard-cost-button',
+                                                                   className="btn btn-info"),
+                                                   ]),
+                                               ]),
+                                  ]),
+
+                        html.Div(id='console-output'),
+                    ])
+                ])
         ])
-    ])
+
+
 
 @app.callback(Output('console-output', 'children'),
-              [Input('graph_presenter', 'tapEdgeData'), Input('graph_presenter', 'tapNodeData')]
+              [
+                  Input('graph_presenter', 'tapEdgeData'),
+                  Input('graph_presenter', 'tapNodeData')
+              ],
+              [
+                  State('session-id', 'data')
+              ]
               )
-def onGraphElementClick(edgeData, nodeData):
+def onGraphElementClick(edgeData, nodeData, session_data):
     global active_edge, active_node
 
     context = dash.ctx.triggered
     print(f"Context: {context}")
     print(f"Edge data: {edgeData}")
     print(f"Node data: {nodeData}")
+    print(f"Session data: {session_data}")
+
+    if session_data is not None:
+        email = cache.get(session_data)
+        print(f"Email: {email}")
+
     if context[0]['prop_id'] == 'graph_presenter.tapEdgeData' and edgeData:
         active_edge = edgeData
         active_node = None
@@ -152,7 +242,6 @@ def onGraphElementClick(edgeData, nodeData):
         active_node = nodeData
         active_edge = None
         return "onGraphElementClick: clicked/tapped the node " + nodeData['id'].upper()
-
 
 
 # @app.callback(
@@ -194,34 +283,118 @@ def remove_edge_callback(n_clicks, elements):
     # remove edge from networkx graph
     G.remove_edge(int(source), int(target))
 
-    elements = [elem for elem in elements if ((not 'source' in elem['data']) or (not (elem['data']['source'] == source and elem['data']['target'] == target)))]
+    elements = [elem for elem in elements if ((not 'source' in elem['data']) or (
+        not (elem['data']['source'] == source and elem['data']['target'] == target)))]
 
     return elements
 
+@app.callback(
+    [
+        # Output('login-form-block', 'style'),
+        # Output('logout-form-block', 'style'),
+        # Output('user-email-show', 'children'),
+        # Output('email-input', 'value'),
+        # Output('password-input', 'value'),
+        Output('login-error-block', 'children'),
+        Output('login-error-block', 'style'),
+        Output('session-id', 'data')
+    ],
+    [
+        Input('login-button', 'n_clicks'),
+        Input('logout-button', 'n_clicks')
+    ],
+    [
+        State('email-input', 'value'),
+        State('password-input', 'value'),
+        State('session-id', 'data')
+    ]
+)
+def login_callback(n_clicks_login, n_clicks_logout, email, password, session_data):
 
-#
-#
-# def graph_modify(
-#         add_edge_clicks, remove_edge_clicks, set_weight_clicks,
-#         edge_input, edge_weight, source_node, target_node,
-#         elements):
-#     # print(f"add_edge_clicks: {add_edge_clicks}, remove_edge_clicks: {remove_edge_clicks}, "
-#     #       f"set_weight_clicks: {set_weight_clicks}. edge_input: {edge_input}, edge_weight: {edge_weight}, "
-#     #       f"source_node: {source_node}, target_node: {target_node}")
-#
-#     # if add_edge_clicks is not None:
-#     #     new_edge = {'data': {'source': source_node, 'target': target_node}}
-#     #     elements.append(new_edge)
-#     # elif remove_edge_clicks is not None:
-#     #     elements = [e for e in elements if e['data']['source'] != source_node or e['data']['target'] != target_node]
-#     # elif set_weight_clicks is not None:
-#     #     source_node, target_node, weight = edge_weight.split("-")
-#     #     for e in elements:
-#     #         if e['data']['source'] == source_node and e['data']['target'] == target_node:
-#     #             e['data']['weight'] = weight
-#
-#     return elements
-#
+    if n_clicks_login  is None and n_clicks_logout is None:
+        raise PreventUpdate
+
+    context = dash.ctx.triggered
+    error = None
+    error_block_style = Patch()
+    logged_in = False
+
+    if context[0]['prop_id'] == 'login-button.n_clicks':
+        # hash password and check if it matches the one in the database
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
+        # users and their data are saved in local directory 'users_data'
+        # each user has a separate file named after their email, which contains hashed password
+
+        # ensure that directory exists
+        if not os.path.exists("users_data"):
+            os.mkdir("users_data")
+
+        # check if user exists and if password matches
+        if os.path.exists(f"users_data/{email}.txt"):
+            with open(f"users_data/{email}.txt", "r") as f:
+                if f.read() == hashed_password:
+                    logged_in = True
+                    print("Logged in successfully")
+                else:
+                    logged_in = False
+                    error = "Wrong password!"
+                    error_block_style['display'] = 'block'
+                    print("Wrong password!")
+        else:
+            # create new user
+            with open(f"users_data/{email}.txt", "w") as f:
+                f.write(hashed_password)
+
+            logged_in = True
+            print("Created new user")
+
+        if logged_in:
+            # generate sid and save it in cache
+            sid = str(uuid.uuid4())
+            cache.set(sid, email, timeout=60 * 60 * 24 * 7)
+            print(f"Generated session id: {sid}")
+
+            return [error, error_block_style, sid]
+        else:
+            return [error, error_block_style, '']
+
+    elif context[0]['prop_id'] == 'logout-button.n_clicks':
+        print("Logged out")
+        # show login form and hide logout form, does not update email and password
+        return [error, error_block_style, '']
+
+    raise PreventUpdate
+
+@app.callback(
+    [
+        Output('login-form-block', 'style'),
+        Output('logout-form-block', 'style'),
+        Output('user-email-show', 'children'),
+        Output('email-input', 'value')
+    ],
+    [
+        Input('session-id', 'data')
+    ]
+)
+def session_changed(session_data):
+    print(f"session_changed callback.")
+
+    if session_data is not None and session_data != '':
+        email = cache.get(session_data)
+        print(f"Email in session: {email}")
+
+        if email is not None:
+            return [{"display": "none"}, {"display": "block"}, email, email]
+        else:
+            return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
+    else:
+        return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
 
 if __name__ == "__main__":
+    G, pos, labels = prepare_problem()
+    app.layout = get_layout(G, pos, labels)
+
+    cache.init_app(server)
+
     app.run_server(debug=True)
