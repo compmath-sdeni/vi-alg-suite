@@ -47,81 +47,90 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 #                , external_stylesheets=["netedit.css"]
 
 # Define the Dash layout
-app.layout = html.Div([
-    html.Div(
-    style={"height":"96vh", "display": "flex", "justifyContent": "space-between", "width": "100%"},
+app.layout = html.Div(
+    className="dbc container-fluid vh-100",
     children=[
-        # div containing the graph, should take half of the screen
-        html.Div(style={"width": "50%", "border": "1px solid green"}, children = [
-        cyto.Cytoscape(
-            id="graph_presenter",
-            layout={"name": "preset"},
-            style={"width": "98%", "height": "98%"},
-            elements=[
-                         {"data": {"id": str(node), "label": "Nod " + str(i)},
-                          "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in enumerate(G.nodes())
-                     ] + [
-                         {"data": {"source": str(edge[0]), "target": str(edge[1]), "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
-                     ],
-            stylesheet=[
-                {
-                    "selector": 'node',
-                    "style": {
-                        'background-color': '#BBBBFF',
-                        'text-halign':'center',
-                        'text-valign':'center',
-                        'label': 'data(id)'
+        dbc.Row(
+            className="vh-100",
+            children=[
+            # div containing the graph, should take half of the screen
+            dbc.Col(style={"border": "1px solid green"}, children = [
+            cyto.Cytoscape(
+                id="graph_presenter",
+                layout={"name": "preset"},
+                style={"width": "98%", "height": "98%"},
+                elements=[
+                             {"data": {"id": str(node), "label": "Nod " + str(i)},
+                              "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in enumerate(G.nodes())
+                         ] + [
+                             {"data": {"source": str(edge[0]), "target": str(edge[1]), "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
+                         ],
+                stylesheet=[
+                    {
+                        "selector": 'node',
+                        "style": {
+                            'background-color': '#BBBBFF',
+                            'text-halign':'center',
+                            'text-valign':'center',
+                            'label': 'data(id)'
+                        }
+                    },
+                    {
+                        "selector": 'edge',
+                        "style": {
+                            'source-label': 'data(edge_label)',
+                            'source-text-offset': '20px',
+                            'width': 1,
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier'
+                        }
                     }
-                },
-                {
-                    "selector": 'edge',
-                    "style": {
-                        'source-label': 'data(edge_label)',
-                        'source-text-offset': '20px',
-                        'width': 1,
-                        'target-arrow-shape': 'triangle',
-                        'curve-style': 'bezier'
-                    }
-                }
-            ]
-        )]),
+                ]
+            )]),
 
-        html.Div(style={"width": "50%", "border": "1px solid gray", "padding":"8px"}, children = [
-            dbc.Card([
+            dbc.Col(style={"border": "1px solid gray"}, children = [
                 html.H2("Edge Manipulation", className="bg-primary text-white p-2 mb-2 text-center"),
-                dbc.Row(
-                    [
-                        dbc.Col([
-                            dbc.Input(id='source-node-input', type='text', placeholder="Source node", className="form-control"),
-                        ]),
-                        dbc.Col([
-                            dbc.Input(id='target-node-input', type='text', placeholder="Target node", className="form-control"),
-                        ]),
-                        dbc.Col([
-                            dbc.Button("Add Edge", id='add-edge-button', className="btn btn-primary"),
-                        ]),
-                        dbc.Col([
-                            html.Button("Remove Edge", id='remove-edge-button', className="btn btn-danger"),
-                        ]),
+                html.Form(className="form",
+                    children=[
+                        html.Div(className="row align-items-left  mt-2",
+                            children=[
+                                html.Div(className="col-sm-3", children=[
+                                    dcc.Input(id='source-node-input', type='text', placeholder="Source node", className="form-control"),
+                                ]),
+                                html.Div(className="col-sm-3", children=[
+                                    dcc.Input(id='target-node-input', type='text', placeholder="Target node", className="form-control"),
+                                ]),
+                                html.Div(className="col-sm-3", children=[
+                                    dbc.Button("Add Edge", id='add-edge-button', className="btn btn-primary"),
+                                ]),
+                                html.Div(className="col-sm-3", children=[
+                                    html.Button("Remove Edge", id='remove-edge-button', className="btn btn-danger"),
+                                ]),
+                            ]),
+                        html.Div(className="row align-items-left mt-2",
+                                 children=[
+                                     html.Div(className="col-sm-3", children=[
+                                         dcc.Input(id='edge-oper-cost-input', type='text', placeholder="unit operational cost",
+                                                   className="form-control"),
+                                     ]),
+                                     html.Div(className="col-sm-3", children=[
+                                         html.Button("Set", id='set-oper-cost-button', className="btn btn-info"),
+                                     ]),
+                                     html.Div(className="col-sm-3", children=[
+                                         dcc.Input(id='edge-discard-cost-input', type='text',
+                                                   placeholder="unit discard cost",
+                                                   className="form-control"),
+                                     ]),
+                                     html.Div(className="col-sm-3", children=[
+                                         html.Button("Set", id='set-discard-cost-button', className="btn btn-info"),
+                                     ]),
+                                 ]),
+                    ]),
 
-                    ], className="form-row"),
-                dbc.Row(
-                    [
-                        dbc.Col([
-                            dcc.Input(id='edge-weight-input', type='text', placeholder="weight", className="form-control"),
-                        ]),
-                        dbc.Col([
-                            html.Button("Set Weight", id='set-weight-button', className="btn btn-info"),
-                        ])
-                    ])
-                ]),
-
-            html.Div(id='console-output'),
+                html.Div(id='console-output'),
+            ])
         ])
     ])
-], className="dbc container-fluid"
-)
-
 
 @app.callback(Output('console-output', 'children'),
               [Input('graph_presenter', 'tapEdgeData'), Input('graph_presenter', 'tapNodeData')]
