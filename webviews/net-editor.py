@@ -28,6 +28,25 @@ import dotenv
 active_edge = None
 active_node = None
 
+# enum for cache keys
+CACHE_KEY_ACTIVE_EDGE = 'active_edge'
+CACHE_KEY_ACTIVE_NODE = 'active_node'
+CACHE_KEY_EMAIL = 'email'
+
+
+def get_cache_key(session_id, key):
+    return f"{session_id}.{key}"
+
+
+def set_cached_value(session_id, key, value, *, timeout=60 * 60 * 24):
+    cache_key = get_cache_key(session_id, key)
+    cache.set(cache_key, value, timeout=timeout)
+
+
+def get_cached_value(session_id, key):
+    cache_key = get_cache_key(session_id, key)
+    return cache.get(cache_key)
+
 
 def prepare_problem():
     params = AlgorithmParams(
@@ -77,6 +96,7 @@ login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
 
+
 # Define the Dash layout
 
 def get_saved_problems_list():
@@ -85,6 +105,7 @@ def get_saved_problems_list():
         {"label": "Blood delivery test two", "value": "blood_delivery_test_two"},
         {"label": "Blood delivery test three", "value": "blood_delivery_test_three"},
     ]
+
 
 def get_layout(G, pos, labels):
     print("get_layout called - creating initial application layout.")
@@ -139,7 +160,7 @@ def get_layout(G, pos, labels):
                                 html.Div(className="row align-items-left mt-2", children=[
                                     html.Div(className="col-sm-3", children=[
                                         dcc.Input(id='email-input', type='text',
-                                                    placeholder="Email", className="form-control"),
+                                                  placeholder="Email", className="form-control"),
                                     ]),
                                     html.Div(className="col-sm-3", children=[
                                         dcc.Input(id='password-input', type='password',
@@ -151,19 +172,21 @@ def get_layout(G, pos, labels):
                                     ]),
                                 ])
                             ]),
-                            html.Div(id="user-session-block", style={"display":"none"}, children=[
+                            html.Div(id="user-session-block", style={"display": "none"}, children=[
                                 html.Div(className="row align-items-left mt-2 ml-2", children=[
                                     html.Div(className="col-sm-2 mt-1", children=[
                                         html.Span("Hello, "),
-                                        html.Span(id='user-email-show', style={"fontWeight":"bold", "fontSize":"larger"}),
+                                        html.Span(id='user-email-show',
+                                                  style={"fontWeight": "bold", "fontSize": "larger"}),
                                     ]),
                                     html.Div(className="col-sm-2", children=[
                                         html.Button("Log out", id='logout-button',
                                                     className="btn btn-warning"),
                                     ]),
                                     html.Div(className="col-sm-6", children=[
-                                        html.Select(id='user-saved-problems', className="form-select", children = [
-                                            html.Option(value=problem["value"], children=problem["label"]) for problem in get_saved_problems_list()
+                                        html.Select(id='user-saved-problems', className="form-select", children=[
+                                            html.Option(value=problem["value"], children=problem["label"]) for problem
+                                            in get_saved_problems_list()
                                         ]),
                                     ]),
                                     html.Div(className="col-sm-2", children=[
@@ -171,65 +194,73 @@ def get_layout(G, pos, labels):
                                     ]),
                                 ])
                             ]),
-                            html.Div(id="login-error-block", style={"display":"none", "color":"red", "textAlign":"center"})
+                            html.Div(id="login-error-block",
+                                     style={"display": "none", "color": "red", "textAlign": "center"})
                         ]),
 
                         html.H4("Problem editor", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
                         html.Div(className="form",
-                                  children=[
-                                      html.Div([html.H4("Edge data", className="my-0 py-0")], className="form row align-items-left mt-2 g-1"),
-                                      html.Div(className="form row align-items-left mt-2 g-1",
-                                               children=[
-                                                   html.Div(className="col-sm-2", children=[
-                                                       html.Label("Source node", htmlFor="source-node-input", className="form-label"),
-                                                       dcc.Input(id='source-node-input', type='text',
-                                                                 placeholder="node id", className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-2", children=[
-                                                       html.Label("Target node", htmlFor="target-node-input", className="form-label"),
-                                                       dcc.Input(id='target-node-input', type='text',
-                                                                 placeholder="node id", className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       html.Label("Operational cost", htmlFor="oper-cost-input", className="form-label"),
-                                                       dcc.Input(id='oper-cost-input', type='text',
-                                                                 placeholder="function of flow", className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       html.Label("Waste cost", htmlFor="waste-discard-cost-input", className="form-label"),
-                                                       dcc.Input(id='waste-discard-cost-input', type='text',
-                                                                 placeholder="function of flow", className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-2", children=[
-                                                       html.Label("Risk cost", htmlFor="risk-cost-input",
-                                                                  className="form-label"),
-                                                       dcc.Input(id='risk-cost-input', type='text',
-                                                                 placeholder="function of flow",
-                                                                 className="form-control"),
-                                                   ]),
-                                               ]),
-                                      html.Div(className="form row align-items-left mt-2 g-1",
-                                               children=[
-                                                   html.Div(className="col-auto", children=[
-                                                       dbc.Button("Add Edge", id='add-edge-button',
-                                                                  className="btn btn-primary"),
-                                                   ]),
+                                 children=[
+                                     html.Div([html.H4("Edge data", className="my-0 py-0")],
+                                              className="form row align-items-left mt-2 g-1"),
+                                     html.Div(className="form row align-items-left mt-2 g-1",
+                                              children=[
+                                                  html.Div(className="col-sm-2", children=[
+                                                      html.Label("Source node", htmlFor="source-node-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='source-node-input', type='text',
+                                                                placeholder="node id", className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-sm-2", children=[
+                                                      html.Label("Target node", htmlFor="target-node-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='target-node-input', type='text',
+                                                                placeholder="node id", className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-sm-3", children=[
+                                                      html.Label("Operational cost", htmlFor="oper-cost-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='oper-cost-input', type='text',
+                                                                placeholder="function of flow",
+                                                                className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-sm-3", children=[
+                                                      html.Label("Waste cost", htmlFor="waste-discard-cost-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='waste-discard-cost-input', type='text',
+                                                                placeholder="function of flow",
+                                                                className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-sm-2", children=[
+                                                      html.Label("Risk cost", htmlFor="risk-cost-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='risk-cost-input', type='text',
+                                                                placeholder="function of flow",
+                                                                className="form-control"),
+                                                  ]),
+                                              ]),
+                                     html.Div(className="form row align-items-left mt-2 g-1",
+                                              children=[
+                                                  html.Div(className="col-auto", children=[
+                                                      dbc.Button("Add Edge", id='add-edge-button',
+                                                                 className="btn btn-primary"),
+                                                  ]),
 
-                                                   html.Div(className="col-auto", children=[
-                                                       html.Button("Set edge parameters", id='set-edge-params-button',
-                                                                   className="btn btn-info"),
-                                                   ]),
+                                                  html.Div(className="col-auto", children=[
+                                                      html.Button("Set edge parameters", id='set-edge-params-button',
+                                                                  className="btn btn-info"),
+                                                  ]),
 
-                                                   html.Div(className="col-auto", children=[
-                                                       dbc.Button("Remove Edge", id='remove-edge-button',
-                                                                  className="btn btn-danger"),
-                                                   ]),
-                                               ]),
-                                      html.Hr(),
-                                      html.Div([html.H4("Node data", className="my-0 py-0")],
-                                               className="form row align-items-left mt-2 g-1"),
-                                      html.Hr(),
-                                  ]),
+                                                  html.Div(className="col-auto", children=[
+                                                      dbc.Button("Remove Edge", id='remove-edge-button',
+                                                                 className="btn btn-danger"),
+                                                  ]),
+                                              ]),
+                                     html.Hr(),
+                                     html.Div([html.H4("Node data", className="my-0 py-0")],
+                                              className="form row align-items-left mt-2 g-1"),
+                                     html.Hr(),
+                                 ]),
 
                         html.Div(id='console-output'),
                     ])
@@ -237,40 +268,66 @@ def get_layout(G, pos, labels):
         ])
 
 
-
-@app.callback(Output('console-output', 'children'),
+@app.callback(
+            [
+                Output('console-output', 'children'),
+                Output('source-node-input', 'value'),
+                Output('target-node-input', 'value'),
+                Output('oper-cost-input', 'value'),
+                Output('waste-discard-cost-input', 'value'),
+                Output('risk-cost-input', 'value')
+            ],
               [
                   Input('graph_presenter', 'tapEdgeData'),
                   Input('graph_presenter', 'tapNodeData')
               ],
               [
+                  State('source-node-input', 'value'),
+                  State('target-node-input', 'value'),
                   State('session-id', 'data')
               ]
               )
-def onGraphElementClick(edgeData, nodeData, session_data):
+def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, session_id):
     global active_edge, active_node
 
     context = dash.ctx.triggered
-    print(f"Context: {context}")
-    print(f"Edge data: {edgeData}")
-    print(f"Node data: {nodeData}")
-    print(f"Session data: {session_data}")
+    event_source = context[0]['prop_id']
 
-    if session_data is not None:
-        email = cache.get(session_data)
-        print(f"Email: {email}")
+    source_node_value = dash.no_update
+    target_node_value = dash.no_update
+    oper_cost_value = dash.no_update
+    waste_discard_cost_value = dash.no_update
+    risk_cost_value = dash.no_update
+    console_message = ''
 
-    if context[0]['prop_id'] == 'graph_presenter.tapEdgeData' and edgeData:
-        active_edge = edgeData
-        active_node = None
+    if event_source == 'graph_presenter.tapEdgeData' and edgeData:
+        print(f"onGraphElementClick: edge data: {edgeData}")
+        set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, edgeData)
+        set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, None)
 
-        return "onGraphElementClick: clicked/tapped the edge between " + \
-            edgeData['source'].upper() + " and " + edgeData['target'].upper()
+        source_node_value = edgeData['source']
+        target_node_value = edgeData['target']
+
+        console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData['target'].upper()
     elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
-        active_node = nodeData
-        active_edge = None
-        return "onGraphElementClick: clicked/tapped the node " + nodeData['id'].upper()
+        print(f"onGraphElementClick: node data: {nodeData}")
 
+        prev_active_node = get_cached_value(session_id, CACHE_KEY_ACTIVE_NODE)
+        set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, nodeData)
+        set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, None)
+
+        if sourceNode and sourceNode != nodeData['id']:
+            target_node_value = nodeData['id']
+        elif sourceNode == nodeData['id']:
+            source_node_value = None
+            target_node_value = None
+        else:
+            source_node_value = nodeData['id']
+            target_node_value = None
+
+        console_message = "clicked/tapped the node " + nodeData['id'].upper()
+
+    return console_message, source_node_value, target_node_value, oper_cost_value, waste_discard_cost_value, risk_cost_value
 
 # @app.callback(
 #     Output('graph_presenter', 'elements'),
@@ -316,6 +373,7 @@ def remove_edge_callback(n_clicks, elements):
 
     return elements
 
+
 @app.callback(
     [
         # Output('login-form-block', 'style'),
@@ -337,9 +395,8 @@ def remove_edge_callback(n_clicks, elements):
         State('session-id', 'data')
     ]
 )
-def login_callback(n_clicks_login, n_clicks_logout, email, password, session_data):
-
-    if n_clicks_login  is None and n_clicks_logout is None:
+def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id):
+    if n_clicks_login is None and n_clicks_logout is None:
         raise PreventUpdate
 
     context = dash.ctx.triggered
@@ -380,7 +437,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_dat
         if logged_in:
             # generate sid and save it in cache
             sid = str(uuid.uuid4())
-            cache.set(sid, email, timeout=60 * 60 * 24 * 7)
+            set_cached_value(sid, CACHE_KEY_EMAIL, email, timeout=60 * 60 * 24 * 7)
             print(f"Generated session id: {sid}")
 
             return [error, error_block_style, sid]
@@ -393,6 +450,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_dat
         return [error, error_block_style, '']
 
     raise PreventUpdate
+
 
 @app.callback(
     [
@@ -409,7 +467,7 @@ def session_changed(session_data):
     print(f"session_changed callback.")
 
     if session_data is not None and session_data != '':
-        email = cache.get(session_data)
+        email = get_cached_value(session_data, CACHE_KEY_EMAIL)
         print(f"Email in session: {email}")
 
         if email is not None:
@@ -418,6 +476,7 @@ def session_changed(session_data):
             return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
     else:
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
+
 
 if __name__ == "__main__":
     G, pos, labels = prepare_problem()
