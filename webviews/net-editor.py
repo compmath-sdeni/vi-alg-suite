@@ -79,6 +79,13 @@ login_manager.login_view = '/login'
 
 # Define the Dash layout
 
+def get_saved_problems_list():
+    return [
+        {"label": "Blood delivery test one", "value": "blood_delivery_test_one"},
+        {"label": "Blood delivery test two", "value": "blood_delivery_test_two"},
+        {"label": "Blood delivery test three", "value": "blood_delivery_test_three"},
+    ]
+
 def get_layout(G, pos, labels):
     print("get_layout called - creating initial application layout.")
     return html.Div(
@@ -144,63 +151,84 @@ def get_layout(G, pos, labels):
                                     ]),
                                 ])
                             ]),
-                            html.Div(id="logout-form-block", style={"display":"none"}, children=[
-                                html.Div(className="row align-items-left mt-2", children=[
-                                    html.Div(className="col-sm-3", children=[
-                                        html.P(id='user-email-show'),
+                            html.Div(id="user-session-block", style={"display":"none"}, children=[
+                                html.Div(className="row align-items-left mt-2 ml-2", children=[
+                                    html.Div(className="col-sm-2 mt-1", children=[
+                                        html.Span("Hello, "),
+                                        html.Span(id='user-email-show', style={"fontWeight":"bold", "fontSize":"larger"}),
                                     ]),
-                                    html.Div(className="col-sm-3", children=[
+                                    html.Div(className="col-sm-2", children=[
                                         html.Button("Log out", id='logout-button',
                                                     className="btn btn-warning"),
+                                    ]),
+                                    html.Div(className="col-sm-6", children=[
+                                        html.Select(id='user-saved-problems', className="form-select", children = [
+                                            html.Option(value=problem["value"], children=problem["label"]) for problem in get_saved_problems_list()
+                                        ]),
+                                    ]),
+                                    html.Div(className="col-sm-2", children=[
+                                        html.Button("Load problem", id='load-problem', className="btn btn-primary")
                                     ]),
                                 ])
                             ]),
                             html.Div(id="login-error-block", style={"display":"none", "color":"red", "textAlign":"center"})
                         ]),
 
-                        html.H4("Edge Manipulation", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
-                        html.Form(className="form",
+                        html.H4("Problem editor", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
+                        html.Div(className="form",
                                   children=[
-                                      html.Div(className="row align-items-left  mt-2",
+                                      html.Div([html.H4("Edge data", className="my-0 py-0")], className="form row align-items-left mt-2 g-1"),
+                                      html.Div(className="form row align-items-left mt-2 g-1",
                                                children=[
-                                                   html.Div(className="col-sm-3", children=[
+                                                   html.Div(className="col-sm-2", children=[
+                                                       html.Label("Source node", htmlFor="source-node-input", className="form-label"),
                                                        dcc.Input(id='source-node-input', type='text',
-                                                                 placeholder="Source node", className="form-control"),
+                                                                 placeholder="node id", className="form-control"),
                                                    ]),
-                                                   html.Div(className="col-sm-3", children=[
+                                                   html.Div(className="col-sm-2", children=[
+                                                       html.Label("Target node", htmlFor="target-node-input", className="form-label"),
                                                        dcc.Input(id='target-node-input', type='text',
-                                                                 placeholder="Target node", className="form-control"),
+                                                                 placeholder="node id", className="form-control"),
                                                    ]),
                                                    html.Div(className="col-sm-3", children=[
+                                                       html.Label("Operational cost", htmlFor="oper-cost-input", className="form-label"),
+                                                       dcc.Input(id='oper-cost-input', type='text',
+                                                                 placeholder="function of flow", className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-3", children=[
+                                                       html.Label("Waste cost", htmlFor="waste-discard-cost-input", className="form-label"),
+                                                       dcc.Input(id='waste-discard-cost-input', type='text',
+                                                                 placeholder="function of flow", className="form-control"),
+                                                   ]),
+                                                   html.Div(className="col-sm-2", children=[
+                                                       html.Label("Risk cost", htmlFor="risk-cost-input",
+                                                                  className="form-label"),
+                                                       dcc.Input(id='risk-cost-input', type='text',
+                                                                 placeholder="function of flow",
+                                                                 className="form-control"),
+                                                   ]),
+                                               ]),
+                                      html.Div(className="form row align-items-left mt-2 g-1",
+                                               children=[
+                                                   html.Div(className="col-auto", children=[
                                                        dbc.Button("Add Edge", id='add-edge-button',
                                                                   className="btn btn-primary"),
                                                    ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       html.Button("Remove Edge", id='remove-edge-button',
-                                                                   className="btn btn-danger"),
-                                                   ]),
-                                               ]),
-                                      html.Div(className="row align-items-left mt-2",
-                                               children=[
-                                                   html.Div(className="col-sm-3", children=[
-                                                       dcc.Input(id='edge-oper-cost-input', type='text',
-                                                                 placeholder="unit operational cost",
-                                                                 className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       html.Button("Set", id='set-oper-cost-button',
+
+                                                   html.Div(className="col-auto", children=[
+                                                       html.Button("Set edge parameters", id='set-edge-params-button',
                                                                    className="btn btn-info"),
                                                    ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       dcc.Input(id='edge-discard-cost-input', type='text',
-                                                                 placeholder="unit discard cost",
-                                                                 className="form-control"),
-                                                   ]),
-                                                   html.Div(className="col-sm-3", children=[
-                                                       html.Button("Set", id='set-discard-cost-button',
-                                                                   className="btn btn-info"),
+
+                                                   html.Div(className="col-auto", children=[
+                                                       dbc.Button("Remove Edge", id='remove-edge-button',
+                                                                  className="btn btn-danger"),
                                                    ]),
                                                ]),
+                                      html.Hr(),
+                                      html.Div([html.H4("Node data", className="my-0 py-0")],
+                                               className="form row align-items-left mt-2 g-1"),
+                                      html.Hr(),
                                   ]),
 
                         html.Div(id='console-output'),
@@ -291,7 +319,7 @@ def remove_edge_callback(n_clicks, elements):
 @app.callback(
     [
         # Output('login-form-block', 'style'),
-        # Output('logout-form-block', 'style'),
+        # Output('user-session-block', 'style'),
         # Output('user-email-show', 'children'),
         # Output('email-input', 'value'),
         # Output('password-input', 'value'),
@@ -369,7 +397,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_dat
 @app.callback(
     [
         Output('login-form-block', 'style'),
-        Output('logout-form-block', 'style'),
+        Output('user-session-block', 'style'),
         Output('user-email-show', 'children'),
         Output('email-input', 'value')
     ],
