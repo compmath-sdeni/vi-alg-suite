@@ -396,17 +396,26 @@ class BloodSupplyNetwork:
         # with open(f"{path_to_save}/network.pickle", "wb") as file:
         #     pickle.dump(self, file)
 
-        with open(f"{path_to_save}/network.json", "w") as file:
-            network_data = {
-                "n_C": self.n_C,
-                "n_B": self.n_B,
-                "n_Cmp": self.n_Cmp,
-                "n_S": self.n_S,
-                "n_D": self.n_D,
-                "n_R": self.n_R,
-                "n_p": self.n_p,
-            }
+        network_data = {
+            "n_C": self.n_C,
+            "n_B": self.n_B,
+            "n_Cmp": self.n_Cmp,
+            "n_S": self.n_S,
+            "n_D": self.n_D,
+            "n_R": self.n_R,
+            "n_p": self.n_p,
+            "lam_minus": self.lam_minus,
+            "lam_plus": self.lam_plus,
+            "theta": self.theta,
+#            "predefined_paths": self.paths,
+            "edges": self.edges,
+        }
 
+        # for edge in self.edges:
+        #     network_data[f"edge_{edge[0]}_{edge[1]}"] = edge
+
+
+        with open(f"{path_to_save}/network.json", "w") as file:
             json.dump(network_data, file)
 
 
