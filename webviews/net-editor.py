@@ -64,9 +64,8 @@ def prepare_problem():
     )
 
     problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
-    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
 
-    return G, pos, labels
+    return problem
 
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
@@ -260,6 +259,21 @@ def get_layout(G, pos, labels):
                                      html.Div([html.H4("Node data", className="my-0 py-0")],
                                               className="form row align-items-left mt-2 g-1"),
                                      html.Hr(),
+                                     html.Div([html.H4("Save problem", className="my-0 py-0")],
+                                              className="form row align-items-left mt-2 g-1"),
+                                     html.Div("Name will be name of folder with the problem data",
+                                              className="form row align-items-left mt-2 g-1"),
+                                     html.Div(className="form row align-items-left mt-2 g-1",
+                                              children=[
+                                                  html.Div(className="col-sm-4", children=[
+                                                      dcc.Input(id='save-problem-name-input', type='text',
+                                                                placeholder="problem name", className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-auto", children=[
+                                                      dbc.Button("Save", id='save-problem-button',
+                                                                 className="btn btn-success"),
+                                                  ]),
+                                              ])
                                  ]),
 
                         html.Div(id='console-output'),
@@ -440,6 +454,9 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
             set_cached_value(sid, CACHE_KEY_EMAIL, email, timeout=60 * 60 * 24 * 7)
             print(f"Generated session id: {sid}")
 
+            if not os.path.exists(f"users_data/{email}"):
+                os.mkdir(f"users_data/{email}")
+
             return [error, error_block_style, sid]
         else:
             return [error, error_block_style, '']
@@ -478,8 +495,31 @@ def session_changed(session_data):
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
 
 
+@app.callback(
+    [
+        Output('user-saved-problems', 'children'),
+    ],
+    [
+        Input('save-problem-button', 'n_clicks')
+    ],
+    [
+        State('save-problem-name-input', 'value'),
+        State('session-id', 'data')
+    ]
+)
+def save_problem_click(n_clicks, problem_name, session_id):
+    if n_clicks is None:
+        raise PreventUpdate
+
+    print(f"save_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
+    problem_dir_name = problem_name.replace(" ", "_")
+
+    problem.saveToDir(path_to_save=f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}")
+    return dash.no_update
+
 if __name__ == "__main__":
-    G, pos, labels = prepare_problem()
+    problem = prepare_problem()
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
     app.layout = get_layout(G, pos, labels)
 
     cache.init_app(server)

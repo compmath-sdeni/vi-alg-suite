@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Union, Dict, Optional
 from typing import Callable, Sequence
@@ -392,8 +393,21 @@ class BloodSupplyNetwork:
 
     def saveToDir(self, *, path_to_save: str):
         # save network to pickle binary
-        with open(f"{path_to_save}/network.pickle", "wb") as file:
-            pickle.dump(self, file)
+        # with open(f"{path_to_save}/network.pickle", "wb") as file:
+        #     pickle.dump(self, file)
+
+        with open(f"{path_to_save}/network.json", "w") as file:
+            network_data = {
+                "n_C": self.n_C,
+                "n_B": self.n_B,
+                "n_Cmp": self.n_Cmp,
+                "n_S": self.n_S,
+                "n_D": self.n_D,
+                "n_R": self.n_R,
+                "n_p": self.n_p,
+            }
+
+            json.dump(network_data, file)
 
 
     @staticmethod
@@ -480,8 +494,8 @@ class BloodSupplyNetworkProblem(VIProblem):
         if self.xtest is not None:
             np.savetxt("{0}/{1}".format(path_to_save, 'x_test.txt'), self.xtest)
 
-        # if self.net is not None:
-        #     self.net.saveToDir(path_to_save=path_to_save)
+        if self.net is not None:
+            self.net.saveToDir(path_to_save=path_to_save)
 
         return path_to_save
 
