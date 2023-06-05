@@ -193,8 +193,8 @@ def get_layout(G, pos, labels):
                                     ]),
                                 ])
                             ]),
-                            html.Div(id="login-error-block",
-                                     style={"display": "none", "color": "red", "textAlign": "center"})
+                            html.Div(id="login-error-block", className="alert alert-danger",
+                                     style={"display": "none", "textAlign": "center"})
                         ]),
 
                         html.H4("Problem editor", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
@@ -273,6 +273,10 @@ def get_layout(G, pos, labels):
                                                       dbc.Button("Save", id='save-problem-button',
                                                                  className="btn btn-success"),
                                                   ]),
+                                                  html.Div(className="col-auto", children=[
+                                                    html.Div(id="save-error-block", className="alert alert-danger",
+                                                           style={"display": "none", "textAlign": "center"})
+                                                ])
                                               ])
                                  ]),
 
@@ -298,12 +302,11 @@ def get_layout(G, pos, labels):
               [
                   State('source-node-input', 'value'),
                   State('target-node-input', 'value'),
+                  State('graph_presenter', 'elements'),
                   State('session-id', 'data')
               ]
               )
-def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, session_id):
-    global active_edge, active_node
-
+def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elements, session_id):
     context = dash.ctx.triggered
     event_source = context[0]['prop_id']
 
@@ -326,8 +329,13 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, session_id):
     elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
         print(f"onGraphElementClick: node data: {nodeData}")
 
+        for el in graph_elements:
+            if el['data']['id'] == nodeData['id']:
+                print(f"onGraphElementClick: full node element data: {el}")
+                break
+
         prev_active_node = get_cached_value(session_id, CACHE_KEY_ACTIVE_NODE)
-        set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, nodeData)
+        set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, el)
         set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, None)
 
         if sourceNode and sourceNode != nodeData['id']:
@@ -474,7 +482,8 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
         Output('login-form-block', 'style'),
         Output('user-session-block', 'style'),
         Output('user-email-show', 'children'),
-        Output('email-input', 'value')
+        Output('email-input', 'value'),
+        Output('user-saved-problems', 'children')
     ],
     [
         Input('session-id', 'data')
@@ -488,34 +497,46 @@ def session_changed(session_data):
         print(f"Email in session: {email}")
 
         if email is not None:
-            return [{"display": "none"}, {"display": "block"}, email, email]
+            problems = os.listdir(f"users_data/{email}")
+            problem_dropdown_options = [html.Option(value = problem, children = problem)  for problem in problems]
+
+            return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options]
         else:
-            return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
+            return [{"display": "block"}, {"display": "none"}, "", dash.no_update, []]
     else:
-        return [{"display": "block"}, {"display": "none"}, "", dash.no_update]
+        return [{"display": "block"}, {"display": "none"}, "", dash.no_update, []]
 
 
 @app.callback(
     [
-        Output('user-saved-problems', 'children'),
+        Output('save-error-block', 'children'),
+        Output('save-error-block', 'style')
     ],
     [
         Input('save-problem-button', 'n_clicks')
     ],
     [
         State('save-problem-name-input', 'value'),
+        State('graph_presenter', 'elements'),
         State('session-id', 'data')
     ]
 )
-def save_problem_click(n_clicks, problem_name, session_id):
+def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
     if n_clicks is None:
         raise PreventUpdate
 
     print(f"save_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
-    problem_dir_name = problem_name.replace(" ", "_")
+    if session_id:
+        problem_dir_name = problem_name.replace(" ", "_")
 
-    problem.saveToDir(path_to_save=f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}")
-    return dash.no_update
+        for elem in graph_elements:
+            if 'position' in elem:
+                problem.net.pos[elem['data']['id']] = (elem['position']['x'], elem['position']['y'])
+
+        problem.saveToDir(path_to_save=f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}")
+        return "", {"display": "none"}
+    else:
+        return "You need to log in to be able to save the problem setup!", {"display": "block"}
 
 if __name__ == "__main__":
     problem = prepare_problem()

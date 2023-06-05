@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Union, Dict, Optional
+from typing import Union, Dict, List, Optional
 from typing import Callable, Sequence
 
 import numpy as np
@@ -32,7 +32,7 @@ class BloodSupplyNetwork:
                  edges: Sequence[tuple], c: Sequence[tuple], z: Sequence[tuple], r: Sequence[tuple],
                  expected_shortage: Sequence[tuple], expected_surplus: Sequence[tuple], edge_loss: Sequence[float],
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
-                 paths: Sequence[Sequence[int]] = None
+                 paths: Sequence[Sequence[int]] = None, pos: Dict[int, List[float]] = None
                  ):
         self.nodes_count = 1 + n_C + n_B + n_Cmp + n_S + n_D + n_R  # also we have virtual node 0 - source node, "regional division"
         self.n_C = n_C
@@ -70,7 +70,12 @@ class BloodSupplyNetwork:
 
         self.build_demand_points_dict()
 
-        self.G, self.pos, self.labels = self.to_nx_graph()
+        G, auto_pos, labels = self.to_nx_graph()
+        self.G = G
+        if pos is None:
+            self.pos = auto_pos
+        else:
+            self.pos = pos
 
         if paths is None:
             demand_points = [k for k in self.demand_points_dic.keys()]
@@ -407,9 +412,12 @@ class BloodSupplyNetwork:
             "lam_minus": self.lam_minus,
             "lam_plus": self.lam_plus,
             "theta": self.theta,
-#            "predefined_paths": self.paths,
+#           "predefined_paths": self.paths,
             "edges": self.edges,
+            "pos": self.pos
         }
+
+        print(f"Current pos: {self.pos}")
 
         # for edge in self.edges:
         #     network_data[f"edge_{edge[0]}_{edge[1]}"] = edge
