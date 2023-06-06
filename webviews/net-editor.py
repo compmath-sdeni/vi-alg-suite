@@ -183,13 +183,10 @@ def get_layout(G, pos, labels):
                                                     className="btn btn-warning"),
                                     ]),
                                     html.Div(className="col-sm-6", children=[
-                                        html.Select(id='user-saved-problems', className="form-select", children=[
-                                            html.Option(value=problem["value"], children=problem["label"]) for problem
-                                            in get_saved_problems_list()
-                                        ]),
+                                        dcc.Dropdown(id='user-saved-problems', className="form-select", options=[{'value': problem["value"], 'label': problem["value"]} for problem in get_saved_problems_list()], value=None, placeholder="Select problem")
                                     ]),
                                     html.Div(className="col-sm-2", children=[
-                                        html.Button("Load problem", id='load-problem', className="btn btn-primary")
+                                        html.Button("Load problem", id='load-problem-button', className="btn btn-primary")
                                     ]),
                                 ])
                             ]),
@@ -483,7 +480,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
         Output('user-session-block', 'style'),
         Output('user-email-show', 'children'),
         Output('email-input', 'value'),
-        Output('user-saved-problems', 'children')
+        Output('user-saved-problems', 'options')
     ],
     [
         Input('session-id', 'data')
@@ -498,7 +495,7 @@ def session_changed(session_data):
 
         if email is not None:
             problems = os.listdir(f"users_data/{email}")
-            problem_dropdown_options = [html.Option(value = problem, children = problem)  for problem in problems]
+            problem_dropdown_options = [{'value': problem, 'label': problem}  for problem in problems]
 
             return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options]
         else:
@@ -506,6 +503,53 @@ def session_changed(session_data):
     else:
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update, []]
 
+@app.callback(
+    [
+        Output('graph_presenter', 'elements', allow_duplicate=True),
+    ],
+    [
+        Input('load-problem-button', 'n_clicks')
+    ],
+    [
+        State('user-saved-problems', 'value'),
+        State('graph_presenter', 'elements'),
+        State('session-id', 'data')
+    ],
+    prevent_initial_call=True
+)
+def load_problem_click(n_clicks, problem_name, graph_elements, session_id):
+    if n_clicks is None:
+        raise PreventUpdate
+
+    print(f"load_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
+    if session_id:
+        problem_dir_name = problem_name.replace(" ", "_")
+        problem_dir = f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}"
+
+        if os.path.exists(problem_dir):
+            problem.net.loadFromDir(problem.net, path_to_load = problem_dir)
+            print(f"Problem loaded from {problem_dir_name}")
+
+            G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+
+            if problem.net.pos:
+                pos = problem.net.pos
+
+            nodes_data = []
+            edges_data = []
+
+            for i, node in enumerate(G.nodes()):
+                nodes_data.append({"data": {"id": str(node), "label": "Nod " + str(i)},
+                                   "position": {"x": pos[str(node)][0], "y": pos[str(node)][1]}})
+
+            for idx, edge in enumerate(G.edges()):
+                edges_data.append({"data": {"source": str(edge[0]), "target": str(edge[1]),
+                                            "edge_label": str(idx)}})
+            elems = [nodes_data + edges_data]
+            return elems
+        else:
+            print(f"Problem directory does not exist: {problem_dir_name}")
+            return dash.no_update
 
 @app.callback(
     [

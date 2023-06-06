@@ -34,7 +34,6 @@ class BloodSupplyNetwork:
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
                  paths: Sequence[Sequence[int]] = None, pos: Dict[int, List[float]] = None
                  ):
-        self.nodes_count = 1 + n_C + n_B + n_Cmp + n_S + n_D + n_R  # also we have virtual node 0 - source node, "regional division"
         self.n_C = n_C
         self.n_B = n_B
         self.n_Cmp = n_Cmp
@@ -43,6 +42,8 @@ class BloodSupplyNetwork:
         self.n_R = n_R
 
         self.edges = edges
+
+        self.nodes_count = 1 + n_C + n_B + n_Cmp + n_S + n_D + n_R  # also we have virtual node 0 - source node, "regional division"
 
         self.adj_dict = {}
         for idx, e in enumerate(self.edges):
@@ -72,6 +73,8 @@ class BloodSupplyNetwork:
 
         G, auto_pos, labels = self.to_nx_graph()
         self.G = G
+        self.labels = labels
+
         if pos is None:
             self.pos = auto_pos
         else:
@@ -422,15 +425,70 @@ class BloodSupplyNetwork:
         # for edge in self.edges:
         #     network_data[f"edge_{edge[0]}_{edge[1]}"] = edge
 
-
         with open(f"{path_to_save}/network.json", "w") as file:
             json.dump(network_data, file)
 
 
     @staticmethod
-    def loadFromDir(*, path_to_load: str):
-        with open(f"{path_to_load}/network.pickle", "rb") as file:
-            return pickle.load(file)
+    def loadFromDir(self, *, path_to_load: str):
+        with open(f"{path_to_load}/network.json", "r") as file:
+            net_data = json.load(file)
+
+            self.n_C = net_data["n_C"]
+            self.n_B = net_data["n_B"]
+            self.n_Cmp = net_data["n_Cmp"]
+            self.n_S = net_data["n_S"]
+            self.n_D = net_data["n_D"]
+            self.n_R = net_data["n_R"]
+            self.n_p = net_data["n_p"]
+            self.lam_minus = net_data["lam_minus"]
+            self.lam_plus = net_data["lam_plus"]
+            self.theta = net_data["theta"]
+            self.edges = net_data["edges"]
+            self.pos = net_data["pos"]
+
+            # also we have virtual node 0 - source node, "regional division"
+            self.nodes_count = 1 + self.n_C + self.n_B + self.n_Cmp + self.n_S + self.n_D + self.n_R
+
+            self.adj_dict = {}
+            for idx, e in enumerate(self.edges):
+                if e[0] not in self.adj_dict:
+                    self.adj_dict[e[0]] = {e[1]: idx}
+                else:
+                    self.adj_dict[e[0]][e[1]] = idx
+
+            self.lam_minus = net_data["lam_minus"]
+            self.lam_plus = net_data["lam_plus"]
+            self.theta = net_data["theta"]
+
+            self.n_L = len(self.edges)
+
+            self.projected_demands = np.zeros(self.n_R)
+
+            self.build_demand_points_dict()
+
+            G, auto_pos, labels = self.to_nx_graph()
+            self.G = G
+            self.labels = labels
+
+            if self.pos is None:
+                self.pos = auto_pos
+
+            demand_points = [k for k in self.demand_points_dic.keys()]
+            self.paths = []
+            for path in nx.all_simple_paths(self.G, source=0, target=demand_points):
+                path_edge_indices = []
+                v1 = path[0]
+                for i in range(1, len(path)):
+                    v2 = path[i]
+                    path_edge_indices.append(self.adj_dict[v1][v2])
+                    v1 = v2
+                self.paths.append(path_edge_indices)
+
+            self.path_loss = np.ones(len(self.paths))
+            self.n_p = len(self.paths)
+
+            self.build_static_params()
 
 
 class BloodSupplyNetworkProblem(VIProblem):
@@ -501,6 +559,10 @@ class BloodSupplyNetworkProblem(VIProblem):
         # self.ax.plot_wireframe(x, y, z, rstride=10, cstride=10)
 
         return res
+
+    def loadFromDir(self, *, path_to_save: str = None):
+        self.net = BloodSupplyNetwork()
+        self.net.loadFromDir(path_to_save=path_to_save)
 
     def saveToDir(self, *, path_to_save: str = None):
         path_to_save = super().saveToDir(path_to_save=path_to_save)
