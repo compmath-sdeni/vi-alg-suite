@@ -110,54 +110,103 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              #     [1, 5, 7, 9, 13, 17],
                              #     [1, 5, 7, 9, 13, 19]
                              # ],
-                             c=[
-                                 (lambda f: eval("6 * f + 15"), lambda x: eval("6") ),
-                                 (lambda f: eval("9 * f + 11"), lambda f: eval("9")),
-                                 (lambda f: 0.7 * f + 1, lambda f: 0.7),
-                                 (lambda f: 1.2 * f + 1, lambda f: 1.2),
-                                 (lambda f: 1 * f + 3, lambda f: 1),
-                                 (lambda f: 0.8 * f + 2, lambda f: 0.8),
-                                 (lambda f: 2.5 * f + 2, lambda f: 2.5),
-                                 (lambda f: 3 * f + 5, lambda f: 3),
-                                 (lambda f: 0.8 * f + 6, lambda f: 0.8),
-                                 (lambda f: 0.5 * f + 3, lambda f: 0.5),
-                                 (lambda f: 0.3 * f + 1, lambda f: 0.3),
-                                 (lambda f: 0.5 * f + 2, lambda f: 0.5),
-                                 (lambda f: 0.4 * f + 2, lambda f: 0.4),
-                                 (lambda f: 0.6 * f + 1, lambda f: 0.6),
-                                 (lambda f: 1.3 * f + 3, lambda f: 1.3),
-                                 (lambda f: 0.8 * f + 2, lambda f: 0.8),
-                                 (lambda f: 0.5 * f + 3, lambda f: 0.5),
-                                 (lambda f: 0.7 * f + 2, lambda f: 0.7),
-                                 (lambda f: 0.6 * f + 4, lambda f: 0.6),
-                                 (lambda f: 1.1 * f + 5, lambda f: 1.1)
+                             # c=[
+                             #     (lambda f: 6 * f + 15, lambda x: 6 ),
+                             #     (lambda f: 9 * f + 11, lambda f: 9),
+                             #     (lambda f: 0.7 * f + 1, lambda f: 0.7),
+                             #     (lambda f: 1.2 * f + 1, lambda f: 1.2),
+                             #     (lambda f: 1 * f + 3, lambda f: 1),
+                             #     (lambda f: 0.8 * f + 2, lambda f: 0.8),
+                             #     (lambda f: 2.5 * f + 2, lambda f: 2.5),
+                             #     (lambda f: 3 * f + 5, lambda f: 3),
+                             #     (lambda f: 0.8 * f + 6, lambda f: 0.8),
+                             #     (lambda f: 0.5 * f + 3, lambda f: 0.5),
+                             #     (lambda f: 0.3 * f + 1, lambda f: 0.3),
+                             #     (lambda f: 0.5 * f + 2, lambda f: 0.5),
+                             #     (lambda f: 0.4 * f + 2, lambda f: 0.4),
+                             #     (lambda f: 0.6 * f + 1, lambda f: 0.6),
+                             #     (lambda f: 1.3 * f + 3, lambda f: 1.3),
+                             #     (lambda f: 0.8 * f + 2, lambda f: 0.8),
+                             #     (lambda f: 0.5 * f + 3, lambda f: 0.5),
+                             #     (lambda f: 0.7 * f + 2, lambda f: 0.7),
+                             #     (lambda f: 0.6 * f + 4, lambda f: 0.6),
+                             #     (lambda f: 1.1 * f + 5, lambda f: 1.1)
+                             # ],
+                             c_string = [
+                                 ("6 * f + 15", "6"),
+                                 ("9 * f + 11", "9"),
+                                 ("0.7 * f + 1", "0.7"),
+                                 ("1.2 * f + 1", "1.2"),
+                                 ("1 * f + 3", "1"),
+                                 ("0.8 * f + 2", "0.8"),
+                                 ("2.5 * f + 2", "2.5"),
+                                 ("3 * f + 5", "3"),
+                                 ("0.8 * f + 6", "0.8"),
+                                 ("0.5 * f + 3", "0.5"),
+                                 ("0.3 * f + 1", "0.3"),
+                                 ("0.5 * f + 2", "0.5"),
+                                 ("0.4 * f + 2", "0.4"),
+                                 ("0.6 * f + 1", "0.6"),
+                                 ("1.3 * f + 3", "1.3"),
+                                 ("0.8 * f + 2", "0.8"),
+                                 ("0.5 * f + 3", "0.5"),
+                                 ("0.7 * f + 2", "0.7"),
+                                 ("0.6 * f + 4", "0.6"),
+                                 ("1.1 * f + 5", "1.1")
                              ],
-                             z=[
-                                 (lambda f: 0.8 * f, lambda f: 0.8),
-                                 (lambda f: 0.7 * f, lambda f: 0.7),
-                                 (lambda f: 0.6 * f, lambda f: 0.6),
-                                 (lambda f: 0.8 * f, lambda f: 0.8),
-                                 (lambda f: 0.6 * f, lambda f: 0.6),
-                                 (lambda f: 0.8 * f, lambda f: 0.8),
-                                 (lambda f: 0.5 * f, lambda f: 0.5),
-                                 (lambda f: 0.8 * f, lambda f: 0.8),
-                                 (lambda f: 0.4 * f, lambda f: 0.4),
-                                 (lambda f: 0.7 * f, lambda f: 0.7),
-                                 (lambda f: 0.3 * f, lambda f: 0.3),
-                                 (lambda f: 0.4 * f, lambda f: 0.4),
-                                 (lambda f: 0.3 * f, lambda f: 0.3),
-                                 (lambda f: 0.4 * f, lambda f: 0.4),
-                                 (lambda f: 0.7 * f, lambda f: 0.7),
-                                 (lambda f: 0.4 * f, lambda f: 0.4),
-                                 (lambda f: 0.5 * f, lambda f: 0.5),
-                                 (lambda f: 0.7 * f, lambda f: 0.7),
-                                 (lambda f: 0.4 * f, lambda f: 0.4),
-                                 (lambda f: 0.5 * f, lambda f: 0.5)
+                             # z=[
+                             #     (lambda f: 0.8 * f, lambda f: 0.8),
+                             #     (lambda f: 0.7 * f, lambda f: 0.7),
+                             #     (lambda f: 0.6 * f, lambda f: 0.6),
+                             #     (lambda f: 0.8 * f, lambda f: 0.8),
+                             #     (lambda f: 0.6 * f, lambda f: 0.6),
+                             #     (lambda f: 0.8 * f, lambda f: 0.8),
+                             #     (lambda f: 0.5 * f, lambda f: 0.5),
+                             #     (lambda f: 0.8 * f, lambda f: 0.8),
+                             #     (lambda f: 0.4 * f, lambda f: 0.4),
+                             #     (lambda f: 0.7 * f, lambda f: 0.7),
+                             #     (lambda f: 0.3 * f, lambda f: 0.3),
+                             #     (lambda f: 0.4 * f, lambda f: 0.4),
+                             #     (lambda f: 0.3 * f, lambda f: 0.3),
+                             #     (lambda f: 0.4 * f, lambda f: 0.4),
+                             #     (lambda f: 0.7 * f, lambda f: 0.7),
+                             #     (lambda f: 0.4 * f, lambda f: 0.4),
+                             #     (lambda f: 0.5 * f, lambda f: 0.5),
+                             #     (lambda f: 0.7 * f, lambda f: 0.7),
+                             #     (lambda f: 0.4 * f, lambda f: 0.4),
+                             #     (lambda f: 0.5 * f, lambda f: 0.5)
+                             # ],
+                             z_string=[
+                                 ("0.8 * f", "0.8"),
+                                 ("0.7 * f", "0.7"),
+                                 ("0.6 * f", "0.6"),
+                                 ("0.8 * f", "0.8"),
+                                 ("0.6 * f", "0.6"),
+                                 ("0.8 * f", "0.8"),
+                                 ("0.5 * f", "0.5"),
+                                 ("0.8 * f", "0.8"),
+                                 ("0.4 * f", "0.4"),
+                                 ("0.7 * f", "0.7"),
+                                 ("0.3 * f", "0.3"),
+                                 ("0.4 * f", "0.4"),
+                                 ("0.3 * f", "0.3"),
+                                 ("0.4 * f", "0.4"),
+                                 ("0.7 * f", "0.7"),
+                                 ("0.4 * f", "0.4"),
+                                 ("0.5 * f", "0.5"),
+                                 ("0.7 * f", "0.7"),
+                                 ("0.4 * f", "0.4"),
+                                 ("0.5 * f", "0.5")
                              ],
 
-                             r=[
-                                 (lambda f: 2 * f, lambda f: 2),
-                                 (lambda f: 1.5 * f, lambda f: 1.5)
+                             # r=[
+                             #     (lambda f: 2 * f, lambda f: 2),
+                             #     (lambda f: 1.5 * f, lambda f: 1.5)
+                             # ],
+
+                             r_string=[
+                                    ("2 * f", "2"),
+                                    ("1.5 * f", "1.5")
                              ],
 
                              # E(t) - expected value, E'(t) - derivative of expected value
@@ -206,6 +255,10 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
 
     # net.sanity_check()
     # return
+
+    # print numbers from 1 to 10
+
+
 
     net.link_flows = np.array(
         [54.72, 43.90, 30.13, 22.42, 19.57, 23.46, 49.39, 42.00, 43.63, 39.51, 29.68, 13.08, 26.20, 13.31, 5.78, 25.78,

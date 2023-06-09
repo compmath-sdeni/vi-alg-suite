@@ -29,7 +29,8 @@ import networkx as nx
 # https://machinelearningmastery.com/calculating-derivatives-in-pytorch/
 class BloodSupplyNetwork:
     def __init__(self, *, n_C: int, n_B: int, n_Cmp: int, n_S: int, n_D: int, n_R: int,
-                 edges: Sequence[tuple], c: Sequence[tuple], z: Sequence[tuple], r: Sequence[tuple],
+                 edges: Sequence[tuple], c: Sequence[tuple] = None, c_string: Sequence[tuple] = None, z: Sequence[tuple] = None, z_string: Sequence[tuple] = None,
+                 r: Sequence[tuple] = None, r_string: Sequence[tuple] = None,
                  expected_shortage: Sequence[tuple], expected_surplus: Sequence[tuple], edge_loss: Sequence[float],
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
                  paths: Sequence[Sequence[int]] = None, pos: Dict[int, List[float]] = None
@@ -52,9 +53,32 @@ class BloodSupplyNetwork:
             else:
                 self.adj_dict[e[0]][e[1]] = idx
 
-        self.c = c
-        self.z = z
-        self.r = r
+        self.c = []
+        if c_string is not None:
+            self.c_string = c_string
+            for func, deriv in c_string:
+                self.c.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+        else:
+            self.c = c
+            self.c_string = None
+
+        self.z = []
+        if z_string is not None:
+            self.z_string = z_string
+            for func, deriv in z_string:
+                self.z.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+        else:
+            self.z = z
+            self.z_string = None
+
+        self.r = []
+        if r_string is not None:
+            self.r_string = r_string
+            for func, deriv in r_string:
+                self.r.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+        else:
+            self.r = r
+            self.r_string = None
 
         self.edge_loss = edge_loss
 

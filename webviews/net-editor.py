@@ -106,8 +106,11 @@ def get_saved_problems_list():
     ]
 
 
-def get_layout(G, pos, labels):
+def get_layout(problem):
     print("get_layout called - creating initial application layout.")
+
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+
     return html.Div(
         className="dbc container-fluid vh-100",
         children=[
@@ -127,7 +130,7 @@ def get_layout(G, pos, labels):
                                          enumerate(G.nodes())
                                      ] + [
                                          {"data": {"source": str(edge[0]), "target": str(edge[1]),
-                                                   "edge_label": str(idx)}} for idx, edge in enumerate(G.edges())
+                                                   "edge_label": str(idx), "operational_cost": problem.net.c_string[idx]}} for idx, edge in enumerate(G.edges())
                                      ],
                             stylesheet=[
                                 {
@@ -216,16 +219,36 @@ def get_layout(G, pos, labels):
                                                   html.Div(className="col-sm-2", children=[
                                                       html.Label("Operational cost", htmlFor="oper-cost-input",
                                                                  className="form-label"),
-                                                      dcc.Input(id='oper-cost-input', type='text',
-                                                                placeholder="function of flow",
-                                                                className="form-control"),
+                                                      html.Div(className="row g-1", children=[
+                                                          html.Div(className="col-sm-6", children=[
+                                                            dcc.Input(id='oper-cost-input', type='text',
+                                                                    placeholder="function of flow",
+                                                                    className="form-control"),
+                                                              ]),
+                                                          html.Div(className="col-sm-6", children=[
+                                                              dcc.Input(id='oper-cost-deriv-input', type='text',
+                                                                        placeholder="function of flow",
+                                                                        className="form-control"),
+                                                          ])
+                                                      ]),
                                                   ]),
                                                   html.Div(className="col-sm-2", children=[
                                                       html.Label("Waste cost", htmlFor="waste-discard-cost-input",
                                                                  className="form-label"),
-                                                      dcc.Input(id='waste-discard-cost-input', type='text',
-                                                                placeholder="function of flow",
-                                                                className="form-control"),
+                                                      html.Div(className="row g-1", children=[
+                                                          html.Div(className="col-sm-6", children=[
+                                                              dcc.Input(id='waste-discard-cost-input', type='text',
+                                                                        placeholder="function of flow",
+                                                                        className="form-control"),
+                                                          ]),
+                                                          html.Div(className="col-sm-6", children=[
+                                                              dcc.Input(id='waste-discard-cost-deriv-input', type='text',
+                                                                        placeholder="function of flow",
+                                                                        className="form-control"),
+
+                                                          ])
+                                                      ]),
+
                                                   ]),
                                                   html.Div(className="col-sm-2", children=[
                                                       html.Label("Risk cost", htmlFor="risk-cost-input",
@@ -296,6 +319,7 @@ def get_layout(G, pos, labels):
                 Output('source-node-input', 'value'),
                 Output('target-node-input', 'value'),
                 Output('oper-cost-input', 'value'),
+                Output('oper-cost-deriv-input', 'value'),
                 Output('waste-discard-cost-input', 'value'),
                 Output('risk-cost-input', 'value')
             ],
@@ -317,6 +341,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
     source_node_value = dash.no_update
     target_node_value = dash.no_update
     oper_cost_value = dash.no_update
+    oper_cost_deriv_value = dash.no_update
     waste_discard_cost_value = dash.no_update
     risk_cost_value = dash.no_update
     console_message = ''
@@ -328,6 +353,8 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         source_node_value = edgeData['source']
         target_node_value = edgeData['target']
+        oper_cost_value = edgeData['operational_cost'][0]
+        oper_cost_deriv_value = edgeData['operational_cost'][1]
 
         console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData['target'].upper()
     elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
@@ -353,7 +380,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         console_message = "clicked/tapped the node " + nodeData['id'].upper()
 
-    return console_message, source_node_value, target_node_value, oper_cost_value, waste_discard_cost_value, risk_cost_value
+    return console_message, source_node_value, target_node_value, oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, risk_cost_value
 
 # @app.callback(
 #     Output('graph_presenter', 'elements'),
@@ -591,8 +618,7 @@ def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
 
 if __name__ == "__main__":
     problem = prepare_problem()
-    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
-    app.layout = get_layout(G, pos, labels)
+    app.layout = get_layout(problem)
 
     cache.init_app(server)
 
