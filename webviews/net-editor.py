@@ -213,14 +213,14 @@ def get_layout(G, pos, labels):
                                                       dcc.Input(id='target-node-input', type='text',
                                                                 placeholder="node id", className="form-control"),
                                                   ]),
-                                                  html.Div(className="col-sm-3", children=[
+                                                  html.Div(className="col-sm-2", children=[
                                                       html.Label("Operational cost", htmlFor="oper-cost-input",
                                                                  className="form-label"),
                                                       dcc.Input(id='oper-cost-input', type='text',
                                                                 placeholder="function of flow",
                                                                 className="form-control"),
                                                   ]),
-                                                  html.Div(className="col-sm-3", children=[
+                                                  html.Div(className="col-sm-2", children=[
                                                       html.Label("Waste cost", htmlFor="waste-discard-cost-input",
                                                                  className="form-label"),
                                                       dcc.Input(id='waste-discard-cost-input', type='text',
@@ -232,6 +232,13 @@ def get_layout(G, pos, labels):
                                                                  className="form-label"),
                                                       dcc.Input(id='risk-cost-input', type='text',
                                                                 placeholder="function of flow",
+                                                                className="form-control"),
+                                                  ]),
+                                                  html.Div(className="col-sm-2", children=[
+                                                      html.Label("1 - loss", htmlFor="edge-loss-input",
+                                                                 className="form-label"),
+                                                      dcc.Input(id='edge-loss-input', type='text',
+                                                                placeholder="alpha from 0 to 1",
                                                                 className="form-control"),
                                                   ]),
                                               ]),
