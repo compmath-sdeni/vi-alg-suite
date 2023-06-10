@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import dash_cytoscape as cyto
 from dash import html, dcc
 import networkx as nx
@@ -8,6 +10,7 @@ import logging
 
 logger = logging.getLogger('vi-algo-test-suite')
 
+
 def get_saved_problems_list():
     return [
         {"label": "Blood delivery test one", "value": "blood_delivery_test_one"},
@@ -15,24 +18,51 @@ def get_saved_problems_list():
         {"label": "Blood delivery test three", "value": "blood_delivery_test_three"},
     ]
 
+
 def get_cytoscape_graph_elements(net: BloodSupplyNetwork, *, G: nx.Graph = None, pos: dict = None, labels: dict = None):
     if G is None:
         G, pos, labels = net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
 
-    return [
-        {"data": {"id": str(node), "label": "Nod " + str(i)},
-         "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in
-        enumerate(G.nodes())
-    ] + [
-        {
-            "data": {
-                "source": str(edge[0]), "target": str(edge[1]), "edge_label": str(idx),
-                "operational_cost": net.c_string[idx], "waste_discard_cost": net.z_string[idx],
-                "risk_cost": (net.r_string[idx] if len(net.r_string) > idx else ''),
-                "alpha": net.edge_loss[idx],
-            }
-        } for idx, edge in enumerate(G.edges())
-    ]
+    try:
+        return [
+            {"data": {"id": str(node), "label": "Nod " + str(i)},
+             "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in
+            enumerate(G.nodes())
+        ] + [
+            {
+                "data": {
+                    "source": str(edge[0]), "target": str(edge[1]), "edge_index": str(idx), "edge_label": str(idx),
+                    "operational_cost": net.c_string[idx], "waste_discard_cost": net.z_string[idx],
+                    "risk_cost": (net.r_string[idx] if len(net.r_string) > idx else ''),
+                    "alpha": net.edge_loss[idx],
+                }
+            } for idx, edge in enumerate(G.edges())
+        ]
+    except Exception as e:
+        logger.error(f"Error in get_cytoscape_graph_elements: {e}")
+        for i, node in enumerate(G.nodes()):
+            print(i, node, pos[node][0], pos[node][1])
+
+        for idx, edge in enumerate(G.edges()):
+            print(idx, edge[0], edge[1], net.c_string[idx], net.z_string[idx],
+                  (net.r_string[idx] if len(net.r_string) > idx else ''), net.edge_loss[idx])
+        return []
+
+
+def update_net_by_cytoscape_elements(graph_elements: List[Dict], net: BloodSupplyNetwork):
+    for elem in graph_elements:
+        data = elem['data']
+        if 'source' in data and 'target' in data:  # edge element
+            idx = int(data['edge_index'])
+            net.c_string[idx] = data['operational_cost']
+            net.z_string[idx] = data['waste_discard_cost']
+            if ('risk_cost' in data) and data['risk_cost']:
+                net.r_string[idx] = data['risk_cost']
+
+            net.edge_loss[idx] = float(data['alpha'])
+        elif 'id' in data:  # node element
+            if 'position' in elem:
+                net.pos[int(data['id'])] = (elem['position']['x'], elem['position']['y'])
 
 
 def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
@@ -44,6 +74,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
         className="dbc container-fluid vh-100",
         children=[
             dcc.Store(data=session_id, id='session-id', storage_type='session'),
+            dcc.Input(id='session-id-input', type='hidden', value=session_id),
             html.Div(
                 className="row vh-100",
                 children=[

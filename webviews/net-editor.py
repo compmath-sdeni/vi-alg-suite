@@ -22,8 +22,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-from net_editor_layout import get_layout
-
+from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_net_by_cytoscape_elements
 
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
@@ -81,7 +80,6 @@ logger.addHandler(fh)
 
 logger.info("Starting server")
 
-
 cache = Cache(config=flask_cache_config)
 
 # Configure flask login with secret key from environment variable
@@ -109,8 +107,10 @@ def get_cached_value(session_id, key):
 def save_problem_to_cache(session_id, problem):
     set_cached_value(session_id, CACHE_KEY_PROBLEM, problem)
 
+
 def get_problem_from_cache(session_id):
     return get_cached_value(session_id, CACHE_KEY_PROBLEM)
+
 
 def prepare_default_problem():
     params = AlgorithmParams(
@@ -131,34 +131,39 @@ def prepare_default_problem():
 
     return problem
 
+def get_initial_layout():
+    session_id = str(uuid.uuid4())
 
-# Define the Dash layout
+    problem = prepare_default_problem()
+    save_problem_to_cache(session_id, problem)
+
+    return get_layout(problem, session_id)
 
 
 @app.callback(
-            [
-                Output('console-output', 'children'),
-                Output('source-node-input', 'value'),
-                Output('target-node-input', 'value'),
-                Output('oper-cost-input', 'value'),
-                Output('oper-cost-deriv-input', 'value'),
-                Output('waste-discard-cost-input', 'value'),
-                Output('waste-discard-cost-deriv-input', 'value'),
-                Output('risk-cost-input', 'value'),
-                Output('risk-cost-deriv-input', 'value'),
-                Output('edge-loss-input', 'value'),
-            ],
-              [
-                  Input('graph_presenter', 'tapEdgeData'),
-                  Input('graph_presenter', 'tapNodeData')
-              ],
-              [
-                  State('source-node-input', 'value'),
-                  State('target-node-input', 'value'),
-                  State('graph_presenter', 'elements'),
-                  State('session-id', 'data')
-              ]
-              )
+    [
+        Output('console-output', 'children'),
+        Output('source-node-input', 'value'),
+        Output('target-node-input', 'value'),
+        Output('oper-cost-input', 'value'),
+        Output('oper-cost-deriv-input', 'value'),
+        Output('waste-discard-cost-input', 'value'),
+        Output('waste-discard-cost-deriv-input', 'value'),
+        Output('risk-cost-input', 'value'),
+        Output('risk-cost-deriv-input', 'value'),
+        Output('edge-loss-input', 'value'),
+    ],
+    [
+        Input('graph_presenter', 'tapEdgeData'),
+        Input('graph_presenter', 'tapNodeData')
+    ],
+    [
+        State('source-node-input', 'value'),
+        State('target-node-input', 'value'),
+        State('graph_presenter', 'elements'),
+        State('session-id', 'data')
+    ]
+)
 def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elements, session_id):
     logger.info(f"onGraphElementClick: session_id: {session_id}")
 
@@ -200,7 +205,8 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         alpha_value = edgeData['alpha']
 
-        console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData['target'].upper()
+        console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData[
+            'target'].upper()
     elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
         logger.info(f"onGraphElementClick: node data: {nodeData}")
 
@@ -228,53 +234,45 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
         risk_cost_value, risk_cost_deriv_value, alpha_value
 
+
 # @app.callback(
 #     Output('graph_presenter', 'elements'),
-#     Input("add-edge-button", "n_clicks"),
+#     [
+#         Input('remove-edge-button', 'n_clicks')
+#     ],
+#     [
+#         State('graph_presenter', 'elements'),
+#         State('session-id', 'data')
+#     ]
 # )
-# def test_callback(elements, n_clicks):
-#     return elements
-
-
-@app.callback(
-    Output('graph_presenter', 'elements'),
-    [
-        Input('remove-edge-button', 'n_clicks')
-    ],
-    [
-        State('graph_presenter', 'elements'),
-        State('session-id', 'data')
-    ]
-)
-def remove_edge_callback(n_clicks, elements, session_id):
-    logger.info(f"remove_edge_callback: session_id: {session_id}")
-
-    if n_clicks is None:
-        raise PreventUpdate
-
-    active_edge = get_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE)
-
-    if active_edge is None:
-        raise PreventUpdate
-
-    logger.info(f"remove_edge_callback: removing edge {active_edge}")
-
-    source = active_edge['source']
-    target = active_edge['target']
-
-    logger.info(f"Removing edge between {source} and {target}")
-
-    # for elem in elements:
-    #     logger.info(f"elem: {elem}")
-
-    # remove edge from networkx graph
-    G.remove_edge(int(source), int(target))
-
-    elements = [elem for elem in elements if ((not 'source' in elem['data']) or (
-        not (elem['data']['source'] == source and elem['data']['target'] == target)))]
-
-    return elements
-
+# def remove_edge_callback(n_clicks, elements, session_id):
+#     logger.info(f"remove_edge_callback: session_id: {session_id}")
+#
+#     if n_clicks is None:
+#         raise PreventUpdate
+#
+#     active_edge = get_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE)
+#
+#     if active_edge is None:
+#         raise PreventUpdate
+#
+#     logger.info(f"remove_edge_callback: removing edge {active_edge}")
+#
+#     source = active_edge['source']
+#     target = active_edge['target']
+#
+#     logger.info(f"Removing edge between {source} and {target}")
+#
+#     # # remove edge from networkx graph
+#     # G.remove_edge(int(source), int(target))
+#     #
+#     # elements = [elem for elem in elements if ((not 'source' in elem['data']) or (
+#     #     not (elem['data']['source'] == source and elem['data']['target'] == target)))]
+#     #
+#     # return elements
+#
+#     return dash.no_update
+#
 
 @app.callback(
     [
@@ -365,84 +363,156 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
         Output('user-session-block', 'style'),
         Output('user-email-show', 'children'),
         Output('email-input', 'value'),
-        Output('user-saved-problems', 'options')
+        Output('user-saved-problems', 'options'),
+        Output('session-id-input', 'value')
     ],
     [
         Input('session-id', 'data')
     ],
     [
-        State('session-id', 'data')
+        State('session-id-input', 'value')
     ]
 )
 def session_changed(new_session_id, old_session_id):
-    logger.info(f"session_changed callback. new_session_id: {new_session_id}, old_session_id: {old_session_id}")
+    logger.info(f"session_changed callback. sorage session_id: {new_session_id}, input_session_id: {old_session_id}")
 
     problem = get_problem_from_cache(old_session_id)
 
     if new_session_id is not None and new_session_id != '':
-        if new_session_id != old_session_id:
+        if new_session_id != old_session_id and problem is not None:
             save_problem_to_cache(new_session_id, problem)
+            logger.info(f"Copied problem from old to new session {old_session_id} -> {new_session_id}")
+        elif problem is None:
+            problem = get_problem_from_cache(new_session_id)
+            logger.info(f"There is no problem in old session {old_session_id}, but there is one in new session {new_session_id}")
 
         email = get_cached_value(new_session_id, CACHE_KEY_EMAIL)
-        logger.info(f"Email in new session: {email}")
 
         if email is not None:
+            logger.info(f"Email in new session: {email}")
             problems = os.listdir(f"users_data/{email}")
-            problem_dropdown_options = [{'value': problem, 'label': problem}  for problem in problems]
+            problem_dropdown_options = [{'value': problem, 'label': problem} for problem in problems]
 
-            return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options]
+            return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options, new_session_id]
         else:
-            return [{"display": "block"}, {"display": "none"}, "", dash.no_update, []]
+            logger.info(f"No email in new session.")
+            return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [{'value': '', 'label': 'Default'}], new_session_id]
     else:
-        return [{"display": "block"}, {"display": "none"}, "", dash.no_update, []]
+        logger.info(f"New session is empty.")
+        return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [], dash.no_update]
+
 
 @app.callback(
-    [
-        Output('graph_presenter', 'elements', allow_duplicate=True),
-    ],
-    [
-        Input('load-problem-button', 'n_clicks')
-    ],
-    [
-        State('user-saved-problems', 'value'),
-        State('graph_presenter', 'elements'),
-        State('session-id', 'data')
-    ],
-    prevent_initial_call=True
+    Output('graph_presenter', 'elements'),
+    Input('load-problem-button', 'n_clicks'),
+    State('user-saved-problems', 'value'),
+    State('session-id', 'data'),
+    State('graph_presenter', 'elements')
 )
-def load_problem_click(n_clicks, problem_name, graph_elements, session_id):
-    if n_clicks is None:
-        raise PreventUpdate
+def load_problem_click(n_clicks, problem_name, session_id, elements):
 
-    logger.info(f"load_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
-    if session_id:
-        problem_dir_name = problem_name.replace(" ", "_")
-        problem_dir = f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}"
+    if n_clicks is None or not session_id:
+            raise PreventUpdate
 
-        if os.path.exists(problem_dir):
-            problem.net.loadFromDir(problem.net, path_to_load = problem_dir)
-            logger.info(f"Problem loaded from {problem_dir_name}")
+    logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
 
-            G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+    problem_dir_name = problem_name.replace(" ", "_")
 
-            if problem.net.pos:
-                pos = problem.net.pos
+    user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
+    if user_email:
+        problem_dir = f"users_data/{user_email}/{problem_dir_name}"
+    else:
+        problem_dir = f"users_data/{session_id}"
 
-            nodes_data = []
-            edges_data = []
+    if os.path.exists(problem_dir):
+        problem = get_problem_from_cache(session_id)
 
-            for i, node in enumerate(G.nodes()):
-                nodes_data.append({"data": {"id": str(node), "label": "Nod " + str(i)},
-                                   "position": {"x": pos[str(node)][0], "y": pos[str(node)][1]}})
+        problem.net.loadFromDir(problem.net, path_to_load=problem_dir)
+        logger.info(f"load_problem_click: problem loaded from file {problem_dir_name}")
 
-            for idx, edge in enumerate(G.edges()):
-                edges_data.append({"data": {"source": str(edge[0]), "target": str(edge[1]),
-                                            "edge_label": str(idx)}})
-            elems = [nodes_data + edges_data]
-            return elems
-        else:
-            logger.info(f"Problem directory does not exist: {problem_dir_name}")
-            return dash.no_update
+        G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+
+        if problem.net.pos:
+            pos = problem.net.pos
+
+        elems = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+
+        # clear elements
+        elements.clear()
+        # add new elements
+        elements.extend(elems)
+
+        save_problem_to_cache(session_id, problem)
+
+        logger.info(f"load_problem_click: elements ready.")
+        return elements
+    else:
+        logger.info(f"Problem directory does not exist: {problem_dir_name}")
+        return dash.no_update
+
+
+# @app.callback(
+#     [
+#         Output('graph_presenter', 'elements'),
+#     ],
+#     [
+#         Input('load-problem-button', 'n_clicks')
+#     ],
+#     [
+#         State('user-saved-problems', 'value'),
+#         State('session-id', 'data'),
+#         State('graph_presenter', 'elements')
+#     ]
+# )
+# def load_problem_click(n_clicks, problem_name, session_id, elements):
+#     new_elements = [
+#         {'data': {'id': 'node1', 'label': 'Node 1'}},
+#         {'data': {'id': 'node2', 'label': 'Node 2'}},
+#         {'data': {'id': 'node1', 'source': 'node1', 'target': 'node2'}}
+#     ]
+#     return new_elements
+#
+#     if n_clicks is None or not session_id:
+#         raise PreventUpdate
+#
+#     logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+#
+#     return elements
+#
+#     problem_dir_name = problem_name.replace(" ", "_")
+#
+#     user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
+#     if user_email:
+#         problem_dir = f"users_data/{user_email}/{problem_dir_name}"
+#     else:
+#         problem_dir = f"users_data/{session_id}"
+#
+#     if os.path.exists(problem_dir):
+#         problem = get_problem_from_cache(session_id)
+#
+#         problem.net.loadFromDir(problem.net, path_to_load=problem_dir)
+#         logger.info(f"load_problem_click: problem loaded from file {problem_dir_name}")
+#
+#         G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+#
+#         if problem.net.pos:
+#             pos = problem.net.pos
+#
+#         elems = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+#
+#         # clear elements
+#         # elements.clear()
+#         # # add new elements
+#         # elements.extend(elems)
+#
+#         save_problem_to_cache(session_id, problem)
+#
+#         logger.info(f"load_problem_click: elements ready.")
+#         return elements
+#     else:
+#         logger.info(f"Problem directory does not exist: {problem_dir_name}")
+#         return dash.no_update
+#
 
 @app.callback(
     [
@@ -466,22 +536,23 @@ def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
     if session_id:
         problem_dir_name = problem_name.replace(" ", "_")
 
-        for elem in graph_elements:
-            if 'position' in elem:
-                problem.net.pos[elem['data']['id']] = (elem['position']['x'], elem['position']['y'])
+        problem = get_problem_from_cache(session_id)
 
-        problem.saveToDir(path_to_save=f"users_data/{get_cached_value(session_id, CACHE_KEY_EMAIL)}/{problem_dir_name}")
+        update_net_by_cytoscape_elements(graph_elements, problem.net)
+        problem.net.update_functions_from_strings()
+
+        user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
+
+        if user_email:
+            problem.saveToDir(path_to_save=f"users_data/{user_email}/{problem_dir_name}")
+        else:
+            problem.saveToDir(path_to_save=f"users_data/{session_id}")
+
+        logger.info(f"save_problem_click: problem saved to {problem_dir_name}")
         return "", {"display": "none"}
     else:
+        logger.info(f"save_problem_click: not saved - not logged in")
         return "You need to log in to be able to save the problem setup!", {"display": "block"}
-
-def get_initial_layout():
-    session_id = str(uuid.uuid4())
-
-    problem = prepare_default_problem()
-    save_problem_to_cache(session_id, problem)
-
-    return get_layout(problem, session_id)
 
 
 if __name__ == "__main__":

@@ -29,7 +29,8 @@ import networkx as nx
 # https://machinelearningmastery.com/calculating-derivatives-in-pytorch/
 class BloodSupplyNetwork:
     def __init__(self, *, n_C: int, n_B: int, n_Cmp: int, n_S: int, n_D: int, n_R: int,
-                 edges: Sequence[tuple], c: Sequence[tuple] = None, c_string: Sequence[tuple] = None, z: Sequence[tuple] = None, z_string: Sequence[tuple] = None,
+                 edges: Sequence[tuple], c: Sequence[tuple] = None, c_string: Sequence[tuple] = None,
+                 z: Sequence[tuple] = None, z_string: Sequence[tuple] = None,
                  r: Sequence[tuple] = None, r_string: Sequence[tuple] = None,
                  expected_shortage: Sequence[tuple], expected_surplus: Sequence[tuple], edge_loss: Sequence[float],
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
@@ -53,32 +54,16 @@ class BloodSupplyNetwork:
             else:
                 self.adj_dict[e[0]][e[1]] = idx
 
-        self.c = []
-        if c_string is not None:
-            self.c_string = c_string
-            for func, deriv in c_string:
-                self.c.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
-        else:
-            self.c = c
-            self.c_string = None
+        self.c_string = c_string
+        self.c = c
 
-        self.z = []
-        if z_string is not None:
-            self.z_string = z_string
-            for func, deriv in z_string:
-                self.z.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
-        else:
-            self.z = z
-            self.z_string = None
+        self.z_string = z_string
+        self.z = z
 
-        self.r = []
-        if r_string is not None:
-            self.r_string = r_string
-            for func, deriv in r_string:
-                self.r.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
-        else:
-            self.r = r
-            self.r_string = None
+        self.r_string = r_string
+        self.r = r
+
+        self.update_functions_from_strings()
 
         self.edge_loss = edge_loss
 
@@ -122,6 +107,22 @@ class BloodSupplyNetwork:
         self.n_p = len(self.paths)
 
         self.build_static_params()
+
+    def update_functions_from_strings(self):
+        if self.c_string is not None:
+            self.c = []
+            for func, deriv in self.c_string:
+                self.c.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+
+        if self.z_string is not None:
+            self.z = []
+            for func, deriv in self.z_string:
+                self.z.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+
+        if self.r_string is not None:
+            self.r = []
+            for func, deriv in self.r_string:
+                self.r.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
 
     # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs,
     # edge operational costs, risks and expectations
@@ -354,7 +355,7 @@ class BloodSupplyNetwork:
 
         node_idx = 0
         G.add_node(node_idx, label=f"1")
-        pos[node_idx] = [(x_left+x_right) / 2 + 0.08*w, row_y]
+        pos[node_idx] = [(x_left + x_right) / 2 + 0.08 * w, row_y]
         labels[node_idx] = "1"
         node_idx += 1
 
@@ -362,42 +363,42 @@ class BloodSupplyNetwork:
 
         for i in range(self.n_C):
             G.add_node(node_idx, label=f"C{i + 1}")
-            pos[node_idx] = [x_left + (i / self.n_C + 1 / (self.n_C + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_C + 1 / (self.n_C + 1)) * w, row_y]
             labels[node_idx] = f"C{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_B):
             G.add_node(node_idx, label=f"B{i + 1}")
-            pos[node_idx] = [x_left + (i / self.n_B + 1 / (self.n_B + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_B + 1 / (self.n_B + 1)) * w, row_y]
             labels[node_idx] = f"B{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_Cmp):
             G.add_node(node_idx, label=f"P{i + 1}")
-            pos[node_idx] = [x_left + (i / self.n_Cmp + 1 / (self.n_Cmp + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_Cmp + 1 / (self.n_Cmp + 1)) * w, row_y]
             labels[node_idx] = f"P{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_S):
             G.add_node(node_idx, label=f"S{i + 1}")
-            pos[node_idx] = [x_left + (i / self.n_S + 1 / (self.n_S + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_S + 1 / (self.n_S + 1)) * w, row_y]
             labels[node_idx] = f"S{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_D):
             G.add_node(node_idx, label=f"D{i + 1}")
-            pos[node_idx] = [x_left + (i / self.n_D + 1 / (self.n_D + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_D + 1 / (self.n_D + 1)) * w, row_y]
             labels[node_idx] = f"D{i + 1}"
             node_idx += 1
 
         row_y -= h_step
         for i in range(self.n_R):
             G.add_node(node_idx, label=f"R{i + 1} ({self.projected_demands[i]})", proj_demand=self.projected_demands[i])
-            pos[node_idx] = [x_left + (i / self.n_R + 1 / (self.n_R + 1))*w, row_y]
+            pos[node_idx] = [x_left + (i / self.n_R + 1 / (self.n_R + 1)) * w, row_y]
             labels[node_idx] = f"R{i + 1} ({self.projected_demands[i]:.2f})"
             node_idx += 1
 
@@ -458,12 +459,12 @@ class BloodSupplyNetwork:
             "lam_minus": self.lam_minus,
             "lam_plus": self.lam_plus,
             "theta": self.theta,
-#           "predefined_paths": self.paths,
+            #           "predefined_paths": self.paths,
             "edges": self.edges,
             "pos": self.pos
         }
 
-        print(f"Current pos: {self.pos}")
+        #   print(f"Current pos: {self.pos}")
 
         # for edge in self.edges:
         #     network_data[f"edge_{edge[0]}_{edge[1]}"] = edge
@@ -471,24 +472,26 @@ class BloodSupplyNetwork:
         with open(f"{path_to_save}/network.json", "w") as file:
             json.dump(network_data, file)
 
-
     @staticmethod
     def loadFromDir(self, *, path_to_load: str):
         with open(f"{path_to_load}/network.json", "r") as file:
             net_data = json.load(file)
 
-            self.n_C = net_data["n_C"]
-            self.n_B = net_data["n_B"]
-            self.n_Cmp = net_data["n_Cmp"]
-            self.n_S = net_data["n_S"]
-            self.n_D = net_data["n_D"]
-            self.n_R = net_data["n_R"]
-            self.n_p = net_data["n_p"]
+            self.n_C = int(net_data["n_C"])
+            self.n_B = int(net_data["n_B"])
+            self.n_Cmp = int(net_data["n_Cmp"])
+            self.n_S = int(net_data["n_S"])
+            self.n_D = int(net_data["n_D"])
+            self.n_R = int(net_data["n_R"])
+            self.n_p = int(net_data["n_p"])
             self.lam_minus = net_data["lam_minus"]
             self.lam_plus = net_data["lam_plus"]
             self.theta = net_data["theta"]
             self.edges = net_data["edges"]
-            self.pos = net_data["pos"]
+
+            self.pos = {}
+            for node_idx in net_data["pos"]:
+                self.pos[int(node_idx)] = net_data["pos"][node_idx]
 
             # also we have virtual node 0 - source node, "regional division"
             self.nodes_count = 1 + self.n_C + self.n_B + self.n_Cmp + self.n_S + self.n_D + self.n_R
@@ -621,8 +624,7 @@ class BloodSupplyNetworkProblem(VIProblem):
 
         return path_to_save
 
-
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> \
-    Optional[Dict]:
+            Optional[Dict]:
         return {'v': self.net.projected_demands, 'demand_by_link_flows': self.net.get_demands_by_link_flows(),
                 'f': self.net.link_flows}
