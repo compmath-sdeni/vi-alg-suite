@@ -423,6 +423,25 @@ class BloodSupplyNetwork:
 
         plt.show()
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+
+        # Remove the unpicklable entries (lambdas).
+        if 'c' in state:
+            del state['c']
+        if 'z' in state:
+            del state['z']
+        if 'r' in state:
+            del state['r']
+
+        if 'expected_shortage' in state:
+            del state['expected_shortage']
+
+        if 'expected_surplus' in state:
+            del state['expected_surplus']
+
+        return state
+
     def saveToDir(self, *, path_to_save: str):
         # save network to pickle binary
         # with open(f"{path_to_save}/network.pickle", "wb") as file:
@@ -601,6 +620,7 @@ class BloodSupplyNetworkProblem(VIProblem):
             self.net.saveToDir(path_to_save=path_to_save)
 
         return path_to_save
+
 
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> \
     Optional[Dict]:
