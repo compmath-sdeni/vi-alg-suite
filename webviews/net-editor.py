@@ -404,6 +404,7 @@ def session_changed(new_session_id, old_session_id):
 
 @app.callback(
     Output('graph_presenter', 'elements'),
+    Output('save-problem-name-input', 'value'),
     Input('load-problem-button', 'n_clicks'),
     State('user-saved-problems', 'value'),
     State('session-id', 'data'),
@@ -435,125 +436,92 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         if problem.net.pos:
             pos = problem.net.pos
 
-        elems = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+        elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
 
-        # clear elements
-        elements.clear()
-        # add new elements
-        elements.extend(elems)
+        # # clear elements
+        # elements.clear()
+        # # add new elements
+        # elements.extend(elems)
 
         save_problem_to_cache(session_id, problem)
 
         logger.info(f"load_problem_click: elements ready.")
-        return elements
+        return elements, problem_name
     else:
         logger.info(f"Problem directory does not exist: {problem_dir_name}")
-        return dash.no_update
+        return dash.no_update, dash.no_update
 
+
+# dash callback for click on button with id="set-edge-params-button"
 
 # @app.callback(
-#     [
-#         Output('graph_presenter', 'elements'),
-#     ],
-#     [
-#         Input('load-problem-button', 'n_clicks')
-#     ],
-#     [
-#         State('user-saved-problems', 'value'),
-#         State('session-id', 'data'),
-#         State('graph_presenter', 'elements')
-#     ]
-# )
-# def load_problem_click(n_clicks, problem_name, session_id, elements):
-#     new_elements = [
-#         {'data': {'id': 'node1', 'label': 'Node 1'}},
-#         {'data': {'id': 'node2', 'label': 'Node 2'}},
-#         {'data': {'id': 'node1', 'source': 'node1', 'target': 'node2'}}
-#     ]
-#     return new_elements
+#     Output('console-output', 'children', allow_duplicate=True),
+#     Input('set-edge-params-button', 'n_clicks'),
+#     State('source-node-input', 'value'),
+#     State('target-node-input', 'value'),
+#     State('oper-cost-input', 'value'),
+#     State('oper-cost-deriv-input', 'value'),
+#     State('waste-discard-cost-input', 'value'),
+#     State('waste-discard-cost-deriv-input', 'value'),
+#     State('risk-cost-input', 'value'),
+#     State('risk-cost-deriv-input', 'value'),
+#     State('edge-loss-input', 'value'),
+#     Input('graph_presenter', 'tapEdgeData'),
 #
-#     if n_clicks is None or not session_id:
+#     prevent_initial_call=True
+# )
+# def set_edge_params_click(n_clicks, close_edge_params_modal_clicks, is_open):
+#     if set_edge_params_button_clicks is None and close_edge_params_modal_clicks is None:
 #         raise PreventUpdate
 #
-#     logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+#     if is_open:
+#         return False
+#     return True
 #
-#     return elements
 #
-#     problem_dir_name = problem_name.replace(" ", "_")
 #
-#     user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
-#     if user_email:
-#         problem_dir = f"users_data/{user_email}/{problem_dir_name}"
-#     else:
-#         problem_dir = f"users_data/{session_id}"
 #
-#     if os.path.exists(problem_dir):
+#
+# @app.callback(
+#     [
+#         Output('save-error-block', 'children'),
+#         Output('save-error-block', 'style')
+#     ],
+#     [
+#         Input('save-problem-button', 'n_clicks')
+#     ],
+#     [
+#         State('save-problem-name-input', 'value'),
+#         State('graph_presenter', 'elements'),
+#         State('session-id', 'data')
+#     ]
+# )
+# def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
+#     if n_clicks is None:
+#         raise PreventUpdate
+#
+#     logger.info(f"save_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
+#     if session_id:
+#         problem_dir_name = problem_name.replace(" ", "_")
+#
 #         problem = get_problem_from_cache(session_id)
 #
-#         problem.net.loadFromDir(problem.net, path_to_load=problem_dir)
-#         logger.info(f"load_problem_click: problem loaded from file {problem_dir_name}")
+#         update_net_by_cytoscape_elements(graph_elements, problem.net)
+#         problem.net.update_functions_from_strings()
 #
-#         G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+#         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 #
-#         if problem.net.pos:
-#             pos = problem.net.pos
+#         if user_email:
+#             problem.saveToDir(path_to_save=f"users_data/{user_email}/{problem_dir_name}")
+#         else:
+#             problem.saveToDir(path_to_save=f"users_data/{session_id}")
 #
-#         elems = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
-#
-#         # clear elements
-#         # elements.clear()
-#         # # add new elements
-#         # elements.extend(elems)
-#
-#         save_problem_to_cache(session_id, problem)
-#
-#         logger.info(f"load_problem_click: elements ready.")
-#         return elements
+#         logger.info(f"save_problem_click: problem saved to {problem_dir_name}")
+#         return "", {"display": "none"}
 #     else:
-#         logger.info(f"Problem directory does not exist: {problem_dir_name}")
-#         return dash.no_update
+#         logger.info(f"save_problem_click: not saved - not logged in")
+#         return "You need to log in to be able to save the problem setup!", {"display": "block"}
 #
-
-@app.callback(
-    [
-        Output('save-error-block', 'children'),
-        Output('save-error-block', 'style')
-    ],
-    [
-        Input('save-problem-button', 'n_clicks')
-    ],
-    [
-        State('save-problem-name-input', 'value'),
-        State('graph_presenter', 'elements'),
-        State('session-id', 'data')
-    ]
-)
-def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
-    if n_clicks is None:
-        raise PreventUpdate
-
-    logger.info(f"save_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
-    if session_id:
-        problem_dir_name = problem_name.replace(" ", "_")
-
-        problem = get_problem_from_cache(session_id)
-
-        update_net_by_cytoscape_elements(graph_elements, problem.net)
-        problem.net.update_functions_from_strings()
-
-        user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
-
-        if user_email:
-            problem.saveToDir(path_to_save=f"users_data/{user_email}/{problem_dir_name}")
-        else:
-            problem.saveToDir(path_to_save=f"users_data/{session_id}")
-
-        logger.info(f"save_problem_click: problem saved to {problem_dir_name}")
-        return "", {"display": "none"}
-    else:
-        logger.info(f"save_problem_click: not saved - not logged in")
-        return "You need to log in to be able to save the problem setup!", {"display": "block"}
-
 
 if __name__ == "__main__":
     cache.init_app(server)

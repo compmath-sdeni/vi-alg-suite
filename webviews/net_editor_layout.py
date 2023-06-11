@@ -275,7 +275,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
                                                   ])
                                               ])
                                  ]),
-
+                        html.H4("Console output", className="bg-info p-1 mb-1 mt-4 text-center"),
                         html.Div(id='console-output'),
                     ])
                 ])
