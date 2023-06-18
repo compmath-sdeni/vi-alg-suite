@@ -135,9 +135,13 @@ def get_initial_layout():
     session_id = str(uuid.uuid4())
 
     problem = prepare_default_problem()
+
+    # calculate and update positions inside problem
+    res = get_layout(problem, session_id)
+
     save_problem_to_cache(session_id, problem)
 
-    return get_layout(problem, session_id)
+    return res
 
 
 @app.callback(
@@ -362,6 +366,8 @@ def session_changed(new_session_id, old_session_id):
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [], dash.no_update]
 
 
+# Changing elements broke the update cycle, positions are not updated after loading a problem
+# https://github.com/plotly/dash-cytoscape/issues/159
 @app.callback(
     Output('graph_presenter', 'elements'),
     Output('save-problem-name-input', 'value'),
@@ -374,6 +380,7 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
 
     if n_clicks is None or not session_id:
             raise PreventUpdate
+
 
     logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
 
@@ -396,17 +403,28 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         if problem.net.pos:
             pos = problem.net.pos
 
-        elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+        new_elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
 
-        # # clear elements
+        elements_patch = Patch()
+        for idx,old_el in enumerate(elements):
+            # elements_patch.remove(old_el)
+            if 'position' in new_elements[idx]:
+                elements_patch[idx]['position']['x'] = new_elements[idx]['position']['x']
+                elements_patch[idx]['position']['y'] = new_elements[idx]['position']['y']
+
+            #elements_patch[idx]['data'] = new_elements[idx]['data']
+
+        # elements_patch.extend(new_elements)
+
+        # # # clear elements
         # elements.clear()
         # # add new elements
-        # elements.extend(elems)
+        # elements.extend(new_elements)
 
         save_problem_to_cache(session_id, problem)
 
         logger.info(f"load_problem_click: elements ready.")
-        return elements, problem_name
+        return elements_patch, problem_name
     else:
         logger.info(f"Problem directory does not exist: {problem_dir_name}")
         return dash.no_update, dash.no_update
@@ -466,46 +484,54 @@ def set_edge_params_click(
     return elements
 
 
-# @app.callback(
-#     [
-#         Output('save-error-block', 'children'),
-#         Output('save-error-block', 'style')
-#     ],
-#     [
-#         Input('save-problem-button', 'n_clicks')
-#     ],
-#     [
-#         State('save-problem-name-input', 'value'),
-#         State('graph_presenter', 'elements'),
-#         State('session-id', 'data')
-#     ]
-# )
-# def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
-#     if n_clicks is None:
-#         raise PreventUpdate
-#
-#     logger.info(f"save_problem_click: n_clicks: {n_clicks}, session_id: {session_id}, problem_name: {problem_name}")
-#     if session_id:
-#         problem_dir_name = problem_name.replace(" ", "_")
-#
-#         problem = get_problem_from_cache(session_id)
-#
-#         update_net_by_cytoscape_elements(graph_elements, problem.net)
-#         problem.net.update_functions_from_strings()
-#
-#         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
-#
-#         if user_email:
-#             problem.saveToDir(path_to_save=f"users_data/{user_email}/{problem_dir_name}")
-#         else:
-#             problem.saveToDir(path_to_save=f"users_data/{session_id}")
-#
-#         logger.info(f"save_problem_click: problem saved to {problem_dir_name}")
-#         return "", {"display": "none"}
-#     else:
-#         logger.info(f"save_problem_click: not saved - not logged in")
-#         return "You need to log in to be able to save the problem setup!", {"display": "block"}
-#
+@app.callback(
+    [
+        Output('save-error-block', 'children'),
+        Output('save-error-block', 'style')
+    ],
+    [
+        Input('save-problem-button', 'n_clicks')
+    ],
+    [
+        State('save-problem-name-input', 'value'),
+        State('graph_presenter', 'elements'),
+        State('session-id', 'data')
+    ]
+)
+def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
+    if n_clicks is None:
+        raise PreventUpdate
+
+    if not problem_name:
+        return "Please enter problem name", {'color': 'red'}
+
+    logger.info(f"save_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+
+    for elem in graph_elements:
+        if 'position' in elem:
+            print(elem['data']['id'], (elem['position']['x'], elem['position']['y']))
+
+    if session_id:
+        problem_dir_name = problem_name.replace(" ", "_")
+
+        problem = get_problem_from_cache(session_id)
+
+        update_net_by_cytoscape_elements(graph_elements, problem.net)
+        problem.net.update_functions_from_strings()
+
+        user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
+
+        if user_email:
+            path_to_save = f"users_data/{user_email}/{problem_dir_name}"
+            problem.saveToDir(path_to_save=path_to_save)
+            logger.info(f"save_problem_click: problem saved to {path_to_save}")
+            return "", {"display": "none"}
+        else:
+            logger.info(f"save_problem_click: not saved - not logged in")
+            return "You need to log in to be able to save the problem setup!", {"display": "block"}
+    else:
+        logger.info(f"save_problem_click: not saved - no session and not logged in")
+        return "You need to log in to be able to save the problem setup!", {"display": "block"}
 
 if __name__ == "__main__":
     cache.init_app(server)

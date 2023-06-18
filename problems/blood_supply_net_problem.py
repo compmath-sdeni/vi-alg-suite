@@ -343,7 +343,7 @@ class BloodSupplyNetwork:
 
         return grad
 
-    def to_nx_graph(self, *, use_flows_and_demands: bool = False, x_left=0, x_right=1, y_bottom=0, y_top=60):
+    def to_nx_graph(self, *, use_flows_and_demands: bool = False, x_left=0, x_right=1, y_bottom=0, y_top=60, update_positions: bool = False):
         G = nx.DiGraph()
         pos = dict()
         labels = dict()
@@ -409,6 +409,9 @@ class BloodSupplyNetwork:
             else:
                 G.add_edge(e[0], e[1], label=f"{i} ({e[0], e[1]})", weight=f"{0}",
                            edge_index=f"{i + 1}")
+
+        if update_positions:
+            self.pos = pos
 
         return G, pos, labels
 

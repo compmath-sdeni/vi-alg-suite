@@ -68,7 +68,7 @@ def update_net_by_cytoscape_elements(graph_elements: List[Dict], net: BloodSuppl
 def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
     logger.info(f"get_layout called - creating application layout. Session: {session_id}")
 
-    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0, update_positions=True)
 
     return html.Div(
         className="dbc container-fluid vh-100",
