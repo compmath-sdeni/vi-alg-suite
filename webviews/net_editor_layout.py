@@ -75,6 +75,8 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
         children=[
             dcc.Store(data=session_id, id='session-id', storage_type='session'),
             dcc.Input(id='session-id-input', type='hidden', value=session_id),
+            dcc.Input(id='selected-node-id', type='hidden', value=''),
+            dcc.Input(id='selected-edge-index', type='hidden', value=''),
             html.Div(
                 className="row vh-100",
                 children=[

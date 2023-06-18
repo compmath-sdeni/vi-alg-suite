@@ -145,6 +145,7 @@ def get_initial_layout():
         Output('console-output', 'children'),
         Output('source-node-input', 'value'),
         Output('target-node-input', 'value'),
+        Output('selected-edge-index', 'value'),
         Output('oper-cost-input', 'value'),
         Output('oper-cost-deriv-input', 'value'),
         Output('waste-discard-cost-input', 'value'),
@@ -180,6 +181,8 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
     risk_cost_deriv_value = dash.no_update
     alpha_value = dash.no_update
 
+    selected_edge_index = dash.no_update
+
     console_message = ''
 
     if event_source == 'graph_presenter.tapEdgeData' and edgeData:
@@ -189,6 +192,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         source_node_value = edgeData['source']
         target_node_value = edgeData['target']
+        selected_edge_index = edgeData['edge_index']
 
         oper_cost_value = edgeData['operational_cost'][0]
         oper_cost_deriv_value = edgeData['operational_cost'][1]
@@ -230,57 +234,13 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         console_message = "clicked/tapped the node " + nodeData['id'].upper()
 
-    return console_message, source_node_value, target_node_value, \
+    return console_message, source_node_value, target_node_value, selected_edge_index, \
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
         risk_cost_value, risk_cost_deriv_value, alpha_value
 
 
-# @app.callback(
-#     Output('graph_presenter', 'elements'),
-#     [
-#         Input('remove-edge-button', 'n_clicks')
-#     ],
-#     [
-#         State('graph_presenter', 'elements'),
-#         State('session-id', 'data')
-#     ]
-# )
-# def remove_edge_callback(n_clicks, elements, session_id):
-#     logger.info(f"remove_edge_callback: session_id: {session_id}")
-#
-#     if n_clicks is None:
-#         raise PreventUpdate
-#
-#     active_edge = get_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE)
-#
-#     if active_edge is None:
-#         raise PreventUpdate
-#
-#     logger.info(f"remove_edge_callback: removing edge {active_edge}")
-#
-#     source = active_edge['source']
-#     target = active_edge['target']
-#
-#     logger.info(f"Removing edge between {source} and {target}")
-#
-#     # # remove edge from networkx graph
-#     # G.remove_edge(int(source), int(target))
-#     #
-#     # elements = [elem for elem in elements if ((not 'source' in elem['data']) or (
-#     #     not (elem['data']['source'] == source and elem['data']['target'] == target)))]
-#     #
-#     # return elements
-#
-#     return dash.no_update
-#
-
 @app.callback(
     [
-        # Output('login-form-block', 'style'),
-        # Output('user-session-block', 'style'),
-        # Output('user-email-show', 'children'),
-        # Output('email-input', 'value'),
-        # Output('password-input', 'value'),
         Output('login-error-block', 'children'),
         Output('login-error-block', 'style'),
         Output('session-id', 'data')
@@ -374,7 +334,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
     ]
 )
 def session_changed(new_session_id, old_session_id):
-    logger.info(f"session_changed callback. sorage session_id: {new_session_id}, input_session_id: {old_session_id}")
+    logger.info(f"session_changed callback. storage session_id: {new_session_id}, input_session_id: {old_session_id}")
 
     problem = get_problem_from_cache(old_session_id)
 
@@ -454,34 +414,58 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
 
 # dash callback for click on button with id="set-edge-params-button"
 
-# @app.callback(
-#     Output('console-output', 'children', allow_duplicate=True),
-#     Input('set-edge-params-button', 'n_clicks'),
-#     State('source-node-input', 'value'),
-#     State('target-node-input', 'value'),
-#     State('oper-cost-input', 'value'),
-#     State('oper-cost-deriv-input', 'value'),
-#     State('waste-discard-cost-input', 'value'),
-#     State('waste-discard-cost-deriv-input', 'value'),
-#     State('risk-cost-input', 'value'),
-#     State('risk-cost-deriv-input', 'value'),
-#     State('edge-loss-input', 'value'),
-#     Input('graph_presenter', 'tapEdgeData'),
-#
-#     prevent_initial_call=True
-# )
-# def set_edge_params_click(n_clicks, close_edge_params_modal_clicks, is_open):
-#     if set_edge_params_button_clicks is None and close_edge_params_modal_clicks is None:
-#         raise PreventUpdate
-#
-#     if is_open:
-#         return False
-#     return True
-#
-#
-#
-#
-#
+@app.callback(
+    Output('graph_presenter', 'elements', allow_duplicate=True),
+    Input('set-edge-params-button', 'n_clicks'),
+    State('source-node-input', 'value'),
+    State('target-node-input', 'value'),
+    State('selected-edge-index', 'value'),
+    State('oper-cost-input', 'value'),
+    State('oper-cost-deriv-input', 'value'),
+    State('waste-discard-cost-input', 'value'),
+    State('waste-discard-cost-deriv-input', 'value'),
+    State('risk-cost-input', 'value'),
+    State('risk-cost-deriv-input', 'value'),
+    State('edge-loss-input', 'value'),
+    State('session-id', 'data'),
+    State('graph_presenter', 'elements'),
+    prevent_initial_call=True
+)
+def set_edge_params_click(
+        n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost, waste_discard_cost_deriv,
+        risk_cost, risk_cost_deriv, edge_loss, session_id, elements):
+
+    if n_clicks is None:
+        raise PreventUpdate
+
+    selected_edge_index = int(selected_edge_index)
+
+    logger.info(f"set_edge_params_click: called for session_id: {session_id}, source_node: {source_node}, target_node: {target_node}, selected_edge_index: {selected_edge_index}")
+
+    problem = get_problem_from_cache(session_id)
+    problem.net.c_string[selected_edge_index] = (oper_cost, oper_cost_deriv)
+    problem.net.z_string[selected_edge_index] = (waste_discard_cost, waste_discard_cost_deriv)
+
+    if risk_cost is not None and risk_cost != "":
+        problem.net.r_string[selected_edge_index] = (risk_cost, risk_cost_deriv)
+
+    if edge_loss is not None and edge_loss != "":
+        problem.net.edge_loss[selected_edge_index] = edge_loss
+
+    problem.net.update_functions_from_strings()
+
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+
+    if problem.net.pos:
+        pos = problem.net.pos
+
+    elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+
+    save_problem_to_cache(session_id, problem)
+
+    return elements
+
+
 # @app.callback(
 #     [
 #         Output('save-error-block', 'children'),
