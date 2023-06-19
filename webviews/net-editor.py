@@ -1,4 +1,5 @@
 import hashlib
+import json
 
 import uuid
 
@@ -6,6 +7,7 @@ import flask
 from flask_login import LoginManager
 from flask_caching import Cache
 import dash
+from dash import clientside_callback
 # import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 from dash import html, dcc, Patch
@@ -22,7 +24,8 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_net_by_cytoscape_elements
+from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_net_by_cytoscape_elements, \
+    build_graph_view_layout
 
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
@@ -146,7 +149,7 @@ def get_initial_layout():
 
 @app.callback(
     [
-        Output('console-output', 'children'),
+        Output('console-output', 'children', allow_duplicate=True),
         Output('source-node-input', 'value'),
         Output('target-node-input', 'value'),
         Output('selected-edge-index', 'value'),
@@ -167,10 +170,11 @@ def get_initial_layout():
         State('target-node-input', 'value'),
         State('graph_presenter', 'elements'),
         State('session-id', 'data')
-    ]
+    ],
+    prevent_initial_call=True
 )
 def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elements, session_id):
-    logger.info(f"onGraphElementClick: session_id: {session_id}")
+    logger.info(f"onGraphElementClick: session_id: {session_id}; First node position: {graph_elements[0]['position']}")
 
     context = dash.ctx.triggered
     event_source = context[0]['prop_id']
@@ -236,7 +240,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
             source_node_value = nodeData['id']
             target_node_value = None
 
-        console_message = "clicked/tapped the node " + nodeData['id'].upper()
+        console_message = "clicked/tapped the node " + nodeData['id'].upper() + '; First node pos: ' + str(graph_elements[0]['position']) + '; Sec: ' + str(graph_elements[1]['position'])
 
     return console_message, source_node_value, target_node_value, selected_edge_index, \
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
@@ -366,11 +370,40 @@ def session_changed(new_session_id, old_session_id):
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [], dash.no_update]
 
 
+clientside_callback(
+    """
+    function(data, elements) {
+        console.log("clientside_callback:  " + data);
+        console.log(elements);
+        
+        new_elements = JSON.parse(data);
+        
+        elements[0].position.x = new_elements[0].position.x;
+        elements[0].position.y = new_elements[0].position.y;
+        
+        return 'ready';
+    }
+    """,
+    Output('temp-data-target', 'value'),
+    Input('temp-data', 'value'),
+    State("graph_presenter", "elements")
+)
+
+@app.callback(
+    Output('graph_presenter', 'elements'),
+    Input('temp-data-target', 'value'),
+    State('graph_presenter', 'elements')
+)
+def update_graph_container_post_callback(temp_data, elements):
+    logger.info(f"update_graph_container_post_callback: {temp_data}")
+    return elements
+
 # Changing elements broke the update cycle, positions are not updated after loading a problem
 # https://github.com/plotly/dash-cytoscape/issues/159
 @app.callback(
-    Output('graph_presenter', 'elements'),
+    Output('graph-container', 'children'),
     Output('save-problem-name-input', 'value'),
+    Output('temp-data', 'value'),
     Input('load-problem-button', 'n_clicks'),
     State('user-saved-problems', 'value'),
     State('session-id', 'data'),
@@ -403,14 +436,17 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         if problem.net.pos:
             pos = problem.net.pos
 
+        #new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
         new_elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
 
-        elements_patch = Patch()
-        for idx,old_el in enumerate(elements):
-            # elements_patch.remove(old_el)
-            if 'position' in new_elements[idx]:
-                elements_patch[idx]['position']['x'] = new_elements[idx]['position']['x']
-                elements_patch[idx]['position']['y'] = new_elements[idx]['position']['y']
+        # elements_patch = Patch()
+        # elements_patch[0]['position']['x'] = 10
+
+        # for idx,old_el in enumerate(elements):
+        #     # elements_patch.remove(old_el)
+        #     if 'position' in new_elements[idx]:
+        #         elements_patch[idx]['position']['x'] = new_elements[idx]['position']['x']
+        #         elements_patch[idx]['position']['y'] = new_elements[idx]['position']['y']
 
             #elements_patch[idx]['data'] = new_elements[idx]['data']
 
@@ -424,10 +460,10 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         save_problem_to_cache(session_id, problem)
 
         logger.info(f"load_problem_click: elements ready.")
-        return elements_patch, problem_name
+        return dash.no_update, problem_name, json.dumps(new_elements)
     else:
         logger.info(f"Problem directory does not exist: {problem_dir_name}")
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
 
 
 # dash callback for click on button with id="set-edge-params-button"

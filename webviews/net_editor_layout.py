@@ -65,6 +65,35 @@ def update_net_by_cytoscape_elements(graph_elements: List[Dict], net: BloodSuppl
                 net.pos[int(data['id'])] = (elem['position']['x'], elem['position']['y'])
 
 
+def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
+    return cyto.Cytoscape(
+        id="graph_presenter",
+        layout={"name": "preset"},
+        style={"width": "98%", "height": "98%"},
+        elements=get_cytoscape_graph_elements(net, G=G, pos=pos, labels=labels),
+        stylesheet=[
+            {
+                "selector": 'node',
+                "style": {
+                    'background-color': '#BBBBFF',
+                    'text-halign': 'center',
+                    'text-valign': 'center',
+                    'label': 'data(id)'
+                }
+            },
+            {
+                "selector": 'edge',
+                "style": {
+                    'source-label': 'data(edge_label)',
+                    'source-text-offset': '20px',
+                    'width': 1,
+                    'target-arrow-shape': 'triangle',
+                    'curve-style': 'bezier'
+                }
+            }
+        ]
+    )
+
 def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
     logger.info(f"get_layout called - creating application layout. Session: {session_id}")
 
@@ -77,39 +106,14 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
             dcc.Input(id='session-id-input', type='hidden', value=session_id),
             dcc.Input(id='selected-node-id', type='hidden', value=''),
             dcc.Input(id='selected-edge-index', type='hidden', value=''),
+            dcc.Input(id='temp-data', type='hidden', value=''),
+            dcc.Input(id='temp-data-target', type='hidden', value=''),
             html.Div(
                 className="row vh-100",
                 children=[
                     # div containing the graph, should take half of the screen
-                    html.Div(className="col-sm-5", style={"border": "1px solid green"}, children=[
-                        cyto.Cytoscape(
-                            id="graph_presenter",
-                            layout={"name": "preset"},
-                            style={"width": "98%", "height": "98%"},
-                            elements=get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels),
-                            stylesheet=[
-                                {
-                                    "selector": 'node',
-                                    "style": {
-                                        'background-color': '#BBBBFF',
-                                        'text-halign': 'center',
-                                        'text-valign': 'center',
-                                        'label': 'data(id)'
-                                    }
-                                },
-                                {
-                                    "selector": 'edge',
-                                    "style": {
-                                        'source-label': 'data(edge_label)',
-                                        'source-text-offset': '20px',
-                                        'width': 1,
-                                        'target-arrow-shape': 'triangle',
-                                        'curve-style': 'bezier'
-                                    }
-                                }
-                            ]
-                        )]),
-
+                    html.Div(className="col-sm-5", id="graph-container", style={"border": "1px solid green"},
+                             children=build_graph_view_layout(problem.net, G, pos, labels)),
                     html.Div(className="col-sm-7", style={"border": "1px solid gray"}, children=[
                         html.H4("User and session", className="bg-info text-white p-2 mb-2 text-center"),
                         html.Div(className="form", children=[
