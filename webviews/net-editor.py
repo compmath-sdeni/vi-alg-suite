@@ -8,7 +8,6 @@ from wsgiref.simple_server import make_server
 import flask
 from flask_login import LoginManager
 from flask_caching import Cache
-from flask import route
 import dash
 from dash import clientside_callback
 # import dash_bootstrap_components as dbc
@@ -577,28 +576,35 @@ def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
         logger.info(f"save_problem_click: not saved - no session and not logged in")
         return "You need to log in to be able to save the problem setup!", {"display": "block"}
 
-
 if __name__ == "__main__":
     cache.init_app(server)
 
-    server = make_server("localhost", 8050, server)
+    app.layout = get_initial_layout
+
+    app.run_server(debug=True)
 
 
-    def run_app():
-        app.layout = get_initial_layout
-        server.run(debug=True, use_reloader=False)
-
-
-    dash_thread = threading.Thread(target=run_app)
-    dash_thread.start()
-
-    # app.layout = get_initial_layout
-    # app.run_server(debug=True)
-
-
-@app.route('/test')
-def test():
-    return 'Hello World!'
+# if __name__ == "__main__":
+#     cache.init_app(server)
+#
+#     server = make_server("localhost", 8050, server)
+#
+#
+#     def run_app():
+#         app.layout = get_initial_layout
+#         server.run(debug=True, use_reloader=False)
+#
+#
+#     dash_thread = threading.Thread(target=run_app)
+#     dash_thread.start()
+#
+#     # app.layout = get_initial_layout
+#     # app.run_server(debug=True)
+#
+#
+# @app.route('/test')
+# def test():
+#     return 'Hello World!'
 
 #
 # def stop_execution():
