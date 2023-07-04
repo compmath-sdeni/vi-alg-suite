@@ -1,11 +1,14 @@
 import hashlib
 import json
+import threading
 
 import uuid
+from wsgiref.simple_server import make_server
 
 import flask
 from flask_login import LoginManager
 from flask_caching import Cache
+from flask import route
 import dash
 from dash import clientside_callback
 # import dash_bootstrap_components as dbc
@@ -134,6 +137,7 @@ def prepare_default_problem():
 
     return problem
 
+
 def get_initial_layout():
     session_id = str(uuid.uuid4())
 
@@ -240,7 +244,8 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
             source_node_value = nodeData['id']
             target_node_value = None
 
-        console_message = "clicked/tapped the node " + nodeData['id'].upper() + '; First node pos: ' + str(graph_elements[0]['position']) + '; Sec: ' + str(graph_elements[1]['position'])
+        console_message = "clicked/tapped the node " + nodeData['id'].upper() + '; First node pos: ' + str(
+            graph_elements[0]['position']) + '; Sec: ' + str(graph_elements[1]['position'])
 
     return console_message, source_node_value, target_node_value, selected_edge_index, \
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
@@ -352,7 +357,8 @@ def session_changed(new_session_id, old_session_id):
             logger.info(f"Copied problem from old to new session {old_session_id} -> {new_session_id}")
         elif problem is None:
             problem = get_problem_from_cache(new_session_id)
-            logger.info(f"There is no problem in old session {old_session_id}, but there is one in new session {new_session_id}")
+            logger.info(
+                f"There is no problem in old session {old_session_id}, but there is one in new session {new_session_id}")
 
         email = get_cached_value(new_session_id, CACHE_KEY_EMAIL)
 
@@ -364,7 +370,8 @@ def session_changed(new_session_id, old_session_id):
             return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options, new_session_id]
         else:
             logger.info(f"No email in new session.")
-            return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [{'value': '', 'label': 'Default'}], new_session_id]
+            return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [{'value': '', 'label': 'Default'}],
+                    new_session_id]
     else:
         logger.info(f"New session is empty.")
         return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [], dash.no_update]
@@ -389,6 +396,7 @@ clientside_callback(
     State("graph_presenter", "elements")
 )
 
+
 @app.callback(
     Output('graph_presenter', 'elements'),
     Input('temp-data-target', 'value'),
@@ -397,6 +405,7 @@ clientside_callback(
 def update_graph_container_post_callback(temp_data, elements):
     logger.info(f"update_graph_container_post_callback: {temp_data}")
     return elements
+
 
 # Changing elements broke the update cycle, positions are not updated after loading a problem
 # https://github.com/plotly/dash-cytoscape/issues/159
@@ -410,10 +419,8 @@ def update_graph_container_post_callback(temp_data, elements):
     State('graph_presenter', 'elements')
 )
 def load_problem_click(n_clicks, problem_name, session_id, elements):
-
     if n_clicks is None or not session_id:
-            raise PreventUpdate
-
+        raise PreventUpdate
 
     logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
 
@@ -436,8 +443,8 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         if problem.net.pos:
             pos = problem.net.pos
 
-        #new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
-        new_elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+        # new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
+        new_elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
 
         # elements_patch = Patch()
         # elements_patch[0]['position']['x'] = 10
@@ -448,7 +455,7 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         #         elements_patch[idx]['position']['x'] = new_elements[idx]['position']['x']
         #         elements_patch[idx]['position']['y'] = new_elements[idx]['position']['y']
 
-            #elements_patch[idx]['data'] = new_elements[idx]['data']
+        # elements_patch[idx]['data'] = new_elements[idx]['data']
 
         # elements_patch.extend(new_elements)
 
@@ -486,15 +493,16 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
     prevent_initial_call=True
 )
 def set_edge_params_click(
-        n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost, waste_discard_cost_deriv,
+        n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost,
+        waste_discard_cost_deriv,
         risk_cost, risk_cost_deriv, edge_loss, session_id, elements):
-
     if n_clicks is None:
         raise PreventUpdate
 
     selected_edge_index = int(selected_edge_index)
 
-    logger.info(f"set_edge_params_click: called for session_id: {session_id}, source_node: {source_node}, target_node: {target_node}, selected_edge_index: {selected_edge_index}")
+    logger.info(
+        f"set_edge_params_click: called for session_id: {session_id}, source_node: {source_node}, target_node: {target_node}, selected_edge_index: {selected_edge_index}")
 
     problem = get_problem_from_cache(session_id)
     problem.net.c_string[selected_edge_index] = (oper_cost, oper_cost_deriv)
@@ -513,7 +521,7 @@ def set_edge_params_click(
     if problem.net.pos:
         pos = problem.net.pos
 
-    elements = get_cytoscape_graph_elements(problem.net, G = G, pos = pos, labels = labels)
+    elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
 
     save_problem_to_cache(session_id, problem)
 
@@ -569,9 +577,58 @@ def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
         logger.info(f"save_problem_click: not saved - no session and not logged in")
         return "You need to log in to be able to save the problem setup!", {"display": "block"}
 
+
 if __name__ == "__main__":
     cache.init_app(server)
 
-    app.layout = get_initial_layout
+    server = make_server("localhost", 8050, server)
 
-    app.run_server(debug=True)
+
+    def run_app():
+        app.layout = get_initial_layout
+        server.run(debug=True, use_reloader=False)
+
+
+    dash_thread = threading.Thread(target=run_app)
+    dash_thread.start()
+
+    # app.layout = get_initial_layout
+    # app.run_server(debug=True)
+
+
+@app.route('/test')
+def test():
+    return 'Hello World!'
+
+#
+# def stop_execution():
+#     global keepPlot
+#     # stream.stop_stream()
+#     keepPlot = False
+#     # stop the Flask server
+#     server.shutdown()
+#     server_thread.join()
+#     print("Dash app stopped gracefully.")
+#
+#
+# server = Flask(__name__)
+# app = Dash(__name__, server=server)
+#
+# if __name__ == "__main__":
+#     # create a server instance
+#     server = make_server("localhost", 8050, server)
+#     # start the server in a separate thread
+#     server_thread = threading.Thread(target=server.serve_forever)
+#     server_thread.start()
+#
+#
+#     # start the Dash app in a separate thread
+#     def start_dash_app():
+#         app.run_server(debug=True, use_reloader=False)
+#
+#
+#     dash_thread = threading.Thread(target=start_dash_app)
+#     dash_thread.start()
+#
+#     while keepPlot:
+#         time.sleep(1)  # keep the main thread alive while the other threads are running
