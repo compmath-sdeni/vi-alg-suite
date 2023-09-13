@@ -13,7 +13,7 @@ from dash import clientside_callback
 # import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 from dash import html, dcc, Patch
-from dash.dependencies import Input, Output, State, ALL
+from dash.dependencies import Input, Output, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
 import networkx as nx
 
@@ -188,6 +188,8 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
     sourceNode = sourceNodes[0] if sourceNodes is not None else None
     graph_elements = graphs_elements[0]
 
+    problem = get_problem_from_cache(session_id)
+
     logger.info(f"onGraphElementClick: session_id: {session_id}; First node position: {graph_elements[0]['position']}")
 
     context = dash.ctx.triggered
@@ -216,22 +218,19 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
 
         source_node_value = edgeData['source']
         target_node_value = edgeData['target']
-        selected_edge_index = edgeData['edge_index']
+        selected_edge_index = int(edgeData['edge_index'])
 
-        oper_cost_value = edgeData['operational_cost'][0]
-        oper_cost_deriv_value = edgeData['operational_cost'][1]
+        oper_cost_value, oper_cost_deriv_value = problem.net.c_string[selected_edge_index]
+        waste_discard_cost_value, waste_discard_cost_deriv_value = problem.net.z_string[selected_edge_index]
 
-        waste_discard_cost_value = edgeData['waste_discard_cost'][0]
-        waste_discard_cost_deriv_value = edgeData['waste_discard_cost'][1]
 
-        if ('risk_cost' in edgeData) and (edgeData['risk_cost'] != ''):
-            risk_cost_value = edgeData['risk_cost'][0]
-            risk_cost_deriv_value = edgeData['risk_cost'][1]
+        if problem.net.r_string and selected_edge_index < len(problem.net.r_string):
+            risk_cost_value, risk_cost_deriv_value = problem.net.r_string[selected_edge_index]
         else:
             risk_cost_value = ''
             risk_cost_deriv_value = ''
 
-        alpha_value = edgeData['alpha']
+        alpha_value = problem.net.edge_loss[selected_edge_index]
 
         console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData[
             'target'].upper()
@@ -487,7 +486,8 @@ def load_problem_click(n_clicks, problem_name, session_id): # , elements
 # dash callback for click on button with id="set-edge-params-button"
 
 @app.callback(
-    Output({"type":"graph_presenter", "id": ALL}, 'elements', allow_duplicate=True),
+#    Output('graph-container', 'children', allow_duplicate=True),
+    Output('console-output', 'children', allow_duplicate=True),
     Input('set-edge-params-button', 'n_clicks'),
     State('source-node-input', 'value'),
     State('target-node-input', 'value'),
@@ -500,13 +500,14 @@ def load_problem_click(n_clicks, problem_name, session_id): # , elements
     State('risk-cost-deriv-input', 'value'),
     State('edge-loss-input', 'value'),
     State('session-id', 'data'),
-    State({"type":"graph_presenter", "id": ALL}, 'elements'),
+#    State({"type":"graph_presenter", "id": MATCH}, 'elements'),
     prevent_initial_call=True
 )
 def set_edge_params_click(
         n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost,
         waste_discard_cost_deriv,
-        risk_cost, risk_cost_deriv, edge_loss, session_id, elements):
+        risk_cost, risk_cost_deriv, edge_loss, session_id):
+
     if n_clicks is None:
         raise PreventUpdate
 
@@ -527,16 +528,20 @@ def set_edge_params_click(
 
     problem.net.update_functions_from_strings()
 
-    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
-
-    if problem.net.pos:
-        pos = problem.net.pos
-
-    elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
-
     save_problem_to_cache(session_id, problem)
 
-    return elements
+    # do not need to update view?
+    # G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+    #
+    # if problem.net.pos:
+    #     pos = problem.net.pos
+    #     logger.info(f"load_problem_click: positions got from the problem.net structure.")
+    # else:
+    #     logger.info(f"load_problem_click: positions calculated by to_nx_graph.")
+    #
+    # new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
+
+    return f"Edge parameters updated for edge {source_node} -> {target_node}"
 
 
 @app.callback(
@@ -578,8 +583,8 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
 
         problem = get_problem_from_cache(session_id)
 
-        update_net_by_cytoscape_elements(graph_elements, problem.net)
-        problem.net.update_functions_from_strings()
+        # update_net_by_cytoscape_elements(graph_elements, problem.net)
+        # problem.net.update_functions_from_strings()
 
         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 
