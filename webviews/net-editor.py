@@ -13,7 +13,7 @@ from dash import clientside_callback
 # import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 from dash import html, dcc, Patch
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ALL
 from dash.exceptions import PreventUpdate
 import networkx as nx
 
@@ -165,22 +165,35 @@ def get_initial_layout():
         Output('edge-loss-input', 'value'),
     ],
     [
-        Input('graph_presenter', 'tapEdgeData'),
-        Input('graph_presenter', 'tapNodeData')
+        Input({"type":"graph_presenter", "id": ALL}, 'tapEdgeData'),
+        Input({"type":"graph_presenter", "id": ALL}, 'tapNodeData')
     ],
     [
         State('source-node-input', 'value'),
         State('target-node-input', 'value'),
-        State('graph_presenter', 'elements'),
+        State({"type":"graph_presenter", "id": ALL}, 'elements'),
         State('session-id', 'data')
     ],
     prevent_initial_call=True
 )
-def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elements, session_id):
+def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_elements, session_id):
+
+    # Only one graph presenter is used, so there should be only one element in the list
+    if len(graphs_elements) != 1:
+        logger.error(f"onGraphElementClick: len(graphs_elements) != 1: {len(graphs_elements)}")
+        raise PreventUpdate
+
+    edgeData = edgeDatas[0]
+    nodeData = nodeDatas[0]
+    sourceNode = sourceNodes[0] if sourceNodes is not None else None
+    graph_elements = graphs_elements[0]
+
     logger.info(f"onGraphElementClick: session_id: {session_id}; First node position: {graph_elements[0]['position']}")
 
     context = dash.ctx.triggered
     event_source = context[0]['prop_id']
+
+    logger.info(f"onGraphElementClick event source: {event_source}")
 
     source_node_value = dash.no_update
     target_node_value = dash.no_update
@@ -196,7 +209,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
     console_message = ''
 
-    if event_source == 'graph_presenter.tapEdgeData' and edgeData:
+    if event_source.endswith('.tapEdgeData') and edgeData:
         logger.info(f"onGraphElementClick: edge data: {edgeData}")
         set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, edgeData)
         set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, None)
@@ -222,7 +235,7 @@ def onGraphElementClick(edgeData, nodeData, sourceNode, targetNode, graph_elemen
 
         console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData[
             'target'].upper()
-    elif context[0]['prop_id'] == 'graph_presenter.tapNodeData' and nodeData:
+    elif event_source.endswith('.tapNodeData') and nodeData:
         logger.info(f"onGraphElementClick: node data: {nodeData}")
 
         for el in graph_elements:
@@ -382,28 +395,21 @@ clientside_callback(
         console.log("clientside_callback:  " + data);
         console.log(elements);
         
-        new_elements = JSON.parse(data);
-        
-        elements[0].position.x = new_elements[0].position.x;
-        elements[0].position.y = new_elements[0].position.y;
-        
         return 'ready';
     }
     """,
     Output('temp-data-target', 'value'),
     Input('temp-data', 'value'),
-    State("graph_presenter", "elements")
+    State({"type":"graph_presenter", "id": ALL}, "elements")
 )
 
 
-@app.callback(
-    Output('graph_presenter', 'elements'),
-    Input('temp-data-target', 'value'),
-    State('graph_presenter', 'elements')
-)
-def update_graph_container_post_callback(temp_data, elements):
-    logger.info(f"update_graph_container_post_callback: {temp_data}")
-    return elements
+# @app.callback(
+#     Input('temp-data-target', 'value'),
+#     State('graph_presenter', 'elements')
+# )
+# def update_graph_container_post_callback(temp_data, elements):
+#     logger.info(f"update_graph_container_post_callback: {temp_data}")
 
 
 # Changing elements broke the update cycle, positions are not updated after loading a problem
@@ -415,9 +421,10 @@ def update_graph_container_post_callback(temp_data, elements):
     Input('load-problem-button', 'n_clicks'),
     State('user-saved-problems', 'value'),
     State('session-id', 'data'),
-    State('graph_presenter', 'elements')
+#    State('graph_presenter', 'elements'),
+    prevent_initial_call=True
 )
-def load_problem_click(n_clicks, problem_name, session_id, elements):
+def load_problem_click(n_clicks, problem_name, session_id): # , elements
     if n_clicks is None or not session_id:
         raise PreventUpdate
 
@@ -441,9 +448,14 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
 
         if problem.net.pos:
             pos = problem.net.pos
+            logger.info(f"load_problem_click: positions got from the problem.net structure.")
+        else:
+            logger.info(f"load_problem_click: positions calculated by to_nx_graph.")
 
-        # new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
-        new_elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
+        logger.info(f"load_problem_click positions: {pos}")
+
+        new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
+        # new_elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
 
         # elements_patch = Patch()
         # elements_patch[0]['position']['x'] = 10
@@ -466,7 +478,7 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
         save_problem_to_cache(session_id, problem)
 
         logger.info(f"load_problem_click: elements ready.")
-        return dash.no_update, problem_name, json.dumps(new_elements)
+        return new_graph_view, problem_name, 'NOT_USED' # json.dumps(new_elements)
     else:
         logger.info(f"Problem directory does not exist: {problem_dir_name}")
         return dash.no_update, dash.no_update, dash.no_update
@@ -475,7 +487,7 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
 # dash callback for click on button with id="set-edge-params-button"
 
 @app.callback(
-    Output('graph_presenter', 'elements', allow_duplicate=True),
+    Output({"type":"graph_presenter", "id": ALL}, 'elements', allow_duplicate=True),
     Input('set-edge-params-button', 'n_clicks'),
     State('source-node-input', 'value'),
     State('target-node-input', 'value'),
@@ -488,7 +500,7 @@ def load_problem_click(n_clicks, problem_name, session_id, elements):
     State('risk-cost-deriv-input', 'value'),
     State('edge-loss-input', 'value'),
     State('session-id', 'data'),
-    State('graph_presenter', 'elements'),
+    State({"type":"graph_presenter", "id": ALL}, 'elements'),
     prevent_initial_call=True
 )
 def set_edge_params_click(
@@ -537,11 +549,11 @@ def set_edge_params_click(
     ],
     [
         State('save-problem-name-input', 'value'),
-        State('graph_presenter', 'elements'),
+        State({"type":"graph_presenter", "id": ALL}, 'elements'),
         State('session-id', 'data')
     ]
 )
-def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
+def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
     if n_clicks is None:
         raise PreventUpdate
 
@@ -549,6 +561,13 @@ def save_problem_click(n_clicks, problem_name, graph_elements, session_id):
         return "Please enter problem name", {'color': 'red'}
 
     logger.info(f"save_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+
+    # Only one graph presenter is used, so there should be only one element in the list
+    if len(graphs_elements) != 1:
+        logger.error(f"save_problem_click: len(graphs_elements) != 1: {len(graphs_elements)}")
+        raise PreventUpdate
+
+    graph_elements = graphs_elements[0]
 
     for elem in graph_elements:
         if 'position' in elem:

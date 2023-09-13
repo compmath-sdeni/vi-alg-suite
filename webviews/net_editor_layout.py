@@ -1,4 +1,5 @@
 from typing import List, Dict
+import uuid
 
 import dash_cytoscape as cyto
 from dash import html, dcc
@@ -66,8 +67,14 @@ def update_net_by_cytoscape_elements(graph_elements: List[Dict], net: BloodSuppl
 
 
 def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
+
+    # get new uuid for the graph with non alphanumeric characters removed
+    n = str(uuid.uuid4())
+    n = ''.join(e for e in n if e.isalnum())
+    logger.info(f"build_graph_view_layout: id {n}")
+
     return cyto.Cytoscape(
-        id="graph_presenter",
+        id={"type" : "graph_presenter", "id" : n}, # id={'type':'cyto', 'index':n},
         layout={"name": "preset"},
         style={"width": "98%", "height": "98%"},
         elements=get_cytoscape_graph_elements(net, G=G, pos=pos, labels=labels),
@@ -94,7 +101,9 @@ def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
         ]
     )
 
-def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
+def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_node_id: str = '',
+               selected_edge_index: str = '', temp_data: str = '', temp_data_target: str = ''):
+
     logger.info(f"get_layout called - creating application layout. Session: {session_id}")
 
     G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0, update_positions=True)
@@ -104,10 +113,10 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str):
         children=[
             dcc.Store(data=session_id, id='session-id', storage_type='session'),
             dcc.Input(id='session-id-input', type='hidden', value=session_id),
-            dcc.Input(id='selected-node-id', type='hidden', value=''),
-            dcc.Input(id='selected-edge-index', type='hidden', value=''),
-            dcc.Input(id='temp-data', type='hidden', value=''),
-            dcc.Input(id='temp-data-target', type='hidden', value=''),
+            dcc.Input(id='selected-node-id', type='hidden', value=selected_node_id),
+            dcc.Input(id='selected-edge-index', type='hidden', value=selected_edge_index),
+            dcc.Input(id='temp-data', type='hidden', value=temp_data),
+            dcc.Input(id='temp-data-target', type='hidden', value=temp_data_target),
             html.Div(
                 className="row vh-100",
                 children=[
