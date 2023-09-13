@@ -467,6 +467,21 @@ class BloodSupplyNetwork:
             "pos": self.pos
         }
 
+        if self.c_string is not None:
+            network_data["c"] = []
+            for func, deriv in self.c_string:
+                network_data["c"].append({'f': func, 'df': deriv})
+
+        if self.z_string is not None:
+            network_data["z"] = []
+            for func, deriv in self.z_string:
+                network_data["z"].append({'f': func, 'df': deriv})
+
+        if self.r_string is not None:
+            network_data["r"] = []
+            for func, deriv in self.r_string:
+                network_data["r"].append({'f': func, 'df': deriv})
+
         #   print(f"Current pos: {self.pos}")
 
         # for edge in self.edges:
@@ -491,6 +506,23 @@ class BloodSupplyNetwork:
             self.lam_plus = net_data["lam_plus"]
             self.theta = net_data["theta"]
             self.edges = net_data["edges"]
+
+            if "c" in net_data:
+                self.c_string = []
+                for data in net_data["c"]:
+                    self.c_string.append((data['f'], data['df']))
+
+            if "z" in net_data:
+                self.z_string = []
+                for data in net_data["z"]:
+                    self.z_string.append((data['f'], data['df']))
+
+            if "r" in net_data:
+                self.r_string = []
+                for data in net_data["r"]:
+                    self.r_string.append((data['f'], data['df']))
+
+            self.update_functions_from_strings()
 
             self.pos = {}
             for node_idx in net_data["pos"]:
