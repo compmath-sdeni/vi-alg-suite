@@ -20,6 +20,19 @@ def get_saved_problems_list():
     ]
 
 
+def get_available_solvers():
+    return [
+        {"name": "Tseng", "code": "tseng"},
+        {"name": "Tseng adaptive", "code": "tseng_adaptive"},
+        # {"name": "Korpele", "code": "korpele"},
+        # {"name": "Korpele adaptive", "code": "korpele_adapt"},
+        {"name": "Extrapol from past", "code": "extrapol_from_past"},
+        {"name": "Extrapol from past adaptive", "code": "extrapol_from_past_adaptive"},
+        {"name": "Malitsky Tam", "code": "malitsky_tam"},
+        {"name": "Malitsky Tam adaptive", "code": "malitsky_tam_adaptive"}
+    ]
+
+
 def get_cytoscape_graph_elements(net: BloodSupplyNetwork, *, G: nx.Graph = None, pos: dict = None, labels: dict = None):
     if G is None:
         G, pos, labels = net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
@@ -67,14 +80,13 @@ def update_net_by_cytoscape_elements(graph_elements: List[Dict], net: BloodSuppl
 
 
 def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
-
     # get new uuid for the graph with non alphanumeric characters removed
     n = str(uuid.uuid4())
     n = ''.join(e for e in n if e.isalnum())
     logger.info(f"build_graph_view_layout: id {n}")
 
     return cyto.Cytoscape(
-        id={"type" : "graph_presenter", "id" : n}, # id={'type':'cyto', 'index':n},
+        id={"type": "graph_presenter", "id": n},  # id={'type':'cyto', 'index':n},
         layout={"name": "preset"},
         style={"width": "98%", "height": "98%"},
         elements=get_cytoscape_graph_elements(net, G=G, pos=pos, labels=labels),
@@ -101,9 +113,9 @@ def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
         ]
     )
 
+
 def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_node_id: str = '',
                selected_edge_index: str = '', temp_data: str = '', temp_data_target: str = ''):
-
     logger.info(f"get_layout called - creating application layout. Session: {session_id}")
 
     G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0, update_positions=True)
@@ -126,7 +138,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                     html.Div(className="col-sm-7", style={"border": "1px solid gray"}, children=[
                         html.H4("User and session", className="bg-info text-white p-2 mb-2 text-center"),
                         html.Div(className="form", children=[
-                            html.Div(id="login-form-block", children=[
+                            html.Div(id="login-form-block", className="mb-2", children=[
                                 html.Div(className="row align-items-left mt-2", children=[
                                     html.Div(className="col-sm-3", children=[
                                         dcc.Input(id='email-input', type='text',
@@ -142,7 +154,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                     ]),
                                 ])
                             ]),
-                            html.Div(id="user-session-block", style={"display": "none"}, children=[
+                            html.Div(id="user-session-block", className="mb-2", style={"display": "none"}, children=[
                                 html.Div(className="row align-items-left mt-2 ml-2", children=[
                                     html.Div(className="col-sm-2 mt-1", children=[
                                         html.Span("Hello, "),
@@ -154,7 +166,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                     className="btn btn-warning"),
                                     ]),
                                     html.Div(className="col-sm-6", children=[
-                                        dcc.Dropdown(id='user-saved-problems', className="form-select",
+                                        dcc.Dropdown(id='user-saved-problems',
                                                      options=[{'value': problem["value"], 'label': problem["value"]} for
                                                               problem in get_saved_problems_list()], value=None,
                                                      placeholder="Select problem")
@@ -169,127 +181,159 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                      style={"display": "none", "textAlign": "center"})
                         ]),
 
-                        html.H4("Problem editor", className="bg-primary text-white p-2 mb-2 mt-2 text-center"),
-                        html.Div(className="form",
-                                 children=[
-                                     html.Div([html.H4("Edge data", className="my-0 py-0")],
-                                              className="form row align-items-left mt-2 g-1"),
-                                     html.Div(className="form row align-items-left mt-2 g-1",
-                                              children=[
-                                                  html.Div(className="col-sm-1", children=[
-                                                      html.Label("Source", htmlFor="source-node-input",
-                                                                 className="form-label"),
-                                                      dcc.Input(id='source-node-input', type='text',
-                                                                placeholder="1", className="form-control"),
-                                                  ]),
-                                                  html.Div(className="col-sm-1", children=[
-                                                      html.Label("Dest.", htmlFor="target-node-input",
-                                                                 className="form-label"),
-                                                      dcc.Input(id='target-node-input', type='text',
-                                                                placeholder="2", className="form-control"),
-                                                  ]),
-                                                  html.Div(className="col-sm-3", children=[
-                                                      html.Label("Operational cost: c(f); c'(f)",
-                                                                 htmlFor="oper-cost-input",
-                                                                 className="form-label"),
-                                                      html.Div(className="row g-1", children=[
-                                                          html.Div(className="col-sm-8", children=[
-                                                              dcc.Input(id='oper-cost-input', type='text',
-                                                                        placeholder="e.g. f^2+3*f+1",
+                        dcc.Tabs([
+                            dcc.Tab(label='Problem editor', children=[
+                                html.Div(className="form",
+                                         children=[
+                                             html.Hr(),
+                                             html.Div([html.H4("Edge data", className="my-0 py-0")],
+                                                      className="form row align-items-left mt-2 g-1"),
+                                             html.Div(className="form row align-items-left mt-2 g-1",
+                                                      children=[
+                                                          html.Div(className="col-sm-1", children=[
+                                                              html.Label("Source", htmlFor="source-node-input",
+                                                                         className="form-label"),
+                                                              dcc.Input(id='source-node-input', type='text',
+                                                                        placeholder="1", className="form-control"),
+                                                          ]),
+                                                          html.Div(className="col-sm-1", children=[
+                                                              html.Label("Dest.", htmlFor="target-node-input",
+                                                                         className="form-label"),
+                                                              dcc.Input(id='target-node-input', type='text',
+                                                                        placeholder="2", className="form-control"),
+                                                          ]),
+                                                          html.Div(className="col-sm-3", children=[
+                                                              html.Label("Operational cost: c(f); c'(f)",
+                                                                         htmlFor="oper-cost-input",
+                                                                         className="form-label"),
+                                                              html.Div(className="row g-1", children=[
+                                                                  html.Div(className="col-sm-8", children=[
+                                                                      dcc.Input(id='oper-cost-input', type='text',
+                                                                                placeholder="e.g. f^2+3*f+1",
+                                                                                className="form-control"),
+                                                                  ]),
+                                                                  html.Div(className="col-sm-4", children=[
+                                                                      dcc.Input(id='oper-cost-deriv-input', type='text',
+                                                                                placeholder="2*f+3",
+                                                                                className="form-control"),
+                                                                  ])
+                                                              ]),
+                                                          ]),
+                                                          html.Div(className="col-sm-3", children=[
+                                                              html.Label("Waste cost: z(f); z'(f)",
+                                                                         htmlFor="waste-discard-cost-input",
+                                                                         className="form-label"),
+                                                              html.Div(className="row g-1", children=[
+                                                                  html.Div(className="col-sm-7", children=[
+                                                                      dcc.Input(id='waste-discard-cost-input',
+                                                                                type='text',
+                                                                                placeholder="e.g. 0.75*f",
+                                                                                className="form-control"),
+                                                                  ]),
+                                                                  html.Div(className="col-sm-5", children=[
+                                                                      dcc.Input(id='waste-discard-cost-deriv-input',
+                                                                                type='text',
+                                                                                placeholder="0.75",
+                                                                                className="form-control"),
+
+                                                                  ])
+                                                              ]),
+
+                                                          ]),
+                                                          html.Div(className="col-sm-3", children=[
+                                                              html.Label("Risk cost: r(f); r'(f)",
+                                                                         htmlFor="risk-cost-input",
+                                                                         className="form-label"),
+                                                              html.Div(className="row g-1", children=[
+                                                                  html.Div(className="col-sm-6", children=[
+                                                                      dcc.Input(id='risk-cost-input', type='text',
+                                                                                placeholder="e.g. 1.5*f",
+                                                                                className="form-control"),
+                                                                  ]),
+                                                                  html.Div(className="col-sm-6", children=[
+                                                                      dcc.Input(id='risk-cost-deriv-input', type='text',
+                                                                                placeholder="1.5",
+                                                                                className="form-control"),
+                                                                  ]),
+                                                              ]),
+                                                          ]),
+                                                          html.Div(className="col-sm-1", children=[
+                                                              html.Label("1-loss", htmlFor="edge-loss-input",
+                                                                         className="form-label"),
+                                                              dcc.Input(id='edge-loss-input', type='text',
+                                                                        placeholder="e.g. 0.9",
                                                                         className="form-control"),
                                                           ]),
+                                                      ]),
+                                             html.Div(className="form row align-items-left mt-2 g-1",
+                                                      children=[
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Button("Add Edge", id='add-edge-button',
+                                                                          className="btn btn-primary"),
+                                                          ]),
+
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Button("Set edge parameters",
+                                                                          id='set-edge-params-button',
+                                                                          className="btn btn-info"),
+                                                          ]),
+
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Button("Remove Edge", id='remove-edge-button',
+                                                                          className="btn btn-danger"),
+                                                          ]),
+                                                      ]),
+                                             html.Hr(),
+                                             html.Div([html.H4("Node data", className="my-0 py-0")],
+                                                      className="form row align-items-left mt-2 g-1"),
+                                             html.Hr(),
+                                             html.Div([html.H4("Save problem", className="my-0 py-0")],
+                                                      className="form row align-items-left mt-2 g-1"),
+                                             html.Div("Name will be name of folder with the problem data",
+                                                      className="form row align-items-left mt-2 g-1"),
+                                             html.Div(className="form row align-items-left mt-2 g-1",
+                                                      children=[
                                                           html.Div(className="col-sm-4", children=[
-                                                              dcc.Input(id='oper-cost-deriv-input', type='text',
-                                                                        placeholder="2*f+3",
+                                                              dcc.Input(id='save-problem-name-input', type='text',
+                                                                        placeholder="problem name",
                                                                         className="form-control"),
+                                                          ]),
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Button("Save", id='save-problem-button',
+                                                                          className="btn btn-success"),
+                                                          ]),
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Div(id="save-error-block",
+                                                                       className="alert alert-danger",
+                                                                       style={"display": "none", "textAlign": "center"})
                                                           ])
                                                       ]),
-                                                  ]),
-                                                  html.Div(className="col-sm-3", children=[
-                                                      html.Label("Waste cost: z(f); z'(f)",
-                                                                 htmlFor="waste-discard-cost-input",
-                                                                 className="form-label"),
-                                                      html.Div(className="row g-1", children=[
-                                                          html.Div(className="col-sm-7", children=[
-                                                              dcc.Input(id='waste-discard-cost-input', type='text',
-                                                                        placeholder="e.g. 0.75*f",
-                                                                        className="form-control"),
-                                                          ]),
-                                                          html.Div(className="col-sm-5", children=[
-                                                              dcc.Input(id='waste-discard-cost-deriv-input',
-                                                                        type='text',
-                                                                        placeholder="0.75",
-                                                                        className="form-control"),
-
-                                                          ])
-                                                      ]),
-
-                                                  ]),
-                                                  html.Div(className="col-sm-3", children=[
-                                                      html.Label("Risk cost: r(f); r'(f)", htmlFor="risk-cost-input",
-                                                                 className="form-label"),
-                                                      html.Div(className="row g-1", children=[
-                                                          html.Div(className="col-sm-6", children=[
-                                                              dcc.Input(id='risk-cost-input', type='text',
-                                                                        placeholder="e.g. 1.5*f",
-                                                                        className="form-control"),
-                                                          ]),
-                                                          html.Div(className="col-sm-6", children=[
-                                                              dcc.Input(id='risk-cost-deriv-input', type='text',
-                                                                        placeholder="1.5",
-                                                                        className="form-control"),
-                                                          ]),
-                                                      ]),
-                                                  ]),
-                                                  html.Div(className="col-sm-1", children=[
-                                                      html.Label("1-loss", htmlFor="edge-loss-input",
-                                                                 className="form-label"),
-                                                      dcc.Input(id='edge-loss-input', type='text',
-                                                                placeholder="e.g. 0.9",
-                                                                className="form-control"),
-                                                  ]),
-                                              ]),
-                                     html.Div(className="form row align-items-left mt-2 g-1",
-                                              children=[
-                                                  html.Div(className="col-auto", children=[
-                                                      html.Button("Add Edge", id='add-edge-button',
-                                                                  className="btn btn-primary"),
-                                                  ]),
-
-                                                  html.Div(className="col-auto", children=[
-                                                      html.Button("Set edge parameters", id='set-edge-params-button',
-                                                                  className="btn btn-info"),
-                                                  ]),
-
-                                                  html.Div(className="col-auto", children=[
-                                                      html.Button("Remove Edge", id='remove-edge-button',
-                                                                  className="btn btn-danger"),
-                                                  ]),
-                                              ]),
-                                     html.Hr(),
-                                     html.Div([html.H4("Node data", className="my-0 py-0")],
-                                              className="form row align-items-left mt-2 g-1"),
-                                     html.Hr(),
-                                     html.Div([html.H4("Save problem", className="my-0 py-0")],
-                                              className="form row align-items-left mt-2 g-1"),
-                                     html.Div("Name will be name of folder with the problem data",
-                                              className="form row align-items-left mt-2 g-1"),
-                                     html.Div(className="form row align-items-left mt-2 g-1",
-                                              children=[
-                                                  html.Div(className="col-sm-4", children=[
-                                                      dcc.Input(id='save-problem-name-input', type='text',
-                                                                placeholder="problem name", className="form-control"),
-                                                  ]),
-                                                  html.Div(className="col-auto", children=[
-                                                      html.Button("Save", id='save-problem-button',
-                                                                  className="btn btn-success"),
-                                                  ]),
-                                                  html.Div(className="col-auto", children=[
-                                                      html.Div(id="save-error-block", className="alert alert-danger",
-                                                               style={"display": "none", "textAlign": "center"})
-                                                  ])
-                                              ])
-                                 ]),
+                                         ]),
+                            ]),
+                            dcc.Tab(label='Problem solver', children=[
+                                html.Hr(),
+                                html.Div(className="form", children=[
+                                    html.Div([
+                                        html.Div(className="col-sm-3", children=[
+                                            html.H4("Solve the problem")
+                                        ]),
+                                        html.Div(className="col-sm-3", children=[
+                                            dcc.Dropdown(id='solver-methods',
+                                                         options=[{'value': method["code"],
+                                                                   'label': method["name"]} for
+                                                                  method in get_available_solvers()],
+                                                         value=None,
+                                                         placeholder="Select solver"),
+                                        ]),
+                                        html.Div(className="col-sm-3", children=[
+                                            html.Div(children=[
+                                                html.Button("Solve", id='solve-problem-button',
+                                                            className="btn btn-success"),
+                                            ])]),
+                                    ], className="form row"),
+                                ]),
+                            ]),
+                        ]),
                         html.H4("Console output", className="bg-info p-1 mb-1 mt-4 text-center"),
                         html.Div(id='console-output'),
                     ])

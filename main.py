@@ -209,8 +209,8 @@ sys.stdout = captured_io
 # N = 10
 # def_lam = 1./(4.*N)
 #
-# x0 = np.array([i+1 for i in range(N)])
-# x1 = np.array([i+0.5 for i in range(N)])
+# params.x0 = np.array([i+1 for i in range(N)])
+# params.x1 = np.array([i+0.5 for i in range(N)])
 #
 # real_solution = np.array([0.5 for i in range(N)])
 #
@@ -225,7 +225,7 @@ sys.stdout = captured_io
 #               lambda x: (np.sum(x) - N/2) ** 2,
 #               lambda x: np.ones(N) * 2 * (np.sum(x) - N/2),
 #               C=constraints,
-#               x0=x0,
+#               x0=params.x0,
 #               hr_name='$(x_1 + x_2 + ... + x_n - n/2)^2->min, C = [-5,5]x[-5,5], N = {0}$'.format(N),
 #               xtest=real_solution
 #               )
@@ -294,7 +294,7 @@ sys.stdout = captured_io
 # problem = blood_delivery_test_one.prepareProblem(algorithm_params=params, show_network = False)
 
 # problem = blood_delivery_test_two.prepareProblem(algorithm_params=params, show_network=True)
-problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=True)
+# problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=True)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
