@@ -401,19 +401,21 @@ class AlgsRunner:
 
 
 if __name__ == "__main__":
-    params = AlgorithmParams(
-        eps=1e-5,
-        min_iters=10,
-        max_iters=500,
-        lam=0.01,
-        lam_KL=0.005,
-        start_adaptive_lam=0.5,
-        start_adaptive_lam1=0.5,
-        adaptive_tau=0.75,
-        adaptive_tau_small=0.45,
-        save_history=True,
-        excel_history=True
-    )
+    params_dict = {
+        'eps': 1e-5,
+        'min_iters': 10,
+        'max_iters': 500,
+        'lam': 0.01,
+        'lam_KL': 0.005,
+        'start_adaptive_lam': 0.5,
+        'start_adaptive_lam1': 0.5,
+        'adaptive_tau': 0.75,
+        'adaptive_tau_small': 0.45,
+        'save_history': True,
+        'excel_history': True
+    }
+
+    params = AlgorithmParams(**params_dict)
     problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
     alg_names = ['Tseng', 'MT']
 
