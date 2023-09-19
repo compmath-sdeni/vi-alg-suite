@@ -11,9 +11,11 @@ from utils.print_utils import vectorToString
 class HarkerTest(VIProblem):
     def __init__(self, M: int, *, C: ConvexSetConstraints = None,
                  matr: np.ndarray = None, q: np.ndarray = None,
-                 x0: np.ndarray = None, hr_name: str = None, lam_override: float = None,
-                 xtest: np.ndarray = None):
-        super().__init__(x0=x0 if x0 is not None else np.ones(M), C=C, hr_name=hr_name, lam_override=lam_override, xtest=xtest)
+                 x0: np.ndarray = None, hr_name: str = None, unique_name: str = 'HarkerTestProblem',
+                 lam_override: float = None, xtest: np.ndarray = None):
+
+        super().__init__(x0=x0 if x0 is not None else np.ones(M), C=C, hr_name=hr_name, unique_name=unique_name,
+                         lam_override=lam_override, xtest=xtest)
 
         if matr is None:
             self.M = M

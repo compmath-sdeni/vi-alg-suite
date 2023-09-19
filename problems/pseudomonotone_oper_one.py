@@ -15,12 +15,12 @@ class PseudoMonotoneOperOne(VIProblem):
                  *,
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints, vis: Sequence[VisualParams] = None,
-                 hr_name: str = None,
+                 hr_name: str = None, unique_name: str = 'PseudoMonotoneOperOneProblem',
                  lam_override: float = None,
                  lam_override_by_method: dict = None
                  ):
-        super().__init__(xtest=np.array([0, 0, 0]), x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
-                         lam_override_by_method=lam_override_by_method)
+        super().__init__(xtest=np.array([0, 0, 0]), x0=x0, C=C, hr_name=hr_name, unique_name=unique_name,
+                         lam_override=lam_override, lam_override_by_method=lam_override_by_method)
 
         self.arity = 3
         self.L = 5.068

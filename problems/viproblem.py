@@ -19,9 +19,6 @@ class VIProblem(Problem):
         defx[ydim] = y
         return self.F(defx)
 
-    def Name(self) -> str:
-        pass
-
     def Draw2DProj(self, fig, ax, vis, xdim, ydim, curX=None, mutableOnly=False):
         return None
 

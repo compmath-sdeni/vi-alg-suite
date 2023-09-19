@@ -62,10 +62,13 @@ from methods.korpelevich import Korpelevich
 from utils.test_alghos import BasicAlgoTests
 
 class AlgsRunner:
-    def __init__(self, *, problem: VIProblem = None, params: AlgorithmParams = None, show_output: bool = True):
+    def __init__(self, *, problem: VIProblem = None, params: AlgorithmParams = None, show_output: bool = True, base_save_dir: str = 'storage/alg_run_stats'):
         self.available_algs:List[Dict[(str, IterGradTypeMethod)]] = None
         self.available_algs_dict: Dict[str, IterGradTypeMethod] = None
         self.problem: VIProblem = problem
+
+        self.base_save_dir: str = base_save_dir
+        os.makedirs(self.base_save_dir, exist_ok=True)
 
         if params is None:
             self.params: AlgorithmParams = AlgorithmParams(
@@ -100,6 +103,8 @@ class AlgsRunner:
             res = harker_test.prepareProblem(algorithm_params=self.params)
         elif problem_name.lower() == 'minmax_game_1'.lower():
             res = minmax_game_1.prepareProblem(algorithm_params=self.params)
+        elif problem_name.lower() == 'blood_supply'.lower():
+            res = blood_delivery_test_three.prepareProblem(algorithm_params=self.params)
 
         self.problem = res
 
@@ -217,15 +222,15 @@ class AlgsRunner:
 
         return self.available_algs
 
-    def run_algs(self, algs_to_test_names: List[str]):
+    def run_algs(self, algs_to_test_names: List[str], data_folder_name: str, *, show_output: bool = True):
 
         self.captured_io = io.StringIO()
         sys.stdout = self.captured_io
 
         start = time.monotonic()
 
-        saved_history_dir = f"storage/stats/BloodSupply-{datetime.datetime.today().strftime('%Y-%m')}"
-        test_mnemo = f"{self.problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        saved_history_dir = f"{self.base_save_dir}/{data_folder_name}/{self.problem.GetUniqueName()}-{datetime.datetime.today().strftime('%Y-%m')}"
+        test_mnemo = f"{self.problem.GetUniqueName()}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
         os.makedirs(saved_history_dir, exist_ok=True)
 
@@ -233,10 +238,15 @@ class AlgsRunner:
         self.params.saveToDir(os.path.join(saved_history_dir, "params"))
 
         print(f"Problem: {self.problem.GetFullDesc()}")
+        print(f"Algorithms: {algs_to_test_names}")
+
+        print()
 
         print(f"eps: {self.params.eps}; tau1: {self.params.adaptive_tau}; tau2: {self.params.adaptive_tau_small}; "
               f"start_lam: {self.params.start_adaptive_lam}; start_lam1: {self.params.start_adaptive_lam1}; "
               f"lam: {self.params.lam}; lam_KL: {self.params.lam_KL}")
+
+        print()
 
         if self.params.save_history and self.params.excel_history:
             writer = pd.ExcelWriter(
@@ -391,7 +401,26 @@ class AlgsRunner:
 
 
 if __name__ == "__main__":
-    runner = AlgsRunner()
-    runner.prepare_predefined_problem('pseudo_mono_3')
+    params = AlgorithmParams(
+        eps=1e-5,
+        min_iters=10,
+        max_iters=500,
+        lam=0.01,
+        lam_KL=0.005,
+        start_adaptive_lam=0.5,
+        start_adaptive_lam1=0.5,
+        adaptive_tau=0.75,
+        adaptive_tau_small=0.45,
+        save_history=True,
+        excel_history=True
+    )
+    problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
+    alg_names = ['Tseng', 'MT']
+
+    runner = AlgsRunner(problem=problem, params=params)
+
+    # runner.prepare_predefined_problem('minmax_game_1')
+    # runner.prepare_predefined_problem('blood_supply')
+
     runner.init_algs()
-    runner.run_algs(['Tseng', 'MT'])
+    runner.run_algs(alg_names, 'local_test_runs')

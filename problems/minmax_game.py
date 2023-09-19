@@ -16,12 +16,16 @@ class MinMaxGame(VIProblem):
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints,
                  vis: Sequence[VisualParams] = None,
-                 hr_name: str = None,
+                 hr_name: str = None, unique_name: str = None,
                  x_test: np.ndarray = None,
                  lam_override: float = None,
                  lam_override_by_method: dict = None
                  ):
-        super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
+
+        if unique_name is None:
+            unique_name = f"MinMaxGame-{P.shape[1]}x{P.shape[0]}"
+
+        super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, unique_name=unique_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method)
 
         self.m = P.shape[1]

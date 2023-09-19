@@ -16,6 +16,7 @@ class Problem:
                  x0: Union[np.ndarray, float] = None,
                  C: ConvexSetConstraints = None,
                  hr_name: str = None,
+                 unique_name: str = None,
                  x_dim: int = None,
                  lam_override: float = None,
                  lam_override_by_method: dict = None,
@@ -25,6 +26,7 @@ class Problem:
         self.C = C
         self.xtest: Union[np.ndarray, float] = xtest
         self.hr_name: str = hr_name
+        self.unique_name: str = unique_name
         self.lam_override = lam_override
         self.lam_override_by_method = lam_override_by_method
         self.x_dim = x_dim if x_dim is not None else x0.shape[0]
@@ -83,6 +85,9 @@ class Problem:
 
     def GetHRName(self):
         return self.hr_name if self.hr_name is not None else self.__class__.__name__
+
+    def GetUniqueName(self):
+        return self.unique_name if self.unique_name is not None else self.__class__.__name__
 
     def GetFullDesc(self):
         res = self.GetHRName()

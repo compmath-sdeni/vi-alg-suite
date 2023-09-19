@@ -578,11 +578,12 @@ class BloodSupplyNetworkProblem(VIProblem):
                  x0: Union[np.ndarray, float] = None,
                  vis: Sequence[VisualParams] = None,
                  hr_name: str = None,
+                 unique_name: str = 'BloodSupplyChainProblem',
                  lam_override: float = None,
                  lam_override_by_method: dict = None,
                  xtest: Union[np.ndarray, float] = None):
 
-        super().__init__(xtest=xtest, x0=x0, C=RnPlus(network.n_p), hr_name=hr_name, lam_override=lam_override,
+        super().__init__(xtest=xtest, x0=x0, C=RnPlus(network.n_p), hr_name=hr_name, unique_name=unique_name, lam_override=lam_override,
                          lam_override_by_method=lam_override_by_method)
 
         self.net = network
