@@ -107,6 +107,7 @@ logger.info("Starting server")
 cache = Cache(config=flask_cache_config)
 
 # Configure flask login with secret key from environment variable
+
 server.config.update(SECRET_KEY=os.getenv('WEB_APP_SECRET_KEY'))
 
 login_manager = LoginManager()
