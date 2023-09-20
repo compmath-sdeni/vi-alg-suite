@@ -301,6 +301,8 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                           ])
                                                       ]),
                                          ]),
+                                html.H4("Console output", className="bg-info p-1 mb-1 mt-4 text-center"),
+                                html.Div(id='console-output'),
                             ]),
                             dcc.Tab(label='Problem solver', children=[
                                 html.Hr(),
@@ -325,10 +327,21 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                             ])]),
                                     ], className="form row"),
                                 ]),
+                                html.Div(id='solver-output', children=[
+                                    html.H4("Solver results and stats", className="bg-info p-1 mb-1 mt-4 text-center"),
+                                    html.Div(className="row", children=[
+                                        html.Div(className="col-sm-6", children=[
+                                            html.Div(id='solver-images-output'),
+                                        ])
+                                    ]),
+                                    html.Div(className="row", children=[
+                                        html.Div(className="col-sm-12", children=[
+                                            html.Div(id='solver-console-output'),
+                                        ]),
+                                    ]),
+                                ]),
                             ]),
                         ]),
-                        html.H4("Console output", className="bg-info p-1 mb-1 mt-4 text-center"),
-                        html.Div(id='console-output'),
                     ])
                 ])
         ])

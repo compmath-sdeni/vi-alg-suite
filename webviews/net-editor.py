@@ -35,6 +35,8 @@ from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_n
     build_graph_view_layout
 from run_algs_lib import AlgsRunner
 
+from PIL import Image
+
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
 
@@ -659,7 +661,8 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
 
 @app.callback(
     [
-        Output('console-output', 'children', allow_duplicate=True),
+        Output('solver-console-output', 'children'),
+        Output('solver-images-output', 'children'),
     ],
     [
         Input('solve-problem-button', 'n_clicks')
@@ -689,21 +692,26 @@ def solve_problem_click(n_clicks, solvers, session_id):
 
             logger.info("solve_problem_click: solvers run completed. Data saved to %s", runner.runs_data_save_path)
 
-            res = ["Solved."]
             if result and 'run_log_file_path' in result:
                 # read log file and return it as a result
                 with open(result['run_log_file_path'], 'r') as f:
                     log_data = f.readlines()
 
-                res = [html.Pre("\n".join(log_data))]
+                res_text = [html.Pre("\n".join(log_data))]
+                res_images = []
 
-            return res
+                if 'graph_results' in result:
+                    for image_path in result['graph_results']:
+                        pil_image = Image.open(image_path)
+                        res_images.append(html.Img(src=pil_image, style={'width': '100%'}))
+
+            return [res_text, res_images]
         else:
             logger.info("solve_problem_click: not saved - not logged in")
-            return ["You need to log in to be able to test solvers!"]
+            return [["You need to log in to be able to test solvers!"], []]
     else:
         logger.info("solve_problem_click: no session and not logged in")
-        return ["You need to log in to be able to test solvers!"]
+        return [["You need to log in to be able to test solvers!"], []]
 
 
 if __name__ == "__main__":

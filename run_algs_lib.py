@@ -61,11 +61,12 @@ from constraints.hyperrectangle import Hyperrectangle
 from methods.korpelevich import Korpelevich
 from utils.test_alghos import BasicAlgoTests
 
+
 class AlgsRunner:
     def __init__(self, *, problem: VIProblem = None, params: AlgorithmParams = None, show_output: bool = True,
                  runs_data_save_path: str = 'storage/alg_run_stats'):
 
-        self.available_algs:List[Dict[(str, IterGradTypeMethod)]] = None
+        self.available_algs: List[Dict[(str, IterGradTypeMethod)]] = None
         self.available_algs_dict: Dict[str, IterGradTypeMethod] = None
         self.problem: VIProblem = problem
 
@@ -94,7 +95,7 @@ class AlgsRunner:
     def set_problem(self, problem: VIProblem):
         self.problem = problem
 
-    def prepare_predefined_problem(self, problem_name:str):
+    def prepare_predefined_problem(self, problem_name: str):
         res: VIProblem = None
 
         if problem_name.lower() == 'pseudo_mono_3'.lower():
@@ -114,12 +115,14 @@ class AlgsRunner:
 
     @staticmethod
     def get_avail_alg_names():
-        return ['Korpelevich', 'Korpelevich (A)', 'Tseng', 'Tseng (A)', 'Tseng (A) - KL', 'Tseng - KL', 'EfP', 'EfP (A)', 'EfP (A) - KL', 'Alg. 2*', 'MT', 'MT (A)', 'MT (A) - KL', 'MT - KL']
+        return ['Korpelevich', 'Korpelevich (A)', 'Tseng', 'Tseng (A)', 'Tseng (A) - KL', 'Tseng - KL', 'EfP',
+                'EfP (A)', 'EfP (A) - KL', 'Alg. 2*', 'MT', 'MT (A)', 'MT (A) - KL', 'MT - KL']
 
     def init_algs(self):
         korpele = Korpelevich(self.problem, eps=self.params.eps, lam=self.params.lam, min_iters=self.params.min_iters,
                               max_iters=self.params.max_iters, hr_name="Kor")
-        korpele_adapt = KorpelevichMod(self.problem, eps=self.params.eps, min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+        korpele_adapt = KorpelevichMod(self.problem, eps=self.params.eps, min_iters=self.params.min_iters,
+                                       max_iters=self.params.max_iters,
                                        hr_name="Kor (A)")
 
         tseng = Tseng(self.problem, stop_condition=self.params.stop_by,
@@ -133,66 +136,77 @@ class AlgsRunner:
                                hr_name="Alg. 1*", projection_type=ProjectionType.BREGMAN)
 
         tseng_adaptive = TsengAdaptive(self.problem,
-                                       eps=self.params.eps, lam=self.params.start_adaptive_lam, tau=self.params.adaptive_tau,
+                                       eps=self.params.eps, lam=self.params.start_adaptive_lam,
+                                       tau=self.params.adaptive_tau,
                                        save_history=self.params.save_history,
-                                       min_iters=self.params.min_iters, max_iters=self.params.max_iters, hr_name="Tseng (A)")
+                                       min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+                                       hr_name="Tseng (A)")
 
         tseng_adaptive_bregproj = TsengAdaptive(self.problem, stop_condition=self.params.stop_by,
-                                                eps=self.params.eps, lam=self.params.start_adaptive_lam, tau=self.params.adaptive_tau,
+                                                eps=self.params.eps, lam=self.params.start_adaptive_lam,
+                                                tau=self.params.adaptive_tau,
                                                 min_iters=self.params.min_iters, max_iters=self.params.max_iters,
                                                 hr_name="Alg. 1* (A)", projection_type=ProjectionType.BREGMAN)
 
         extrapol_from_past = ExtrapolationFromPast(self.problem, stop_condition=self.params.stop_by,
                                                    y0=self.params.x1.copy(), eps=self.params.eps,
                                                    lam=self.params.lam * (math.sqrt(2.) - 1),
-                                                   min_iters=self.params.min_iters, max_iters=self.params.max_iters, hr_name="EfP")
+                                                   min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+                                                   hr_name="EfP")
 
         extrapol_from_past_bregproj = ExtrapolationFromPast(self.problem, stop_condition=self.params.stop_by,
                                                             y0=self.params.x1.copy(), eps=self.params.eps,
                                                             lam=self.params.lam_KL * (math.sqrt(2.) - 1),
-                                                            min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+                                                            min_iters=self.params.min_iters,
+                                                            max_iters=self.params.max_iters,
                                                             hr_name="Alg. 2*", projection_type=ProjectionType.BREGMAN)
 
         extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(self.problem, stop_condition=self.params.stop_by,
-                                                                    y0=self.params.x1.copy(), eps=self.params.eps,
-                                                                    lam=self.params.start_adaptive_lam,
-                                                                    tau=self.params.adaptive_tau_small,
-                                                                    min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                                                    hr_name="Alg. 1 - E")
+                                                                 y0=self.params.x1.copy(), eps=self.params.eps,
+                                                                 lam=self.params.start_adaptive_lam,
+                                                                 tau=self.params.adaptive_tau_small,
+                                                                 min_iters=self.params.min_iters,
+                                                                 max_iters=self.params.max_iters,
+                                                                 hr_name="Alg. 1 - E")
 
-        extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(self.problem, stop_condition=self.params.stop_by,
-                                                                                y0=self.params.x1.copy(), eps=self.params.eps,
-                                                                                lam=self.params.start_adaptive_lam1,
-                                                                                tau=self.params.adaptive_tau_small,
-                                                                                min_iters=self.params.min_iters,
-                                                                                max_iters=self.params.max_iters,
-                                                                                hr_name="Alg. 1 - KL",
-                                                                                projection_type=ProjectionType.BREGMAN)
+        extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(self.problem,
+                                                                          stop_condition=self.params.stop_by,
+                                                                          y0=self.params.x1.copy(), eps=self.params.eps,
+                                                                          lam=self.params.start_adaptive_lam1,
+                                                                          tau=self.params.adaptive_tau_small,
+                                                                          min_iters=self.params.min_iters,
+                                                                          max_iters=self.params.max_iters,
+                                                                          hr_name="Alg. 1 - KL",
+                                                                          projection_type=ProjectionType.BREGMAN)
 
         malitsky_tam = MalitskyTam(self.problem, stop_condition=self.params.stop_by,
-                                      x1=self.params.x1.copy(), eps=self.params.eps, lam=self.params.lam / 2.,
-                                      min_iters=self.params.min_iters, max_iters=self.params.max_iters, hr_name="MT")
+                                   x1=self.params.x1.copy(), eps=self.params.eps, lam=self.params.lam / 2.,
+                                   min_iters=self.params.min_iters, max_iters=self.params.max_iters, hr_name="MT")
 
         malitsky_tam_bregproj = MalitskyTam(self.problem, stop_condition=self.params.stop_by,
-                                                    x1=self.params.x1.copy(), eps=self.params.eps, lam=self.params.lam_KL / 2.,
-                                                    min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                                    hr_name="Alg. 3*", projection_type=ProjectionType.BREGMAN)
+                                            x1=self.params.x1.copy(), eps=self.params.eps, lam=self.params.lam_KL / 2.,
+                                            min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+                                            hr_name="Alg. 3*", projection_type=ProjectionType.BREGMAN)
 
         malitsky_tam_adaptive = MalitskyTamAdaptive(self.problem,
-                                                        x1=self.params.x1.copy(), eps=self.params.eps, stop_condition=self.params.stop_by,
-                                                        lam=self.params.start_adaptive_lam, lam1=self.params.start_adaptive_lam,
-                                                        tau=self.params.adaptive_tau,
-                                                        min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                                        hr_name="Alg. 2 - E")
+                                                    x1=self.params.x1.copy(), eps=self.params.eps,
+                                                    stop_condition=self.params.stop_by,
+                                                    lam=self.params.start_adaptive_lam,
+                                                    lam1=self.params.start_adaptive_lam,
+                                                    tau=self.params.adaptive_tau,
+                                                    min_iters=self.params.min_iters, max_iters=self.params.max_iters,
+                                                    hr_name="Alg. 2 - E")
 
         malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(self.problem,
-                                                                        x1=self.params.x1.copy(), eps=self.params.eps,
-                                                                        stop_condition=self.params.stop_by,
-                                                                        lam=self.params.start_adaptive_lam1,
-                                                                        lam1=self.params.start_adaptive_lam1,
-                                                                        tau=self.params.adaptive_tau,
-                                                                        min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                                                        hr_name="Alg. 2 - KL", projection_type=ProjectionType.BREGMAN)
+                                                             x1=self.params.x1.copy(), eps=self.params.eps,
+                                                             stop_condition=self.params.stop_by,
+                                                             lam=self.params.start_adaptive_lam1,
+                                                             lam1=self.params.start_adaptive_lam1,
+                                                             tau=self.params.adaptive_tau,
+                                                             min_iters=self.params.min_iters,
+                                                             max_iters=self.params.max_iters,
+                                                             hr_name="Alg. 2 - KL",
+                                                             projection_type=ProjectionType.BREGMAN)
 
         self.available_algs = [
             {"name": "Korpelevich", "alg": korpele},
@@ -385,7 +399,8 @@ class AlgsRunner:
                 grapher = AlgStatGrapher()
                 grapher.plot_by_history(
                     alg_history_list=alg_history_list,
-                    x_axis_type=self.params.x_axis_type, y_axis_type=self.params.y_axis_type, y_axis_label=self.params.y_label,
+                    x_axis_type=self.params.x_axis_type, y_axis_type=self.params.y_axis_type,
+                    y_axis_label=self.params.y_label,
                     styles=self.params.styles, start_iter=self.params.plot_start_iter,
                     x_axis_label=self.params.x_label, time_scale_divider=self.params.time_scale_divider
                 )
@@ -399,16 +414,17 @@ class AlgsRunner:
                 if self.params.save_plots:
                     dpi = 300.
 
-                    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi,
+                    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight',
+                                dpi=dpi,
                                 format='svg')
-                    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi,
+                    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight',
+                                dpi=dpi,
                                 format='eps')
-
 
                     graph_results_path = os.path.join(saved_history_dir, f"graph-{test_mnemo}.png")
                     plt.savefig(graph_results_path, bbox_inches='tight', dpi=dpi)
 
-                    result["graph_results"] = [ graph_results_path ]
+                    result["graph_results"] = [graph_results_path]
 
                 if self.params.show_plots:
                     plt.title(self.problem.hr_name, loc='center')
@@ -417,6 +433,7 @@ class AlgsRunner:
         # endregion
 
         return result
+
 
 # table - time for getting to epsilon error
 # for 1 and 2 - "real error"
