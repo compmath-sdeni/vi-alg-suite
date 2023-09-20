@@ -4,3 +4,4 @@
 /.venv/
 /webviews/users_data/
 /webviews/*.log
+/webviews/storage/

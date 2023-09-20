@@ -110,6 +110,10 @@ class AlgsRunner:
 
         return self.problem
 
+    @staticmethod
+    def get_avail_alg_names():
+        return ['Korpelevich', 'Korpelevich (A)', 'Tseng', 'Tseng (A)', 'Tseng (A) - KL', 'Tseng - KL', 'EfP', 'EfP (A)', 'EfP (A) - KL', 'Alg. 2*', 'MT', 'MT (A)', 'MT (A) - KL', 'MT - KL']
+
     def init_algs(self):
         korpele = Korpelevich(self.problem, eps=self.params.eps, lam=self.params.lam, min_iters=self.params.min_iters,
                               max_iters=self.params.max_iters, hr_name="Kor")
@@ -194,7 +198,7 @@ class AlgsRunner:
             {"name": "Tseng", "alg": tseng},
             {"name": "Tseng (A)", "alg": tseng_adaptive},
             {"name": "Tseng (A) - KL", "alg": tseng_adaptive_bregproj},
-            {"name": "Alg. 1*", "alg": tseng_bregproj},
+            {"name": "Tseng - KL", "alg": tseng_bregproj},
             {"name": "EfP", "alg": extrapol_from_past},
             {"name": "EfP (A)", "alg": extrapol_from_past_adaptive},
             {"name": "EfP (A) - KL", "alg": extrapol_from_past_adaptive_bregproj},
@@ -202,7 +206,7 @@ class AlgsRunner:
             {"name": "MT", "alg": malitsky_tam},
             {"name": "MT (A)", "alg": malitsky_tam_adaptive},
             {"name": "MT (A) - KL", "alg": malitsky_tam_adaptive_bregproj},
-            {"name": "Alg. 3*", "alg": malitsky_tam_bregproj}
+            {"name": "MT - KL", "alg": malitsky_tam_bregproj}
         ]
 
         # create a dict for fast access
@@ -229,7 +233,7 @@ class AlgsRunner:
 
         start = time.monotonic()
 
-        saved_history_dir = f"{self.base_save_dir}/{data_folder_name}/{self.problem.GetUniqueName()}-{datetime.datetime.today().strftime('%Y-%m')}"
+        saved_history_dir = f"{self.base_save_dir}/{data_folder_name}/{datetime.datetime.today().strftime('%Y-%m')}"
         test_mnemo = f"{self.problem.GetUniqueName()}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
         os.makedirs(saved_history_dir, exist_ok=True)

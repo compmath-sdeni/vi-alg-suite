@@ -3,6 +3,7 @@ import json
 import threading
 
 import uuid
+from datetime import datetime
 from wsgiref.simple_server import make_server
 
 import flask
@@ -28,6 +29,7 @@ from logging.handlers import RotatingFileHandler
 
 from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_net_by_cytoscape_elements, \
     build_graph_view_layout
+from run_algs_lib import AlgsRunner
 
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
@@ -39,9 +41,12 @@ active_node = None
 
 # enum for cache keys
 CACHE_KEY_PROBLEM = 'problem'
+CACHE_KEY_PARAMS = 'alg_params'
 CACHE_KEY_ACTIVE_EDGE = 'active_edge'
 CACHE_KEY_ACTIVE_NODE = 'active_node'
 CACHE_KEY_EMAIL = 'email'
+
+memory_cache = {}
 
 # dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 bs_css = ("https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css")
@@ -101,51 +106,66 @@ def get_cache_key(session_id, key):
 
 def set_cached_value(session_id, key, value, *, timeout=60 * 60 * 24):
     cache_key = get_cache_key(session_id, key)
-    cache.set(cache_key, value, timeout=timeout)
+
+    memory_cache[cache_key] = (value, datetime.utcnow(), timeout)
+    # cache.set(cache_key, value, timeout=timeout)
 
 
 def get_cached_value(session_id, key):
     cache_key = get_cache_key(session_id, key)
-    return cache.get(cache_key)
 
+    if cache_key in memory_cache:
+        return memory_cache[cache_key][0]
+    else:
+        return None
 
-def save_problem_to_cache(session_id, problem):
+    # return cache.get(cache_key)
+
+def save_problem_to_cache(session_id, problem, alg_params=None):
     set_cached_value(session_id, CACHE_KEY_PROBLEM, problem)
+    if alg_params:
+        set_cached_value(session_id, CACHE_KEY_PARAMS, alg_params)
 
 
 def get_problem_from_cache(session_id):
     return get_cached_value(session_id, CACHE_KEY_PROBLEM)
 
 
+def get_params_from_cache(session_id):
+    return get_cached_value(session_id, CACHE_KEY_PARAMS)
+
+
 def prepare_default_problem():
-    params = AlgorithmParams(
-        eps=1e-5,
-        min_iters=10,
-        max_iters=500,
-        lam=0.01,
-        lam_KL=0.005,
-        start_adaptive_lam=0.5,
-        start_adaptive_lam1=0.5,
-        adaptive_tau=0.75,
-        adaptive_tau_small=0.45,
-        save_history=True,
-        excel_history=True
-    )
+    params_dict = {
+        'eps': 1e-5,
+        'min_iters': 10,
+        'max_iters': 500,
+        'lam': 0.01,
+        'lam_KL': 0.005,
+        'start_adaptive_lam': 0.5,
+        'start_adaptive_lam1': 0.5,
+        'adaptive_tau': 0.75,
+        'adaptive_tau_small': 0.45,
+        'save_history': True,
+        'excel_history': True
+    }
 
-    problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
+    algorithm_params = AlgorithmParams(**params_dict)
 
-    return problem
+    problem = blood_delivery_test_three.prepareProblem(algorithm_params=algorithm_params, show_network=False, print_data=False)
+
+    return problem, algorithm_params
 
 
 def get_initial_layout():
     session_id = str(uuid.uuid4())
 
-    problem = prepare_default_problem()
+    problem, algorithm_params = prepare_default_problem()
 
     # calculate and update positions inside problem
     res = get_layout(problem, session_id)
 
-    save_problem_to_cache(session_id, problem)
+    save_problem_to_cache(session_id, problem, algorithm_params)
 
     return res
 
@@ -165,19 +185,18 @@ def get_initial_layout():
         Output('edge-loss-input', 'value'),
     ],
     [
-        Input({"type":"graph_presenter", "id": ALL}, 'tapEdgeData'),
-        Input({"type":"graph_presenter", "id": ALL}, 'tapNodeData')
+        Input({"type": "graph_presenter", "id": ALL}, 'tapEdgeData'),
+        Input({"type": "graph_presenter", "id": ALL}, 'tapNodeData')
     ],
     [
         State('source-node-input', 'value'),
         State('target-node-input', 'value'),
-        State({"type":"graph_presenter", "id": ALL}, 'elements'),
+        State({"type": "graph_presenter", "id": ALL}, 'elements'),
         State('session-id', 'data')
     ],
     prevent_initial_call=True
 )
 def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_elements, session_id):
-
     # Only one graph presenter is used, so there should be only one element in the list
     if len(graphs_elements) != 1:
         logger.error(f"onGraphElementClick: len(graphs_elements) != 1: {len(graphs_elements)}")
@@ -222,7 +241,6 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
 
         oper_cost_value, oper_cost_deriv_value = problem.net.c_string[selected_edge_index]
         waste_discard_cost_value, waste_discard_cost_deriv_value = problem.net.z_string[selected_edge_index]
-
 
         if problem.net.r_string and selected_edge_index < len(problem.net.r_string):
             risk_cost_value, risk_cost_deriv_value = problem.net.r_string[selected_edge_index]
@@ -361,11 +379,12 @@ def session_changed(new_session_id, old_session_id):
     logger.info(f"session_changed callback. storage session_id: {new_session_id}, input_session_id: {old_session_id}")
 
     problem = get_problem_from_cache(old_session_id)
+    alg_params = get_params_from_cache(old_session_id)
 
     if new_session_id is not None and new_session_id != '':
         if new_session_id != old_session_id and problem is not None:
-            save_problem_to_cache(new_session_id, problem)
-            logger.info(f"Copied problem from old to new session {old_session_id} -> {new_session_id}")
+            save_problem_to_cache(new_session_id, problem, alg_params)
+            logger.info(f"Copied problem and params from old to new session {old_session_id} -> {new_session_id}")
         elif problem is None:
             problem = get_problem_from_cache(new_session_id)
             logger.info(
@@ -399,7 +418,7 @@ clientside_callback(
     """,
     Output('temp-data-target', 'value'),
     Input('temp-data', 'value'),
-    State({"type":"graph_presenter", "id": ALL}, "elements")
+    State({"type": "graph_presenter", "id": ALL}, "elements")
 )
 
 
@@ -420,10 +439,10 @@ clientside_callback(
     Input('load-problem-button', 'n_clicks'),
     State('user-saved-problems', 'value'),
     State('session-id', 'data'),
-#    State('graph_presenter', 'elements'),
+    #    State('graph_presenter', 'elements'),
     prevent_initial_call=True
 )
-def load_problem_click(n_clicks, problem_name, session_id): # , elements
+def load_problem_click(n_clicks, problem_name, session_id):  # , elements
     if n_clicks is None or not session_id:
         raise PreventUpdate
 
@@ -477,7 +496,7 @@ def load_problem_click(n_clicks, problem_name, session_id): # , elements
         save_problem_to_cache(session_id, problem)
 
         logger.info(f"load_problem_click: elements ready.")
-        return new_graph_view, problem_name, 'NOT_USED' # json.dumps(new_elements)
+        return new_graph_view, problem_name, 'NOT_USED'  # json.dumps(new_elements)
     else:
         logger.info(f"Problem directory does not exist: {problem_dir_name}")
         return dash.no_update, dash.no_update, dash.no_update
@@ -486,7 +505,7 @@ def load_problem_click(n_clicks, problem_name, session_id): # , elements
 # dash callback for click on button with id="set-edge-params-button"
 
 @app.callback(
-#    Output('graph-container', 'children', allow_duplicate=True),
+    #    Output('graph-container', 'children', allow_duplicate=True),
     Output('console-output', 'children', allow_duplicate=True),
     Input('set-edge-params-button', 'n_clicks'),
     State('source-node-input', 'value'),
@@ -500,14 +519,13 @@ def load_problem_click(n_clicks, problem_name, session_id): # , elements
     State('risk-cost-deriv-input', 'value'),
     State('edge-loss-input', 'value'),
     State('session-id', 'data'),
-#    State({"type":"graph_presenter", "id": MATCH}, 'elements'),
+    #    State({"type":"graph_presenter", "id": MATCH}, 'elements'),
     prevent_initial_call=True
 )
 def set_edge_params_click(
         n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost,
         waste_discard_cost_deriv,
         risk_cost, risk_cost_deriv, edge_loss, session_id):
-
     if n_clicks is None:
         raise PreventUpdate
 
@@ -554,7 +572,7 @@ def set_edge_params_click(
     ],
     [
         State('save-problem-name-input', 'value'),
-        State({"type":"graph_presenter", "id": ALL}, 'elements'),
+        State({"type": "graph_presenter", "id": ALL}, 'elements'),
         State('session-id', 'data')
     ]
 )
@@ -600,13 +618,49 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
         logger.info(f"save_problem_click: not saved - no session and not logged in")
         return "You need to log in to be able to save the problem setup!", {"display": "block"}
 
+
+@app.callback(
+    [
+        Output('console-output', 'children', allow_duplicate=True),
+    ],
+    [
+        Input('solve-problem-button', 'n_clicks')
+    ],
+    [
+        State('solver-methods', 'value'),
+        State('session-id', 'data')
+    ],
+    prevent_initial_call=True
+)
+def solve_problem_click(n_clicks, solvers, session_id):
+    logger.info(f"solve_problem_click: session_id: {session_id}, solvers: {solvers}")
+    if n_clicks is None:
+        raise PreventUpdate
+
+    if session_id:
+        alg_params = get_params_from_cache(session_id)
+        problem = get_problem_from_cache(session_id)
+        user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
+
+        if user_email:
+            runner = AlgsRunner(problem=problem, params=alg_params)
+            runner.init_algs()
+            runner.run_algs(solvers, f"web_users_run/{user_email.replace('@','_')}")
+            return ["Solved."]
+        else:
+            logger.info(f"solve_problem_click: not saved - not logged in")
+            return ["You need to log in to be able to test solvers!"]
+    else:
+        logger.info(f"solve_problem_click: no session and not logged in")
+        return ["You need to log in to be able to test solvers!"]
+
+
 if __name__ == "__main__":
     cache.init_app(server)
 
     app.layout = get_initial_layout
 
     app.run_server(debug=True)
-
 
 # if __name__ == "__main__":
 #     cache.init_app(server)

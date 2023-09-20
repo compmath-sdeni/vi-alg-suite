@@ -5,6 +5,8 @@ import dash_cytoscape as cyto
 from dash import html, dcc
 import networkx as nx
 
+from run_algs_lib import AlgsRunner
+
 from problems.blood_supply_net_problem import BloodSupplyNetworkProblem, BloodSupplyNetwork
 
 import logging
@@ -21,17 +23,7 @@ def get_saved_problems_list():
 
 
 def get_available_solvers():
-    return [
-        {"name": "Tseng", "code": "tseng"},
-        {"name": "Tseng adaptive", "code": "tseng_adaptive"},
-        # {"name": "Korpele", "code": "korpele"},
-        # {"name": "Korpele adaptive", "code": "korpele_adapt"},
-        {"name": "Extrapol from past", "code": "extrapol_from_past"},
-        {"name": "Extrapol from past adaptive", "code": "extrapol_from_past_adaptive"},
-        {"name": "Malitsky Tam", "code": "malitsky_tam"},
-        {"name": "Malitsky Tam adaptive", "code": "malitsky_tam_adaptive"}
-    ]
-
+    return [{"name": name, "code": name} for name in AlgsRunner.get_avail_alg_names()]
 
 def get_cytoscape_graph_elements(net: BloodSupplyNetwork, *, G: nx.Graph = None, pos: dict = None, labels: dict = None):
     if G is None:
@@ -314,18 +306,19 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                 html.Hr(),
                                 html.Div(className="form", children=[
                                     html.Div([
-                                        html.Div(className="col-sm-3", children=[
-                                            html.H4("Solve the problem")
+                                        html.Div(className="col-sm-2", children=[
+                                            html.H4("Solve with", className="mt-1"),
                                         ]),
-                                        html.Div(className="col-sm-3", children=[
+                                        html.Div(className="col-sm-8", children=[
                                             dcc.Dropdown(id='solver-methods',
                                                          options=[{'value': method["code"],
                                                                    'label': method["name"]} for
                                                                   method in get_available_solvers()],
                                                          value=None,
+                                                         multi=True,
                                                          placeholder="Select solver"),
                                         ]),
-                                        html.Div(className="col-sm-3", children=[
+                                        html.Div(className="col-sm-2", children=[
                                             html.Div(children=[
                                                 html.Button("Solve", id='solve-problem-button',
                                                             className="btn btn-success"),
