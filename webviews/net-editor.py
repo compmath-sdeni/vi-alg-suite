@@ -1,6 +1,10 @@
 import hashlib
 import json
+import re
+from transliterate import translit
 import threading
+
+import dotenv
 
 import uuid
 from datetime import datetime
@@ -35,6 +39,16 @@ from run_algs_lib import AlgsRunner
 # https://dash.plotly.com/cytoscape/events
 
 # https://community.plotly.com/t/how-to-update-cytoscape-elements-list-of-dics-using-patch/75631
+
+dotenv.load_dotenv()
+
+BASE_STORAGE_DIR = os.getenv('BASE_STORAGE_DIR')
+USERS_DATA_DIR = os.path.join(BASE_STORAGE_DIR, 'web_users_data')
+RUN_STATS_SUBDIR = 'alg_run_stats'
+LOGS_DIR = os.path.join(BASE_STORAGE_DIR, 'web-logs')
+
+os.makedirs(USERS_DATA_DIR, exist_ok=True)
+os.makedirs(LOGS_DIR, exist_ok=True)
 
 active_edge = None
 active_node = None
@@ -83,7 +97,7 @@ ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
 
-fh = RotatingFileHandler('vi-algo-test-suite.log', maxBytes=1000000, backupCount=100)
+fh = RotatingFileHandler(os.path.join(LOGS_DIR, 'vi-algo-test-suite.log'), maxBytes=1000000, backupCount=100)
 fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
@@ -98,6 +112,10 @@ server.config.update(SECRET_KEY=os.getenv('WEB_APP_SECRET_KEY'))
 login_manager = LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
+
+
+def replace_path_spec_chars(source: str, replace_char: str = '_') -> str:
+    return re.sub("[^0-9a-zA-Z_]+", replace_char, source)
 
 
 def get_cache_key(session_id, key):
@@ -120,6 +138,11 @@ def get_cached_value(session_id, key):
         return None
 
     # return cache.get(cache_key)
+
+
+def get_user_folder(user_email):
+    return os.path.join(USERS_DATA_DIR, replace_path_spec_chars(user_email)) if user_email else os.path.join(USERS_DATA_DIR, 'default')
+
 
 def save_problem_to_cache(session_id, problem, alg_params=None):
     set_cached_value(session_id, CACHE_KEY_PROBLEM, problem)
@@ -146,13 +169,15 @@ def prepare_default_problem():
         'start_adaptive_lam1': 0.5,
         'adaptive_tau': 0.75,
         'adaptive_tau_small': 0.45,
+        'show_plots': False,
         'save_history': True,
         'excel_history': True
     }
 
     algorithm_params = AlgorithmParams(**params_dict)
 
-    problem = blood_delivery_test_three.prepareProblem(algorithm_params=algorithm_params, show_network=False, print_data=False)
+    problem = blood_delivery_test_three.prepareProblem(algorithm_params=algorithm_params, show_network=False,
+                                                       print_data=False)
 
     return problem, algorithm_params
 
@@ -298,7 +323,7 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
     ]
 )
 def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id):
-    logger.info(f"login_callback: session_id: {session_id}")
+    logger.info(f"login/logout callback: session_id: {session_id}")
 
     if n_clicks_login is None and n_clicks_logout is None:
         raise PreventUpdate
@@ -309,22 +334,39 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
     logged_in = False
 
     if context[0]['prop_id'] == 'login-button.n_clicks':
+
+        email = email.strip()
+        if not email or len(email) < 3:
+            error = "Please enter email or username of at least 3 characters long!"
+            error_block_style['display'] = 'block'
+            logger.info("No email!")
+            return [error, error_block_style, dash.no_update]
+
+        password = password.strip()
+        if not password or len(password) < 3:
+            error = "Password must be at least 3 characters long!"
+            error_block_style['display'] = 'block'
+            logger.info("Password too short!")
+            return [error, error_block_style, dash.no_update]
+
         # hash password and check if it matches the one in the database
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # users and their data are saved in local directory 'users_data'
-        # each user has a separate file named after their email, which contains hashed password
+        # users and their data are saved in the filesystem under USERS_DATA_DIR/{email} folder (spec. chars replaced)
+        # hashed password is saved in USERS_DATA_DIR/{email}/hash.txt file
 
-        # ensure that directory exists
-        if not os.path.exists("users_data"):
-            os.mkdir("users_data")
+        user_data_path = get_user_folder(email)
+        password_hash_file = os.path.join(user_data_path, "hash.txt")
+
+        # ensure that directory USERS_DATA_DIR exists
+        os.makedirs(user_data_path, exist_ok=True)
 
         # check if user exists and if password matches
-        if os.path.exists(f"users_data/{email}.txt"):
-            with open(f"users_data/{email}.txt", "r") as f:
+        if os.path.exists(password_hash_file):
+            with open(password_hash_file, "r") as f:
                 if f.read() == hashed_password:
                     logged_in = True
-                    logger.info("Logged in successfully")
+                    logger.info("User logged in successfully")
                 else:
                     logged_in = False
                     error = "Wrong password!"
@@ -332,7 +374,7 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
                     logger.info("Wrong password!")
         else:
             # create new user
-            with open(f"users_data/{email}.txt", "w") as f:
+            with open(password_hash_file, "w") as f:
                 f.write(hashed_password)
 
             logged_in = True
@@ -344,16 +386,17 @@ def login_callback(n_clicks_login, n_clicks_logout, email, password, session_id)
             set_cached_value(sid, CACHE_KEY_EMAIL, email, timeout=60 * 60 * 24 * 7)
             logger.info(f"Generated session id: {sid}")
 
-            if not os.path.exists(f"users_data/{email}"):
-                os.mkdir(f"users_data/{email}")
-
             return [error, error_block_style, sid]
         else:
             return [error, error_block_style, '']
 
     elif context[0]['prop_id'] == 'logout-button.n_clicks':
-        logger.info("Logged out")
-        # show login form and hide logout form, does not update email and password
+        if session_id:
+            set_cached_value(session_id, CACHE_KEY_EMAIL, None)
+            logger.info("Logged out")
+        else:
+            logger.warning("Logout attempt with no session!")
+
         return [error, error_block_style, '']
 
     raise PreventUpdate
@@ -394,12 +437,15 @@ def session_changed(new_session_id, old_session_id):
 
         if email is not None:
             logger.info(f"Email in new session: {email}")
-            problems = os.listdir(f"users_data/{email}")
+
+            problems = os.listdir(get_user_folder(email))
+            problems = [p for p in problems if os.path.isdir(os.path.join(get_user_folder(email), p))]
+
             problem_dropdown_options = [{'value': problem, 'label': problem} for problem in problems]
 
             return [{"display": "none"}, {"display": "block"}, email, email, problem_dropdown_options, new_session_id]
         else:
-            logger.info(f"No email in new session.")
+            logger.info(f"No email in the new session.")
             return [{"display": "block"}, {"display": "none"}, "", dash.no_update, [{'value': '', 'label': 'Default'}],
                     new_session_id]
     else:
@@ -446,59 +492,47 @@ def load_problem_click(n_clicks, problem_name, session_id):  # , elements
     if n_clicks is None or not session_id:
         raise PreventUpdate
 
-    logger.info(f"load_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+    logger.info(f"load_problem_click: session_id: %s, problem_name: %s", session_id, problem_name)
 
-    problem_dir_name = problem_name.replace(" ", "_")
+    latin_problem_name = problem_name
+
+    try:
+        latin_problem_name = translit(latin_problem_name, reversed=True)
+    except:
+        logger.warning("Could not transliterate problem name: %s", problem_name)
+
+    problem_dir_name = replace_path_spec_chars(latin_problem_name)
 
     user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
-    if user_email:
-        problem_dir = f"users_data/{user_email}/{problem_dir_name}"
-    else:
-        problem_dir = f"users_data/{session_id}"
+
+    problem_dir = os.path.join(get_user_folder(user_email), problem_dir_name)
+
+    logger.info("load_problem_click: expected problem dir: %s", problem_dir)
 
     if os.path.exists(problem_dir):
         problem = get_problem_from_cache(session_id)
 
         problem.net.loadFromDir(problem.net, path_to_load=problem_dir)
-        logger.info(f"load_problem_click: problem loaded from file {problem_dir_name}")
+        logger.info("load_problem_click: problem network data loaded from folder %s", problem_dir)
 
         G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
 
         if problem.net.pos:
             pos = problem.net.pos
-            logger.info(f"load_problem_click: positions got from the problem.net structure.")
+            logger.info("load_problem_click: positions got from the problem.net structure.")
         else:
-            logger.info(f"load_problem_click: positions calculated by to_nx_graph.")
+            logger.info("load_problem_click: positions calculated by to_nx_graph.")
 
-        logger.info(f"load_problem_click positions: {pos}")
+        logger.info("load_problem_click positions: %s", pos)
 
         new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
-        # new_elements = get_cytoscape_graph_elements(problem.net, G=G, pos=pos, labels=labels)
-
-        # elements_patch = Patch()
-        # elements_patch[0]['position']['x'] = 10
-
-        # for idx,old_el in enumerate(elements):
-        #     # elements_patch.remove(old_el)
-        #     if 'position' in new_elements[idx]:
-        #         elements_patch[idx]['position']['x'] = new_elements[idx]['position']['x']
-        #         elements_patch[idx]['position']['y'] = new_elements[idx]['position']['y']
-
-        # elements_patch[idx]['data'] = new_elements[idx]['data']
-
-        # elements_patch.extend(new_elements)
-
-        # # # clear elements
-        # elements.clear()
-        # # add new elements
-        # elements.extend(new_elements)
 
         save_problem_to_cache(session_id, problem)
 
-        logger.info(f"load_problem_click: elements ready.")
+        logger.info("load_problem_click: elements ready.")
         return new_graph_view, problem_name, 'NOT_USED'  # json.dumps(new_elements)
     else:
-        logger.info(f"Problem directory does not exist: {problem_dir_name}")
+        logger.warning("Problem directory does not exist: %s", problem_dir_name)
         return dash.no_update, dash.no_update, dash.no_update
 
 
@@ -580,25 +614,28 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
     if n_clicks is None:
         raise PreventUpdate
 
+    problem_name = problem_name.strip()
+
     if not problem_name:
         return "Please enter problem name", {'color': 'red'}
 
-    logger.info(f"save_problem_click: session_id: {session_id}, problem_name: {problem_name}")
+    logger.info("save_problem_click: session_id: %s, problem_name: %s", session_id, problem_name)
+
+    problem_name_latin = problem_name
+
+    try:
+        problem_name_latin = translit(problem_name, reversed=True)
+    except:
+        logger.warning("Could not transliterate problem name: %s", problem_name)
+
+    problem_dir_name = replace_path_spec_chars(problem_name_latin)
 
     # Only one graph presenter is used, so there should be only one element in the list
     if len(graphs_elements) != 1:
         logger.error(f"save_problem_click: len(graphs_elements) != 1: {len(graphs_elements)}")
         raise PreventUpdate
 
-    graph_elements = graphs_elements[0]
-
-    for elem in graph_elements:
-        if 'position' in elem:
-            print(elem['data']['id'], (elem['position']['x'], elem['position']['y']))
-
     if session_id:
-        problem_dir_name = problem_name.replace(" ", "_")
-
         problem = get_problem_from_cache(session_id)
 
         # update_net_by_cytoscape_elements(graph_elements, problem.net)
@@ -607,12 +644,12 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 
         if user_email:
-            path_to_save = f"users_data/{user_email}/{problem_dir_name}"
+            path_to_save = os.path.join(get_user_folder(user_email), problem_dir_name)
             problem.saveToDir(path_to_save=path_to_save)
-            logger.info(f"save_problem_click: problem saved to {path_to_save}")
+            logger.info("save_problem_click: problem saved to %s", path_to_save)
             return "", {"display": "none"}
         else:
-            logger.info(f"save_problem_click: not saved - not logged in")
+            logger.info("save_problem_click: not saved - not logged in")
             return "You need to log in to be able to save the problem setup!", {"display": "block"}
     else:
         logger.info(f"save_problem_click: not saved - no session and not logged in")
@@ -633,7 +670,7 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
     prevent_initial_call=True
 )
 def solve_problem_click(n_clicks, solvers, session_id):
-    logger.info(f"solve_problem_click: session_id: {session_id}, solvers: {solvers}")
+    logger.info("solve_problem_click: session_id: %s, solvers: %s", session_id, solvers)
     if n_clicks is None:
         raise PreventUpdate
 
@@ -643,15 +680,28 @@ def solve_problem_click(n_clicks, solvers, session_id):
         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 
         if user_email:
-            runner = AlgsRunner(problem=problem, params=alg_params)
+            runner = AlgsRunner(problem=problem, params=alg_params,
+                                runs_data_save_path=os.path.join(get_user_folder(user_email), RUN_STATS_SUBDIR))
+
             runner.init_algs()
-            runner.run_algs(solvers, f"web_users_run/{user_email.replace('@','_')}")
-            return ["Solved."]
+            result = runner.run_algs(solvers)
+
+            logger.info("solve_problem_click: solvers run completed. Data saved to %s", runner.runs_data_save_path)
+
+            res = ["Solved."]
+            if result and 'run_log_file_path' in result:
+                # read log file and return it as a result
+                with open(result['run_log_file_path'], 'r') as f:
+                    log_data = f.readlines()
+
+                res = [html.Pre("\n".join(log_data))]
+
+            return res
         else:
-            logger.info(f"solve_problem_click: not saved - not logged in")
+            logger.info("solve_problem_click: not saved - not logged in")
             return ["You need to log in to be able to test solvers!"]
     else:
-        logger.info(f"solve_problem_click: no session and not logged in")
+        logger.info("solve_problem_click: no session and not logged in")
         return ["You need to log in to be able to test solvers!"]
 
 
@@ -661,58 +711,3 @@ if __name__ == "__main__":
     app.layout = get_initial_layout
 
     app.run_server(debug=True)
-
-# if __name__ == "__main__":
-#     cache.init_app(server)
-#
-#     server = make_server("localhost", 8050, server)
-#
-#
-#     def run_app():
-#         app.layout = get_initial_layout
-#         server.run(debug=True, use_reloader=False)
-#
-#
-#     dash_thread = threading.Thread(target=run_app)
-#     dash_thread.start()
-#
-#     # app.layout = get_initial_layout
-#     # app.run_server(debug=True)
-#
-#
-# @app.route('/test')
-# def test():
-#     return 'Hello World!'
-
-#
-# def stop_execution():
-#     global keepPlot
-#     # stream.stop_stream()
-#     keepPlot = False
-#     # stop the Flask server
-#     server.shutdown()
-#     server_thread.join()
-#     print("Dash app stopped gracefully.")
-#
-#
-# server = Flask(__name__)
-# app = Dash(__name__, server=server)
-#
-# if __name__ == "__main__":
-#     # create a server instance
-#     server = make_server("localhost", 8050, server)
-#     # start the server in a separate thread
-#     server_thread = threading.Thread(target=server.serve_forever)
-#     server_thread.start()
-#
-#
-#     # start the Dash app in a separate thread
-#     def start_dash_app():
-#         app.run_server(debug=True, use_reloader=False)
-#
-#
-#     dash_thread = threading.Thread(target=start_dash_app)
-#     dash_thread.start()
-#
-#     while keepPlot:
-#         time.sleep(1)  # keep the main thread alive while the other threads are running

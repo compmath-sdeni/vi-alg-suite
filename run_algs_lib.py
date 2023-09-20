@@ -62,13 +62,15 @@ from methods.korpelevich import Korpelevich
 from utils.test_alghos import BasicAlgoTests
 
 class AlgsRunner:
-    def __init__(self, *, problem: VIProblem = None, params: AlgorithmParams = None, show_output: bool = True, base_save_dir: str = 'storage/alg_run_stats'):
+    def __init__(self, *, problem: VIProblem = None, params: AlgorithmParams = None, show_output: bool = True,
+                 runs_data_save_path: str = 'storage/alg_run_stats'):
+
         self.available_algs:List[Dict[(str, IterGradTypeMethod)]] = None
         self.available_algs_dict: Dict[str, IterGradTypeMethod] = None
         self.problem: VIProblem = problem
 
-        self.base_save_dir: str = base_save_dir
-        os.makedirs(self.base_save_dir, exist_ok=True)
+        self.runs_data_save_path: str = runs_data_save_path
+        os.makedirs(self.runs_data_save_path, exist_ok=True)
 
         if params is None:
             self.params: AlgorithmParams = AlgorithmParams(
@@ -226,20 +228,27 @@ class AlgsRunner:
 
         return self.available_algs
 
-    def run_algs(self, algs_to_test_names: List[str], data_folder_name: str, *, show_output: bool = True):
+    def run_algs(self, algs_to_test_names: List[str], *, show_output: bool = True):
+
+        result = {}
 
         self.captured_io = io.StringIO()
         sys.stdout = self.captured_io
 
         start = time.monotonic()
 
-        saved_history_dir = f"{self.base_save_dir}/{data_folder_name}/{datetime.datetime.today().strftime('%Y-%m')}"
+        saved_history_dir = f"{self.runs_data_save_path}/{datetime.datetime.today().strftime('%Y-%m')}"
         test_mnemo = f"{self.problem.GetUniqueName()}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
         os.makedirs(saved_history_dir, exist_ok=True)
 
+        result["run_results_path"] = saved_history_dir
+
         self.problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
         self.params.saveToDir(os.path.join(saved_history_dir, "params"))
+
+        result["problem_folder"] = "problem"
+        result["params_folder"] = "params"
 
         print(f"Problem: {self.problem.GetFullDesc()}")
         print(f"Algorithms: {algs_to_test_names}")
@@ -316,7 +325,11 @@ class AlgsRunner:
                         # pandas.set_option('display.max_seq_items', None)
 
                         df: pandas.DataFrame = alg.history.toPandasDF()
-                        df.to_csv(os.path.join(saved_history_dir, f"history-{test_mnemo}.csv"))
+
+                        history_csv_path = os.path.join(saved_history_dir, f"history-{test_mnemo}.csv")
+                        df.to_csv(history_csv_path)
+
+                        result["history_csv_path"] = "history_csv_path"
 
                 print('')
 
@@ -339,9 +352,13 @@ class AlgsRunner:
         if self.show_output:
             print(self.captured_io.getvalue())
 
-        f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "w")
+        run_log_file_path = os.path.join(saved_history_dir, f"log-{test_mnemo}.txt")
+
+        f = open(run_log_file_path, "w")
         f.write(self.captured_io.getvalue())
         f.close()
+
+        result["run_log_file_path"] = run_log_file_path
 
         # save history - takes too much space for big matrices!
         # for idx, h in enumerate(alg_history_list):
@@ -359,7 +376,6 @@ class AlgsRunner:
         f.close()
 
         # endregion
-
 
         # region Plot and save graphs
         if self.params.save_plots or self.params.show_plots:
@@ -388,15 +404,19 @@ class AlgsRunner:
                     plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi,
                                 format='eps')
 
-                    plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
+
+                    graph_results_path = os.path.join(saved_history_dir, f"graph-{test_mnemo}.png")
+                    plt.savefig(graph_results_path, bbox_inches='tight', dpi=dpi)
+
+                    result["graph_results"] = [ graph_results_path ]
 
                 if self.params.show_plots:
                     plt.title(self.problem.hr_name, loc='center')
                     plt.show()
 
-                exit(0)
-
         # endregion
+
+        return result
 
 # table - time for getting to epsilon error
 # for 1 and 2 - "real error"
@@ -423,10 +443,10 @@ if __name__ == "__main__":
     problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=False, print_data=False)
     alg_names = ['Tseng', 'MT']
 
-    runner = AlgsRunner(problem=problem, params=params)
+    runner = AlgsRunner(problem=problem, params=params, runs_data_save_path='storage/alg_run_stats/local_test_runs')
 
     # runner.prepare_predefined_problem('minmax_game_1')
     # runner.prepare_predefined_problem('blood_supply')
 
     runner.init_algs()
-    runner.run_algs(alg_names, 'local_test_runs')
+    runner.run_algs(alg_names)
