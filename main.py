@@ -294,7 +294,7 @@ sys.stdout = captured_io
 # problem = blood_delivery_test_one.prepareProblem(algorithm_params=params, show_network = False)
 
 # problem = blood_delivery_test_two.prepareProblem(algorithm_params=params, show_network=True)
-# problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=True)
+problem = blood_delivery_test_three.prepareProblem(algorithm_params=params, show_network=True)
 
 # sys.stdout = sys.__stdout__
 # print(captured_io.getvalue())
@@ -650,14 +650,14 @@ def initAlgs():
     algs_to_test = [
 #       korpele,
 #       korpele_adapt,
-#         tseng,
+        tseng,
 #        tseng_adaptive,
         # tseng_adaptive_bregproj,
-        # extrapol_from_past,
+        extrapol_from_past,
 #        extrapol_from_past_adaptive,
 #        extrapol_from_past_adaptive_bregproj,
-#        malitsky_tam,
-        malitsky_tam_adaptive,
+        malitsky_tam,
+#        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
 #        tseng_bregproj,
 #        extrapol_from_past_bregproj,

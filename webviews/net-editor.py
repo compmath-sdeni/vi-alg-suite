@@ -20,6 +20,7 @@ import dash_cytoscape as cyto
 from dash import html, dcc, Patch
 from dash.dependencies import Input, Output, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
+import diskcache
 import networkx as nx
 
 from methods.algorithm_params import AlgorithmParams
@@ -52,6 +53,9 @@ LOGS_DIR = os.path.join(BASE_STORAGE_DIR, 'web-logs')
 os.makedirs(USERS_DATA_DIR, exist_ok=True)
 os.makedirs(LOGS_DIR, exist_ok=True)
 
+cbk_cache = diskcache.Cache("./cbk_cache")
+background_callback_manager = dash.DiskcacheManager(cbk_cache)
+
 active_edge = None
 active_node = None
 
@@ -71,6 +75,7 @@ bs_css = ("https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.c
 server = flask.Flask(__name__)
 app = dash.Dash(__name__, server=server,
                 title='VI algorithms test suite',
+                background_callback_manager=background_callback_manager,
                 update_title='Loading...',
                 external_stylesheets=[bs_css]
                 )
@@ -210,7 +215,15 @@ def get_initial_layout():
         Output('waste-discard-cost-deriv-input', 'value'),
         Output('risk-cost-input', 'value'),
         Output('risk-cost-deriv-input', 'value'),
+        Output('risk-cost-input', 'disabled'),
+        Output('risk-cost-deriv-input', 'disabled'),
         Output('edge-loss-input', 'value'),
+        Output('expected_demand_min', 'value'),
+        Output('expected_demand_max', 'value'),
+        Output('expected_demand_distribution_type', 'value'),
+        Output('expected_demand_min', 'disabled'),
+        Output('expected_demand_max', 'disabled'),
+        Output('expected_demand_distribution_type', 'disabled'),
     ],
     [
         Input({"type": "graph_presenter", "id": ALL}, 'tapEdgeData'),
@@ -224,7 +237,7 @@ def get_initial_layout():
     ],
     prevent_initial_call=True
 )
-def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_elements, session_id):
+def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_elements, session_id):
     # Only one graph presenter is used, so there should be only one element in the list
     if len(graphs_elements) != 1:
         logger.error(f"onGraphElementClick: len(graphs_elements) != 1: {len(graphs_elements)}")
@@ -233,6 +246,7 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
     edgeData = edgeDatas[0]
     nodeData = nodeDatas[0]
     sourceNode = sourceNodes[0] if sourceNodes is not None else None
+    # targetNode = targetNodes[0] if targetNodes is not None else None
     graph_elements = graphs_elements[0]
 
     problem = get_problem_from_cache(session_id)
@@ -250,8 +264,16 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
     oper_cost_deriv_value = dash.no_update
     waste_discard_cost_value = dash.no_update
     waste_discard_cost_deriv_value = dash.no_update
+
     risk_cost_value = dash.no_update
     risk_cost_deriv_value = dash.no_update
+    risk_cost_enabled = False
+
+    expected_demand_min = dash.no_update
+    expected_demand_max = dash.no_update
+    expected_demand_distribution = dash.no_update
+    expected_demand_enabled = False
+
     alpha_value = dash.no_update
 
     selected_edge_index = dash.no_update
@@ -270,13 +292,24 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
         oper_cost_value, oper_cost_deriv_value = problem.net.c_string[selected_edge_index]
         waste_discard_cost_value, waste_discard_cost_deriv_value = problem.net.z_string[selected_edge_index]
 
-        if problem.net.r_string and selected_edge_index < len(problem.net.r_string):
+        # only collection edges have risk cost, and in the current problem structure they are edges starting from the
+        # node 0
+        risk_cost_enabled = problem.net.is_collection_edge(selected_edge_index)
+        if problem.net.r_string and risk_cost_enabled:
             risk_cost_value, risk_cost_deriv_value = problem.net.r_string[selected_edge_index]
         else:
             risk_cost_value = ''
             risk_cost_deriv_value = ''
 
         alpha_value = problem.net.edge_loss[selected_edge_index]
+
+        is_expected_demand_edge = problem.net.is_demand_point_edge(selected_edge_index)
+        expected_demand_enabled = is_expected_demand_edge
+
+        if is_expected_demand_edge:
+            expected_demand_min = problem.net.expected_demand[selected_edge_index][0]
+            expected_demand_max = problem.net.expected_demand[selected_edge_index][1]
+            expected_demand_distribution = problem.net.expected_demand[selected_edge_index][2]
 
         console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData[
             'target'].upper()
@@ -306,7 +339,9 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNode, graphs_el
 
     return console_message, source_node_value, target_node_value, selected_edge_index, \
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
-        risk_cost_value, risk_cost_deriv_value, alpha_value
+        risk_cost_value, risk_cost_deriv_value, not risk_cost_enabled, not risk_cost_enabled, alpha_value, \
+        expected_demand_min, expected_demand_max, expected_demand_distribution, not expected_demand_enabled, \
+        not expected_demand_enabled, not expected_demand_enabled
 
 
 @app.callback(
@@ -671,6 +706,10 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
         State('solver-methods', 'value'),
         State('session-id', 'data')
     ],
+    running=[
+        (Output("solve-problem-button", "disabled"), True, False),
+    ],
+    background=True,
     prevent_initial_call=True
 )
 def solve_problem_click(n_clicks, solvers, session_id):

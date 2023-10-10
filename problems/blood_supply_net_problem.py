@@ -28,6 +28,22 @@ import networkx as nx
 
 # https://machinelearningmastery.com/calculating-derivatives-in-pytorch/
 class BloodSupplyNetwork:
+    @staticmethod
+    def get_uniform_rand_shortage_expectation_func(a: float, b: float):
+        return lambda v: 0 if v >= b else ((0.5 * (a + b) - v) if v <= a else 0.5 * (b - v) * (b - v) / (b - a))
+
+    @staticmethod
+    def get_uniform_rand_shortage_expectation_derivative(a: float, b: float):
+        return lambda v: -1 if v < a else (0 if v > b else (v - b) / (b - a))
+
+    @staticmethod
+    def get_uniform_rand_surplus_expectation_func(a: float, b: float):
+        return lambda v: 0 if v <= a else ((v - 0.5 * (a + b)) if v >= b else 0.5 * (v - a) * (v - a) / (b - a))
+
+    @staticmethod
+    def get_uniform_rand_surplus_expectation_derivative(a: float, b: float):
+        return lambda v: 0 if v <= a else (1 if v > b else (v - a) / (b - a))
+
     def __init__(self, *, n_C: int, n_B: int, n_Cmp: int, n_S: int, n_D: int, n_R: int,
                  edges: Sequence[tuple], c: Sequence[tuple] = None, c_string: Sequence[tuple] = None,
                  z: Sequence[tuple] = None, z_string: Sequence[tuple] = None,
@@ -112,17 +128,17 @@ class BloodSupplyNetwork:
         if self.c_string is not None:
             self.c = []
             for func, deriv in self.c_string:
-                self.c.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+                self.c.append((eval(f'lambda y: {func}'), eval(f'lambda y: {deriv}')))
 
         if self.z_string is not None:
             self.z = []
             for func, deriv in self.z_string:
-                self.z.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+                self.z.append((eval(f'lambda y: {func}'), eval(f'lambda y: {deriv}')))
 
         if self.r_string is not None:
             self.r = []
             for func, deriv in self.r_string:
-                self.r.append((eval(f'lambda f: {func}'), eval(f'lambda f: {deriv}')))
+                self.r.append((eval(f'lambda y: {func}'), eval(f'lambda y: {deriv}')))
 
     # sanity check function - calculate projected demands (final supplies) by edge flows, edge loss coeffs,
     # edge operational costs, risks and expectations
@@ -251,6 +267,12 @@ class BloodSupplyNetwork:
     def E_delta_plus(self, demand_point_index: int) -> float:
         s = self.expected_surplus[demand_point_index][0](self.projected_demands[demand_point_index])
         return s
+
+    def is_collection_edge(self, edge_index: int) -> bool:
+        return edge_index < self.n_C
+
+    def is_demand_point_edge(self, edge_index: int) -> bool:
+        return edge_index in self.last_layer_links
 
     # x is a vector of path flows
     def get_loss(self, x: np.ndarray, *, recalc_link_flows: bool = False) -> float:
@@ -663,4 +685,4 @@ class BloodSupplyNetworkProblem(VIProblem):
     def GetExtraIndicators(self, x: Union[np.ndarray, float], *, averaged_x: np.ndarray = None, final: bool = False) -> \
             Optional[Dict]:
         return {'v': self.net.projected_demands, 'demand_by_link_flows': self.net.get_demands_by_link_flows(),
-                'f': self.net.link_flows}
+                'y': self.net.link_flows}

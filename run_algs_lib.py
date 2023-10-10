@@ -116,7 +116,7 @@ class AlgsRunner:
     @staticmethod
     def get_avail_alg_names():
         return ['Korpelevich', 'Korpelevich (A)', 'Tseng', 'Tseng (A)', 'Tseng (A) - KL', 'Tseng - KL', 'EfP',
-                'EfP (A)', 'EfP (A) - KL', 'Alg. 2*', 'MT', 'MT (A)', 'MT (A) - KL', 'MT - KL']
+                'EfP (A)', 'EfP (A) - KL', 'EFP - KL', 'MT', 'MT (A)', 'MT (A) - KL', 'MT - KL']
 
     def init_algs(self):
         korpele = Korpelevich(self.problem, eps=self.params.eps, lam=self.params.lam, min_iters=self.params.min_iters,
@@ -133,7 +133,7 @@ class AlgsRunner:
                                eps=self.params.eps,
                                lam=self.params.lam_KL,
                                min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                               hr_name="Alg. 1*", projection_type=ProjectionType.BREGMAN)
+                               hr_name="Tseng - KL", projection_type=ProjectionType.BREGMAN)
 
         tseng_adaptive = TsengAdaptive(self.problem,
                                        eps=self.params.eps, lam=self.params.start_adaptive_lam,
@@ -159,7 +159,7 @@ class AlgsRunner:
                                                             lam=self.params.lam_KL * (math.sqrt(2.) - 1),
                                                             min_iters=self.params.min_iters,
                                                             max_iters=self.params.max_iters,
-                                                            hr_name="Alg. 2*", projection_type=ProjectionType.BREGMAN)
+                                                            hr_name="EFP - KL", projection_type=ProjectionType.BREGMAN)
 
         extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(self.problem, stop_condition=self.params.stop_by,
                                                                  y0=self.params.x1.copy(), eps=self.params.eps,
@@ -167,7 +167,7 @@ class AlgsRunner:
                                                                  tau=self.params.adaptive_tau_small,
                                                                  min_iters=self.params.min_iters,
                                                                  max_iters=self.params.max_iters,
-                                                                 hr_name="Alg. 1 - E")
+                                                                 hr_name="EFP (A)")
 
         extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(self.problem,
                                                                           stop_condition=self.params.stop_by,
@@ -176,7 +176,7 @@ class AlgsRunner:
                                                                           tau=self.params.adaptive_tau_small,
                                                                           min_iters=self.params.min_iters,
                                                                           max_iters=self.params.max_iters,
-                                                                          hr_name="Alg. 1 - KL",
+                                                                          hr_name="EFP (A) - KL",
                                                                           projection_type=ProjectionType.BREGMAN)
 
         malitsky_tam = MalitskyTam(self.problem, stop_condition=self.params.stop_by,
@@ -186,7 +186,7 @@ class AlgsRunner:
         malitsky_tam_bregproj = MalitskyTam(self.problem, stop_condition=self.params.stop_by,
                                             x1=self.params.x1.copy(), eps=self.params.eps, lam=self.params.lam_KL / 2.,
                                             min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                            hr_name="Alg. 3*", projection_type=ProjectionType.BREGMAN)
+                                            hr_name="MT - KL", projection_type=ProjectionType.BREGMAN)
 
         malitsky_tam_adaptive = MalitskyTamAdaptive(self.problem,
                                                     x1=self.params.x1.copy(), eps=self.params.eps,
@@ -195,7 +195,7 @@ class AlgsRunner:
                                                     lam1=self.params.start_adaptive_lam,
                                                     tau=self.params.adaptive_tau,
                                                     min_iters=self.params.min_iters, max_iters=self.params.max_iters,
-                                                    hr_name="Alg. 2 - E")
+                                                    hr_name="MT (A)")
 
         malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(self.problem,
                                                              x1=self.params.x1.copy(), eps=self.params.eps,
@@ -205,7 +205,7 @@ class AlgsRunner:
                                                              tau=self.params.adaptive_tau,
                                                              min_iters=self.params.min_iters,
                                                              max_iters=self.params.max_iters,
-                                                             hr_name="Alg. 2 - KL",
+                                                             hr_name="MT (A) - KL",
                                                              projection_type=ProjectionType.BREGMAN)
 
         self.available_algs = [
@@ -218,7 +218,7 @@ class AlgsRunner:
             {"name": "EfP", "alg": extrapol_from_past},
             {"name": "EfP (A)", "alg": extrapol_from_past_adaptive},
             {"name": "EfP (A) - KL", "alg": extrapol_from_past_adaptive_bregproj},
-            {"name": "Alg. 2*", "alg": extrapol_from_past_bregproj},
+            {"name": "EFP - KL", "alg": extrapol_from_past_bregproj},
             {"name": "MT", "alg": malitsky_tam},
             {"name": "MT (A)", "alg": malitsky_tam_adaptive},
             {"name": "MT (A) - KL", "alg": malitsky_tam_adaptive_bregproj},

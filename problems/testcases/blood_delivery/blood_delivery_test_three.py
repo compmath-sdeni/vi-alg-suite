@@ -11,26 +11,11 @@ from jax import grad as jgrad
 from jax import jit, vmap
 
 
-def get_uniform_rand_shortage_expectation_func(a: float, b: float):
-    return lambda v: 0 if v >= b else ((0.5 * (a + b) - v) if v <= a else 0.5 * (b - v) * (b - v) / (b - a))
-
-
-def get_uniform_rand_shortage_expectation_derivative(a: float, b: float):
-    return lambda v: -1 if v < a else (0 if v > b else (v - b) / (b - a))
-
-
-def get_uniform_rand_surplus_expectation_func(a: float, b: float):
-    return lambda v: 0 if v <= a else ((v - 0.5 * (a + b)) if v >= b else 0.5 * (v - a) * (v - a) / (b - a))
-
-
-def get_uniform_rand_surplus_expectation_derivative(a: float, b: float):
-    return lambda v: 0 if v <= a else (1 if v > b else (v - a) / (b - a))
-
 
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), show_network: bool = False,
                    print_data: bool = False):
     N = 1
-    def_lam = 0.0002
+    def_lam = 0.0001
 
     n_paths = 24
     algorithm_params.x0 = np.ones(n_paths)
@@ -47,7 +32,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     algorithm_params.adaptive_tau = 0.9
     algorithm_params.adaptive_tau_small = 0.33 * 0.9
 
-    algorithm_params.max_iters = 1000
+    algorithm_params.max_iters = 2000
     algorithm_params.min_iters = 3
 
     algorithm_params.test_time = False
@@ -57,12 +42,12 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-10
+    algorithm_params.eps = 1e-4
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.STEP_DELTA
 
-    algorithm_params.plot_start_iter = 0
+    algorithm_params.plot_start_iter = 2
     algorithm_params.time_scale_divider = 1e+9
 
     def aaa(x):
@@ -111,131 +96,131 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
                              #     [1, 5, 7, 9, 13, 19]
                              # ],
                              # c=[
-                             #     (lambda f: 6 * f + 15, lambda x: 6 ),
-                             #     (lambda f: 9 * f + 11, lambda f: 9),
-                             #     (lambda f: 0.7 * f + 1, lambda f: 0.7),
-                             #     (lambda f: 1.2 * f + 1, lambda f: 1.2),
-                             #     (lambda f: 1 * f + 3, lambda f: 1),
-                             #     (lambda f: 0.8 * f + 2, lambda f: 0.8),
-                             #     (lambda f: 2.5 * f + 2, lambda f: 2.5),
-                             #     (lambda f: 3 * f + 5, lambda f: 3),
-                             #     (lambda f: 0.8 * f + 6, lambda f: 0.8),
-                             #     (lambda f: 0.5 * f + 3, lambda f: 0.5),
-                             #     (lambda f: 0.3 * f + 1, lambda f: 0.3),
-                             #     (lambda f: 0.5 * f + 2, lambda f: 0.5),
-                             #     (lambda f: 0.4 * f + 2, lambda f: 0.4),
-                             #     (lambda f: 0.6 * f + 1, lambda f: 0.6),
-                             #     (lambda f: 1.3 * f + 3, lambda f: 1.3),
-                             #     (lambda f: 0.8 * f + 2, lambda f: 0.8),
-                             #     (lambda f: 0.5 * f + 3, lambda f: 0.5),
-                             #     (lambda f: 0.7 * f + 2, lambda f: 0.7),
-                             #     (lambda f: 0.6 * f + 4, lambda f: 0.6),
-                             #     (lambda f: 1.1 * f + 5, lambda f: 1.1)
+                             #     (lambda y: 6 * y + 15, lambda x: 6 ),
+                             #     (lambda y: 9 * y + 11, lambda y: 9),
+                             #     (lambda y: 0.7 * y + 1, lambda y: 0.7),
+                             #     (lambda y: 1.2 * y + 1, lambda y: 1.2),
+                             #     (lambda y: 1 * y + 3, lambda y: 1),
+                             #     (lambda y: 0.8 * y + 2, lambda y: 0.8),
+                             #     (lambda y: 2.5 * y + 2, lambda y: 2.5),
+                             #     (lambda y: 3 * y + 5, lambda y: 3),
+                             #     (lambda y: 0.8 * y + 6, lambda y: 0.8),
+                             #     (lambda y: 0.5 * y + 3, lambda y: 0.5),
+                             #     (lambda y: 0.3 * y + 1, lambda y: 0.3),
+                             #     (lambda y: 0.5 * y + 2, lambda y: 0.5),
+                             #     (lambda y: 0.4 * y + 2, lambda y: 0.4),
+                             #     (lambda y: 0.6 * y + 1, lambda y: 0.6),
+                             #     (lambda y: 1.3 * y + 3, lambda y: 1.3),
+                             #     (lambda y: 0.8 * y + 2, lambda y: 0.8),
+                             #     (lambda y: 0.5 * y + 3, lambda y: 0.5),
+                             #     (lambda y: 0.7 * y + 2, lambda y: 0.7),
+                             #     (lambda y: 0.6 * y + 4, lambda y: 0.6),
+                             #     (lambda y: 1.1 * y + 5, lambda y: 1.1)
                              # ],
                              c_string = [
-                                 ("6 * f + 15", "6"),
-                                 ("9 * f + 11", "9"),
-                                 ("0.7 * f + 1", "0.7"),
-                                 ("1.2 * f + 1", "1.2"),
-                                 ("1 * f + 3", "1"),
-                                 ("0.8 * f + 2", "0.8"),
-                                 ("2.5 * f + 2", "2.5"),
-                                 ("3 * f + 5", "3"),
-                                 ("0.8 * f + 6", "0.8"),
-                                 ("0.5 * f + 3", "0.5"),
-                                 ("0.3 * f + 1", "0.3"),
-                                 ("0.5 * f + 2", "0.5"),
-                                 ("0.4 * f + 2", "0.4"),
-                                 ("0.6 * f + 1", "0.6"),
-                                 ("1.3 * f + 3", "1.3"),
-                                 ("0.8 * f + 2", "0.8"),
-                                 ("0.5 * f + 3", "0.5"),
-                                 ("0.7 * f + 2", "0.7"),
-                                 ("0.6 * f + 4", "0.6"),
-                                 ("1.1 * f + 5", "1.1")
+                                 ("6 * y + 15", "6"),
+                                 ("9 * y + 11", "9"),
+                                 ("0.7 * y + 1", "0.7"),
+                                 ("1.2 * y + 1", "1.2"),
+                                 ("1 * y + 3", "1"),
+                                 ("0.8 * y + 2", "0.8"),
+                                 ("2.5 * y + 2", "2.5"),
+                                 ("3 * y + 5", "3"),
+                                 ("0.8 * y + 6", "0.8"),
+                                 ("0.5 * y + 3", "0.5"),
+                                 ("0.3 * y + 1", "0.3"),
+                                 ("0.5 * y + 2", "0.5"),
+                                 ("0.4 * y + 2", "0.4"),
+                                 ("0.6 * y + 1", "0.6"),
+                                 ("1.3 * y + 3", "1.3"),
+                                 ("0.8 * y + 2", "0.8"),
+                                 ("0.5 * y + 3", "0.5"),
+                                 ("0.7 * y + 2", "0.7"),
+                                 ("0.6 * y + 4", "0.6"),
+                                 ("1.1 * y + 5", "1.1")
                              ],
                              # z=[
-                             #     (lambda f: 0.8 * f, lambda f: 0.8),
-                             #     (lambda f: 0.7 * f, lambda f: 0.7),
-                             #     (lambda f: 0.6 * f, lambda f: 0.6),
-                             #     (lambda f: 0.8 * f, lambda f: 0.8),
-                             #     (lambda f: 0.6 * f, lambda f: 0.6),
-                             #     (lambda f: 0.8 * f, lambda f: 0.8),
-                             #     (lambda f: 0.5 * f, lambda f: 0.5),
-                             #     (lambda f: 0.8 * f, lambda f: 0.8),
-                             #     (lambda f: 0.4 * f, lambda f: 0.4),
-                             #     (lambda f: 0.7 * f, lambda f: 0.7),
-                             #     (lambda f: 0.3 * f, lambda f: 0.3),
-                             #     (lambda f: 0.4 * f, lambda f: 0.4),
-                             #     (lambda f: 0.3 * f, lambda f: 0.3),
-                             #     (lambda f: 0.4 * f, lambda f: 0.4),
-                             #     (lambda f: 0.7 * f, lambda f: 0.7),
-                             #     (lambda f: 0.4 * f, lambda f: 0.4),
-                             #     (lambda f: 0.5 * f, lambda f: 0.5),
-                             #     (lambda f: 0.7 * f, lambda f: 0.7),
-                             #     (lambda f: 0.4 * f, lambda f: 0.4),
-                             #     (lambda f: 0.5 * f, lambda f: 0.5)
+                             #     (lambda y: 0.8 * y, lambda y: 0.8),
+                             #     (lambda y: 0.7 * y, lambda y: 0.7),
+                             #     (lambda y: 0.6 * y, lambda y: 0.6),
+                             #     (lambda y: 0.8 * y, lambda y: 0.8),
+                             #     (lambda y: 0.6 * y, lambda y: 0.6),
+                             #     (lambda y: 0.8 * y, lambda y: 0.8),
+                             #     (lambda y: 0.5 * y, lambda y: 0.5),
+                             #     (lambda y: 0.8 * y, lambda y: 0.8),
+                             #     (lambda y: 0.4 * y, lambda y: 0.4),
+                             #     (lambda y: 0.7 * y, lambda y: 0.7),
+                             #     (lambda y: 0.3 * y, lambda y: 0.3),
+                             #     (lambda y: 0.4 * y, lambda y: 0.4),
+                             #     (lambda y: 0.3 * y, lambda y: 0.3),
+                             #     (lambda y: 0.4 * y, lambda y: 0.4),
+                             #     (lambda y: 0.7 * y, lambda y: 0.7),
+                             #     (lambda y: 0.4 * y, lambda y: 0.4),
+                             #     (lambda y: 0.5 * y, lambda y: 0.5),
+                             #     (lambda y: 0.7 * y, lambda y: 0.7),
+                             #     (lambda y: 0.4 * y, lambda y: 0.4),
+                             #     (lambda y: 0.5 * y, lambda y: 0.5)
                              # ],
                              z_string=[
-                                 ("0.8 * f", "0.8"),
-                                 ("0.7 * f", "0.7"),
-                                 ("0.6 * f", "0.6"),
-                                 ("0.8 * f", "0.8"),
-                                 ("0.6 * f", "0.6"),
-                                 ("0.8 * f", "0.8"),
-                                 ("0.5 * f", "0.5"),
-                                 ("0.8 * f", "0.8"),
-                                 ("0.4 * f", "0.4"),
-                                 ("0.7 * f", "0.7"),
-                                 ("0.3 * f", "0.3"),
-                                 ("0.4 * f", "0.4"),
-                                 ("0.3 * f", "0.3"),
-                                 ("0.4 * f", "0.4"),
-                                 ("0.7 * f", "0.7"),
-                                 ("0.4 * f", "0.4"),
-                                 ("0.5 * f", "0.5"),
-                                 ("0.7 * f", "0.7"),
-                                 ("0.4 * f", "0.4"),
-                                 ("0.5 * f", "0.5")
+                                 ("0.8 * y", "0.8"),
+                                 ("0.7 * y", "0.7"),
+                                 ("0.6 * y", "0.6"),
+                                 ("0.8 * y", "0.8"),
+                                 ("0.6 * y", "0.6"),
+                                 ("0.8 * y", "0.8"),
+                                 ("0.5 * y", "0.5"),
+                                 ("0.8 * y", "0.8"),
+                                 ("0.4 * y", "0.4"),
+                                 ("0.7 * y", "0.7"),
+                                 ("0.3 * y", "0.3"),
+                                 ("0.4 * y", "0.4"),
+                                 ("0.3 * y", "0.3"),
+                                 ("0.4 * y", "0.4"),
+                                 ("0.7 * y", "0.7"),
+                                 ("0.4 * y", "0.4"),
+                                 ("0.5 * y", "0.5"),
+                                 ("0.7 * y", "0.7"),
+                                 ("0.4 * y", "0.4"),
+                                 ("0.5 * y", "0.5")
                              ],
 
                              # r=[
-                             #     (lambda f: 2 * f, lambda f: 2),
-                             #     (lambda f: 1.5 * f, lambda f: 1.5)
+                             #     (lambda y: 2 * y, lambda y: 2),
+                             #     (lambda y: 1.5 * y, lambda y: 1.5)
                              # ],
 
                              r_string=[
-                                    ("2 * f", "2"),
-                                    ("1.5 * f", "1.5")
+                                    ("2 * y", "2"),
+                                    ("1.5 * y", "1.5")
                              ],
 
                              # E(t) - expected value, E'(t) - derivative of expected value
                              expected_shortage=[
                                  (
-                                     get_uniform_rand_shortage_expectation_func(5, 10),  # E(Delta-)
-                                     get_uniform_rand_shortage_expectation_derivative(5, 10),  # E'(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_func(5, 10),  # E(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_derivative(5, 10),  # E'(Delta-)
                                  ),
                                  (
-                                     get_uniform_rand_shortage_expectation_func(40, 50),  # E(Delta-)
-                                     get_uniform_rand_shortage_expectation_derivative(40, 50),  # E'(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_func(40, 50),  # E(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_derivative(40, 50),  # E'(Delta-)
                                  ),
                                  (
-                                     get_uniform_rand_shortage_expectation_func(25, 40),  # E(Delta-)
-                                     get_uniform_rand_shortage_expectation_derivative(25, 40)  # E'(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_func(25, 40),  # E(Delta-)
+                                     BloodSupplyNetwork.get_uniform_rand_shortage_expectation_derivative(25, 40)  # E'(Delta-)
                                  )
                              ],
                              expected_surplus=[
                                  (
-                                     get_uniform_rand_surplus_expectation_func(5, 10),  # E(Delta+)
-                                     get_uniform_rand_surplus_expectation_derivative(5, 10),  # E'(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_func(5, 10),  # E(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_derivative(5, 10),  # E'(Delta+)
                                  ),
                                  (
-                                     get_uniform_rand_surplus_expectation_func(40, 50),  # E(Delta+)
-                                     get_uniform_rand_surplus_expectation_derivative(40, 50),  # E'(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_func(40, 50),  # E(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_derivative(40, 50),  # E'(Delta+)
                                  ),
                                  (
-                                     get_uniform_rand_surplus_expectation_func(25, 40),  # E(Delta+)
-                                     get_uniform_rand_surplus_expectation_derivative(25, 40)  # E'(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_func(25, 40),  # E(Delta+)
+                                     BloodSupplyNetwork.get_uniform_rand_surplus_expectation_derivative(25, 40)  # E'(Delta+)
                                  )
                              ],
                              edge_loss=[.97, .99, 1, .99, 1, 1, .92, .96, .98, 1, 1, 1, 1, 1, 1, 1, .98, 1, 1, .98]
@@ -286,7 +271,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), sho
 
     problem = BloodSupplyNetworkProblem(network=net,
                                         x0=algorithm_params.x0,
-                                        hr_name='$BloodDelivery simplest {0}D$'.format(N),
+                                        hr_name='$BloodDelivery test 2$'.format(N),
                                         xtest=real_solution
                                         )
 

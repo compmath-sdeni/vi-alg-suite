@@ -13,7 +13,6 @@ import logging
 
 logger = logging.getLogger('vi-algo-test-suite')
 
-
 def get_saved_problems_list():
     return [
         {"label": "Blood delivery test one", "value": "blood_delivery_test_one"},
@@ -79,7 +78,8 @@ def build_graph_view_layout(net: BloodSupplyNetwork, G, pos, labels):
 
     return cyto.Cytoscape(
         id={"type": "graph_presenter", "id": n},  # id={'type':'cyto', 'index':n},
-        layout={"name": "preset"},
+        zoom=1.1,
+        layout={"name": "preset", "fit": False},
         style={"width": "98%", "height": "98%"},
         elements=get_cytoscape_graph_elements(net, G=G, pos=pos, labels=labels),
         stylesheet=[
@@ -121,6 +121,12 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
             dcc.Input(id='selected-edge-index', type='hidden', value=selected_edge_index),
             dcc.Input(id='temp-data', type='hidden', value=temp_data),
             dcc.Input(id='temp-data-target', type='hidden', value=temp_data_target),
+            dcc.Loading(
+                id="loading-1",
+                type="default",
+                fullscreen=True,
+                children=html.Div(id="loading-output-1")
+            ),
             html.Div(
                 className="row vh-100",
                 children=[
@@ -128,7 +134,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                     html.Div(className="col-sm-5", id="graph-container", style={"border": "1px solid green"},
                              children=build_graph_view_layout(problem.net, G, pos, labels)),
                     html.Div(className="col-sm-7", style={"border": "1px solid gray"}, children=[
-                        html.H4("User and session", className="bg-info text-white p-2 mb-2 text-center"),
+                        html.H4("User and session", className="bg-info text-white p-2 mb-2 mt-1 text-center"),
                         html.Div(className="form", children=[
                             html.Div(id="login-form-block", className="mb-2", children=[
                                 html.Div(className="row align-items-left mt-2", children=[
@@ -157,13 +163,13 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                         html.Button("Log out", id='logout-button',
                                                     className="btn btn-warning"),
                                     ]),
-                                    html.Div(className="col-sm-6", children=[
+                                    html.Div(className="col-sm-5", children=[
                                         dcc.Dropdown(id='user-saved-problems',
                                                      options=[{'value': problem["value"], 'label': problem["value"]} for
                                                               problem in get_saved_problems_list()], value=None,
                                                      placeholder="Select problem")
                                     ]),
-                                    html.Div(className="col-sm-2", children=[
+                                    html.Div(className="col-sm-3", children=[
                                         html.Button("Load problem", id='load-problem-button',
                                                     className="btn btn-primary")
                                     ]),
@@ -195,31 +201,31 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                                         placeholder="2", className="form-control"),
                                                           ]),
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Operational cost: c(f); c'(f)",
+                                                              html.Label("Oper. cost: c(y); c'(y)",
                                                                          htmlFor="oper-cost-input",
                                                                          className="form-label"),
                                                               html.Div(className="row g-1", children=[
                                                                   html.Div(className="col-sm-8", children=[
                                                                       dcc.Input(id='oper-cost-input', type='text',
-                                                                                placeholder="e.g. f^2+3*f+1",
+                                                                                placeholder="e.g. y^2+3*y+1",
                                                                                 className="form-control"),
                                                                   ]),
                                                                   html.Div(className="col-sm-4", children=[
                                                                       dcc.Input(id='oper-cost-deriv-input', type='text',
-                                                                                placeholder="2*f+3",
+                                                                                placeholder="2*y+3",
                                                                                 className="form-control"),
                                                                   ])
                                                               ]),
                                                           ]),
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Waste cost: z(f); z'(f)",
+                                                              html.Label("Waste cost: z(y); z'(y)",
                                                                          htmlFor="waste-discard-cost-input",
                                                                          className="form-label"),
                                                               html.Div(className="row g-1", children=[
                                                                   html.Div(className="col-sm-7", children=[
                                                                       dcc.Input(id='waste-discard-cost-input',
                                                                                 type='text',
-                                                                                placeholder="e.g. 0.75*f",
+                                                                                placeholder="e.g. 0.75*y",
                                                                                 className="form-control"),
                                                                   ]),
                                                                   html.Div(className="col-sm-5", children=[
@@ -233,18 +239,25 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
 
                                                           ]),
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Risk cost: r(f); r'(f)",
-                                                                         htmlFor="risk-cost-input",
-                                                                         className="form-label"),
+                                                              html.Div(className="row g-1", children=[
+                                                                  html.Div(className="col-sm-6", children=[
+                                                                  html.Label("Risk cost: r(y)",
+                                                                             htmlFor="risk-cost-input",
+                                                                             className="form-label"),]),
+                                                                  html.Div(className="col-sm-6", children=[
+                                                                      html.Label("r'(y)",
+                                                                                 htmlFor="risk-cost-deriv-input",
+                                                                                 className="form-label"), ])
+                                                              ]),
                                                               html.Div(className="row g-1", children=[
                                                                   html.Div(className="col-sm-6", children=[
                                                                       dcc.Input(id='risk-cost-input', type='text',
-                                                                                placeholder="e.g. 1.5*f",
+                                                                                placeholder="r(y), e.g. 1.5*f",
                                                                                 className="form-control"),
                                                                   ]),
                                                                   html.Div(className="col-sm-6", children=[
                                                                       dcc.Input(id='risk-cost-deriv-input', type='text',
-                                                                                placeholder="1.5",
+                                                                                placeholder="r'(y), e.g. 1.5",
                                                                                 className="form-control"),
                                                                   ]),
                                                               ]),
@@ -257,6 +270,36 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                                         className="form-control"),
                                                           ]),
                                                       ]),
+                                             html.Div(className="form row align-items-left mt-2 g-1",
+                                                      children=[
+                                                          html.Div(className="col-md-3 px-2", children=[
+                                                              html.Label("Expected demand, min", htmlFor="expected_demand_min",
+                                                                         className="form-label"),
+                                                              dcc.Input(id='expected_demand_min', type='text',
+                                                                        placeholder="e.g. 2",
+                                                                        className="form-control")
+                                                          ]),
+                                                          html.Div(className="col-md-3 px-2", children=[
+                                                              html.Label("Expected demand, max",
+                                                                         htmlFor="expected_demand_max",
+                                                                         className="form-label"),
+                                                              dcc.Input(id='expected_demand_max', type='text',
+                                                                        placeholder="e.g. 5",
+                                                                        className="form-control")
+                                                          ]),
+                                                          html.Div(className="col-md-3 px-2", children=[
+                                                              html.Label("Distribution type",
+                                                                         htmlFor="expected_demand_distribution_type",
+                                                                         className="form-label"),
+                                                              dcc.Dropdown(id='expected_demand_distribution_type',
+                                                                       options=[{'value': method["value"],
+                                                                                 'label': method["label"]} for
+                                                                                method in [{'value': 'uniform', 'label': 'Uniform'}]],
+                                                                       value="uniform",
+                                                                       clearable=False,
+                                                                       placeholder="Distribution type")
+                                                          ]),
+                                            ]),
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-auto", children=[
@@ -276,9 +319,9 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                           ]),
                                                       ]),
                                              html.Hr(),
-                                             html.Div([html.H4("Node data", className="my-0 py-0")],
-                                                      className="form row align-items-left mt-2 g-1"),
-                                             html.Hr(),
+                                             # html.Div([html.H4("Node data", className="my-0 py-0")],
+                                             #          className="form row align-items-left mt-2 g-1"),
+                                             # html.Hr(),
                                              html.Div([html.H4("Save problem", className="my-0 py-0")],
                                                       className="form row align-items-left mt-2 g-1"),
                                              html.Div("Name will be name of folder with the problem data",
@@ -330,7 +373,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                 html.Div(id='solver-output', children=[
                                     html.H4("Solver results and stats", className="bg-info p-1 mb-1 mt-4 text-center"),
                                     html.Div(className="row", children=[
-                                        html.Div(className="col-sm-6", children=[
+                                        html.Div(className="col-sm-12 ps-1 pe-4", children=[
                                             html.Div(id='solver-images-output'),
                                         ])
                                     ]),
