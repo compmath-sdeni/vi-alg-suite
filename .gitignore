@@ -1,9 +1,10 @@
 .env
 /storage/
-/*.npy
+*.npy
 /test*.txt
 /.venv/
 /webviews/users_data/
 /webviews/*.log
 /webviews/storage/
 /storage/data/
+cbk_cache/
