@@ -46,32 +46,33 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region California search edges list
-    # https://www.quora.com/Where-can-I-find-arff-data-sets-for-implementing-page-rank
-    # http://vlado.fmf.uni-lj.si/pub/networks/data/mix/mixed.htm
-    # https://www.cs.cornell.edu/courses/cs685/2002fa/data/gr0.California
-    # Jon M. Kleinberg, Authoritative sources in a hyperlinked environment, Journal of the ACMVolume 46Issue 5Sept. 1999 pp 604–632, https://doi.org/10.1145/324133.324140
-    # 9664 (6175 used) nodes, 16150 edges
-
-    storage_dir: str = '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/PageRankDatasets/'
-
-    G: nx.DiGraph = nx.readwrite.read_edgelist(f'{storage_dir}CaliforniaSearch/ca_search_edges.txt', create_using=nx.DiGraph)
-    n = G.number_of_nodes()
-    nodes_df:pd.DataFrame = pd.read_csv(f'{storage_dir}CaliforniaSearch/ca_search_nodes.txt', sep=" ", names=["url"], index_col=0)
-    # print(nodes_df.head(5))
-    node_labels = nodes_df["url"]
-
-    GraphMatr: np.ndarray = np.array(nx.google_matrix(G)).T
-
+    # # https://www.quora.com/Where-can-I-find-arff-data-sets-for-implementing-page-rank
+    # # http://vlado.fmf.uni-lj.si/pub/networks/data/mix/mixed.htm
+    # # https://www.cs.cornell.edu/courses/cs685/2002fa/data/gr0.California
+    # # Jon M. Kleinberg, Authoritative sources in a hyperlinked environment, Journal of the ACMVolume 46Issue 5Sept. 1999 pp 604–632, https://doi.org/10.1145/324133.324140
+    # # 9664 (6175 used) nodes, 16150 edges
+    #
+    # storage_dir: str = '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/PageRankDatasets/'
+    #
+    # G: nx.DiGraph = nx.readwrite.read_edgelist(f'{storage_dir}CaliforniaSearch/ca_search_edges.txt', create_using=nx.DiGraph)
+    # n = G.number_of_nodes()
+    # nodes_df:pd.DataFrame = pd.read_csv(f'{storage_dir}CaliforniaSearch/ca_search_nodes.txt', sep=" ", names=["url"], index_col=0)
+    # # print(nodes_df.head(5))
+    # node_labels = nodes_df["url"]
+    #
+    # GraphMatr: np.ndarray = np.array(nx.google_matrix(G)).T
+    #
+    # # Use networkx to calculate solution to compare with
     # # real_solution: np.ndarray = np.zeros(n, dtype=float)
     # # pr_dict = nx.pagerank_numpy(G)
     # # for i, k in enumerate(pr_dict):
     # #     real_solution[i] = pr_dict[k]
     # # np.savetxt("ca_search_numpy_sol.txt", real_solution)
     #
-    real_solution: np.ndarray = np.loadtxt("ca_search_numpy_sol.txt")
-
-    print(f"Test on real solution: {np.max(np.abs(GraphMatr @ real_solution - real_solution))}")
-    print(f"Nodes: {G.number_of_nodes()}, edges: {G.number_of_edges()}")
+    # real_solution: np.ndarray = np.loadtxt(f"{storage_dir}CaliforniaSearch/ca_search_numpy_sol.txt")
+    #
+    # print(f"Test on real solution: {np.max(np.abs(GraphMatr @ real_solution - real_solution))}")
+    # print(f"Nodes: {G.number_of_nodes()}, edges: {G.number_of_edges()}")
 
     # end region
 
@@ -84,13 +85,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # endregion
 
     # region test small PR problem with known solution
+
     # GraphMatr: np.ndarray = np.array([
     #     [0, 0, 0, 1],
     #     [1, 0, 0, 0],
     #     [0, 1, 0, 0],
     #     [1, 1, 1, 0],
     # ], dtype=np.float64)
-    #
+
     # GraphMatr: np.ndarray = np.array([
     #     [0,   0,   0,  1],
     #     [0.5, 0,   0,  0],
@@ -101,34 +103,74 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # n = GraphMatr.shape[0]
     #
     # M = GraphMatr
+
+    # approx solution using numpy linalg
+    # B = np.ones_like(GraphMatr)/n
+    # M = 0.85 * GraphMatr + 0.15 * B
+    # GraphMatr = M
+    # vals, vects = np.linalg.eig(M)
     #
-    # # B = np.ones_like(GraphMatr)/n
-    # # M = 0.85 * GraphMatr + 0.15 * B
-    # # GraphMatr = M
-    # # vals, vects = np.linalg.eig(M)
-    # #
-    # # print("Eigenvects:")
-    # # print(f"{vects}")
-    # # for i, v in enumerate(vals):
-    # #     print(f"Test {i}: {v}: {M @ vects[:, i] - vals[i] * vects[:, i]}")
-    # #
-    # # real_solution = np.array([0.343, 0.183, 0.115, 0.359])
+    # print("Eigenvects:")
+    # print(f"{vects}")
+    # for i, v in enumerate(vals):
+    #     print(f"Test {i}: {v}: {M @ vects[:, i] - vals[i] * vects[:, i]}")
+
+    # real_solution = np.array([0.343, 0.183, 0.115, 0.359])
     # real_solution = np.array([0.36363636, 0.18181818, 0.09090909, 0.36363636])
-    #
-    # print("Test:")
+
+    # print("Test Ax-x:")
     # print(M @ real_solution - real_solution)
 
     # endregion
+
+    GraphMatr: np.ndarray = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+    ], dtype=np.float64)
+
+    n = GraphMatr.shape[0]
+
+    # divide every column of GraphMatr by the column sum to get Markov matrix
+    s = GraphMatr.sum(axis=0)
+    GraphMatr /= s
+
+    B = np.ones_like(GraphMatr) / n
+    M = 0.85 * GraphMatr + 0.15 * B
+    GraphMatr = M
+
+    real_solution = np.array(
+        [3.476e-2, 6.430e-2, 6.209e-2, 8.753e-2, 1.092e-1, 1.423e-1, 1.831e-1, 2.325e-1, 4.953e-2, 3.476e-2])
+
+    vals, vects = np.linalg.eig(GraphMatr)
+
+    print("Eigenvects:")
+    # print(f"{vects}")
+    for i, v in enumerate(vals):
+        # print(f"Test {i}: {v}: {GraphMatr @ vects[:, i] - vals[i] * vects[:, i]}")
+        if abs(v - 1) < 0.000001:
+            real_solution = vects[:, i]
+
+    real_solution /= real_solution.sum()
+
+    print(f"Real solution: {real_solution}")
 
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 1
     algorithm_params.stop_by = StopCondition.STEP_SIZE
 
-    algorithm_params.save_history = False
+    algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-6
-    algorithm_params.max_iters = 15
+    algorithm_params.max_iters = 5000
     algorithm_params.min_iters = 15
 
     algorithm_params.lam = 0.05
@@ -154,7 +196,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    algorithm_params.y_label = "$D_n$"
+    algorithm_params.y_label = "$G(z_n)$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 
@@ -177,8 +219,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     )
 
     if real_solution is not None:
-        print(f"Goal function on real solution: {res.F(real_solution)}")
-        print(f"Top 50 ranks: {np.argsort(real_solution)[::-1][:50]}")
+        print(f"Goal function on test solution: {res.F(real_solution)}")
+        print(f"Top 50 ranks by test solution: {np.argsort(real_solution)[::-1][:50]}")
 
     print(f"Goal function on start: {res.F(algorithm_params.x0)}")
 
