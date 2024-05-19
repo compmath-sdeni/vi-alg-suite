@@ -21,8 +21,8 @@ class YAxisType(Enum):
 
 class DefaultLabels:
     X_AXIS = {
-        XAxisType.ITERATION: "Iterations",
-        XAxisType.TIME: "Time, ms."
+        XAxisType.ITERATION: "Номер ітерації",
+        XAxisType.TIME: "Час, ms."
     }
     Y_AXIS = {
         YAxisType.REAL_ERROR: "$D_n$",  # "$||x_n - x^*||_2$",

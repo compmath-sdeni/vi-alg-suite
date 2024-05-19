@@ -123,17 +123,54 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     # endregion
 
+  # region bigger test PR problem
+  #   GraphMatr: np.ndarray = np.array([
+  #       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  #       [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  #       [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+  #       [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+  #       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  #       [0, 0, 0, 1, 1, 0, 0, 0, 0, 1],
+  #       [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+  #       [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+  #       [0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+  #       [0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+  #   ], dtype=np.float64)
+  #
+  #   n = GraphMatr.shape[0]
+  #
+  #   # divide every column of GraphMatr by the column sum to get Markov matrix
+  #   s = GraphMatr.sum(axis=0)
+  #   GraphMatr /= s
+  #
+  #   B = np.ones_like(GraphMatr) / n
+  #   M = 0.85 * GraphMatr + 0.15 * B
+  #   GraphMatr = M
+  #
+  #   real_solution = np.array(
+  #       [3.476e-2, 6.430e-2, 6.209e-2, 8.753e-2, 1.092e-1, 1.423e-1, 1.831e-1, 2.325e-1, 4.953e-2, 3.476e-2])
+  #
+  #   vals, vects = np.linalg.eig(GraphMatr)
+  #
+  #   print("Eigenvects:")
+  #   # print(f"{vects}")
+  #   for i, v in enumerate(vals):
+  #       # print(f"Test {i}: {v}: {GraphMatr @ vects[:, i] - vals[i] * vects[:, i]}")
+  #       if abs(v - 1) < 0.000001:
+  #           real_solution = vects[:, i]
+  #
+  #   real_solution /= real_solution.sum()
+  #
+  #   print(f"Real solution: {real_solution}")
+# endregion
+
+# region test PR problem from PhD thesis
     GraphMatr: np.ndarray = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+        [0, 1, 1, 0, 1],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 1, 0]
     ], dtype=np.float64)
 
     n = GraphMatr.shape[0]
@@ -141,6 +178,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # divide every column of GraphMatr by the column sum to get Markov matrix
     s = GraphMatr.sum(axis=0)
     GraphMatr /= s
+    print(GraphMatr)
 
     B = np.ones_like(GraphMatr) / n
     M = 0.85 * GraphMatr + 0.15 * B
@@ -162,6 +200,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     print(f"Real solution: {real_solution}")
 
+# end region
+
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 1
     algorithm_params.stop_by = StopCondition.STEP_SIZE
@@ -170,7 +210,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-8
-    algorithm_params.max_iters = 2000
+    algorithm_params.max_iters = 5000
     algorithm_params.min_iters = 15
 
     algorithm_params.lam = 0.05
@@ -196,14 +236,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
-    algorithm_params.y_label = "$G(z_n)$"
+    algorithm_params.y_label = "$G(z_{avg})$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
 
-    algorithm_params.plot_start_iter = 0
+    algorithm_params.plot_start_iter = 5
 
     res = PageRankProblem(
         GraphMatr=GraphMatr,

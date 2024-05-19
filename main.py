@@ -249,8 +249,8 @@ sys.stdout = captured_io
 # endregion
 
 # region PageRank and SLE
-# problem = pagerank_1.prepareProblem(algorithm_params=params)
-problem = pagerank_1.prepareCaliforniaGraphProblem(algorithm_params=params)
+problem = pagerank_1.prepareProblem(algorithm_params=params)
+# problem = pagerank_1.prepareCaliforniaGraphProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -598,9 +598,9 @@ def initAlgs():
                                    min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng (A)")
 
     tseng_adaptive_bregproj = TsengAdaptive(problem, stop_condition=params.stop_by,
-                                   eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                   eps=params.eps, lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                    min_iters=params.min_iters, max_iters=params.max_iters,
-                                            hr_name="Alg. 1* (A)", projection_type=ProjectionType.BREGMAN)
+                                            hr_name="Alg. T - KL", projection_type=ProjectionType.BREGMAN)
 
     extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
@@ -621,7 +621,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 4 - KL", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Екстраполяція з минулого - KL", projection_type=ProjectionType.BREGMAN)
 
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
@@ -653,14 +653,14 @@ def initAlgs():
 #       korpele_adapt,
 #        tseng,
 #        tseng_adaptive,
-        # tseng_adaptive_bregproj,
+#        tseng_adaptive_bregproj,
 #        extrapol_from_past,
 #        extrapol_from_past_adaptive,
         extrapol_from_past_adaptive_bregproj,
 #        malitsky_tam,
 #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
-#        tseng_bregproj,
+#         tseng_bregproj,
 #         extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,
 
@@ -833,7 +833,7 @@ if params.save_plots or params.show_plots:
             plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
 
         if params.show_plots:
-            plt.title(problem.hr_name, loc='center')
+            # plt.title(problem.hr_name, loc='center')
             plt.show()
 
         exit(0)
