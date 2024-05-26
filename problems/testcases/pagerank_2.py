@@ -204,14 +204,14 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     algorithm_params.test_time = False
     algorithm_params.test_time_count = 1
-    algorithm_params.stop_by = StopCondition.STEP_SIZE
+    algorithm_params.stop_by = StopCondition.GAP
 
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 10000
-    algorithm_params.min_iters = 15
+    algorithm_params.max_iters = 1000
+    algorithm_params.min_iters = 100
 
     algorithm_params.lam = 0.05
     # for Bregman variants
@@ -235,8 +235,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
-    algorithm_params.y_label = "$G(z_{avg})$"
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
+    algorithm_params.y_label = "$G(z)$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 
@@ -334,7 +334,7 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     algorithm_params.y_label = "$G(z_n)$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
