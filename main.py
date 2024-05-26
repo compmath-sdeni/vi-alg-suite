@@ -37,7 +37,7 @@ from problems.sle_saddle import SLESaddle
 from problems.nagurna_simplest import BloodDeliveryHardcodedOne
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear
+    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear, pagerank_2
 
 from problems.funcndmin import FuncNDMin
 
@@ -249,7 +249,7 @@ sys.stdout = captured_io
 # endregion
 
 # region PageRank and SLE
-problem = pagerank_1.prepareProblem(algorithm_params=params)
+problem = pagerank_2.prepareProblem(algorithm_params=params)
 # problem = pagerank_1.prepareCaliforniaGraphProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
@@ -655,8 +655,8 @@ def initAlgs():
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-#        extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_bregproj,
+        extrapol_from_past_adaptive,
+#         extrapol_from_past_adaptive_bregproj,
 #        malitsky_tam,
 #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
