@@ -80,6 +80,7 @@ class PageRankProblem2Simplex(VIProblem):
         return self.A(x)
 
     def bregmanProject(self, x: np.ndarray, a: np.ndarray) -> np.ndarray:
+
         res = np.empty_like(x, dtype=float)
 
         t = x[:self.m] * np.exp(a[:self.m])

@@ -308,7 +308,7 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-8
+    algorithm_params.eps = 1e-15
     algorithm_params.max_iters = 20000
     algorithm_params.min_iters = 15
 
@@ -330,7 +330,7 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.adaptive_tau = 0.5 * 0.75
     algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
-    algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(n)])))
+    algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(2*n)])))
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION

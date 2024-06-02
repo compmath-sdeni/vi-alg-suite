@@ -249,8 +249,8 @@ sys.stdout = captured_io
 # endregion
 
 # region PageRank and SLE
-problem = pagerank_2.prepareProblem(algorithm_params=params)
-# problem = pagerank_1.prepareCaliforniaGraphProblem(algorithm_params=params)
+# problem = pagerank_2.prepareProblem(algorithm_params=params)
+problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -621,7 +621,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраполяція з минулого - KL", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Екстраполяція з минулого - KL симплекс", projection_type=ProjectionType.BREGMAN)
 
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
@@ -752,7 +752,7 @@ else:
                 # formatting params - precision is ignored for some reason...
                 with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
                     df: pandas.DataFrame = alg.history.toPandasDF()
-                    df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star"), index=False)
+                    df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star")[:30], index=False)
 
             # save to csv without cutting data (without ...)
             with np.printoptions(threshold=sys.maxsize, precision=3, linewidth=sys.maxsize, floatmode='fixed'):
