@@ -104,7 +104,7 @@ class KorpelevichExtragradAdapt(IterGradTypeMethod):
                     delta_A = np.linalg.norm(diff_A)
 
                 if self.projection_type == ProjectionType.BREGMAN:
-                    dot_prod_to_check = np.dot(diff_A, diff_newx_y)
+                    dot_prod_to_check = 1.0 # for bregman div always check!
                 else:
                     dot_prod_to_check = np.dot(diff_A, diff_newx_y)
 

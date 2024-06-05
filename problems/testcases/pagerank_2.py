@@ -210,8 +210,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 1000
-    algorithm_params.min_iters = 100
+    algorithm_params.max_iters = 500
+    algorithm_params.min_iters = 500
 
     algorithm_params.lam = 0.05
     # for Bregman variants

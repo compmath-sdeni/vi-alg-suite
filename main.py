@@ -250,9 +250,9 @@ sys.stdout = captured_io
 # endregion
 
 # region PageRank and SLE
-problem = pagerank_1.prepareProblem(algorithm_params=params)
+# problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
-# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=20)
+problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -274,7 +274,7 @@ problem = pagerank_1.prepareProblem(algorithm_params=params)
 #                                           )
 
 # problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-#                                           max_iters=1500, problem_name='SiouxFalls',
+#                                           max_iters=1000, problem_name='SiouxFalls',
 #                                           max_od_paths_count=2, max_path_edges=10,
 #                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
 #                                           net_file_name='SiouxFalls_net.tntp',
@@ -617,37 +617,52 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраполяція з минулого, адаптивний", use_step_increase=False)
+                                                             hr_name="Алг. 3.2 (евклідовий)", use_step_increase=False)
 
     extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраполяція з минулого, адаптивний+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+                                                             hr_name="Алг. 3.2 (евклідовий)+", use_step_increase=True,
+                                                                 step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алгоритм 4 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Алг. 3.2 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+
+    extrapol_from_past_adaptive_bregproj_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Алг. 3.2 (KL, симплекс)+", projection_type=ProjectionType.BREGMAN,
+                                                             use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраградієнтний, адаптивний", use_step_increase=False)
+                                                             hr_name="Алг. 3.1 (евклідовий)", use_step_increase=False)
 
     korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраградієнтний, адаптивний+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+                                                             hr_name="Алг. 3.1 (евклідовий)+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive_bregproj = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алгоритм 3 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Алг. 3.1 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+
+    korpele_adaptive_bregproj_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Алг. 3.1 (KL, симплекс) +", projection_type=ProjectionType.BREGMAN,
+                                                             use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
                                x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
@@ -675,16 +690,18 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-       korpele_adaptive,
-        korpele_adaptive_inc,
-#       korpele_adaptive_bregproj,
+       # korpele_adaptive,
+#        korpele_adaptive_inc,
+        korpele_adaptive_bregproj,
+        korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-         extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_inc,
-#        extrapol_from_past_adaptive_bregproj,
+         # extrapol_from_past_adaptive,
+#         extrapol_from_past_adaptive_inc,
+        extrapol_from_past_adaptive_bregproj,
+        extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
 #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
@@ -712,7 +729,7 @@ def initAlgs():
 # region Run all algs and save data and results
 start = time.monotonic()
 
-saved_history_dir = f"storage/stats/BloodSupply-{datetime.datetime.today().strftime('%Y-%m')}"
+saved_history_dir = f"storage/stats/PhdUlt-{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)

@@ -102,7 +102,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     algorithm_params.min_iters = 3
 
-    algorithm_params.start_adaptive_lam = 0.0065
+    algorithm_params.start_adaptive_lam = 5.0
     algorithm_params.start_adaptive_lam1 = 1.0
 
     algorithm_params.adaptive_tau = 0.9
