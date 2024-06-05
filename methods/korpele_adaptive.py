@@ -6,29 +6,28 @@ from problems.viproblem import VIProblem
 from methods.IterGradTypeMethod import IterGradTypeMethod, ProjectionType
 
 
-class ExtrapolationFromPastAdapt(IterGradTypeMethod):
+class KorpelevichExtragradAdapt(IterGradTypeMethod):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, y0: np.ndarray,
                  min_iters: int = 0, max_iters=5000, tau: float = 0.3,
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, use_step_increase: bool = False,
-                 step_increase_seq_rule=None):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, use_step_increase: bool = False, step_increase_seq_rule = None):
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
                          hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
 
         self.x0 = self.problem.x0
-        self.y0 = y0
+        self.y0 = self.problem.x0
         self.y = self.y0
 
-        self.x: np.ndarray = self.problem.x0
-        self.Ay: np.ndarray = self.problem.A(self.y0)
+        self.x: np.ndarray = self.x0
+        self.Ax: np.ndarray = self.problem.A(self.x)
+        self.Ay: np.ndarray = self.problem.A(self.y)
 
-        self.cum_y: np.ndarray = np.zeros_like(self.y)
+        self.cum_x = self.x.copy()
         self.averaged_result: np.ndarray = None
 
         self.D: float = 0
-        self.D2: float = 0
 
         self.lam0 = lam
         self.tau = tau
@@ -47,76 +46,67 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.projections_count = 0
         self.operator_count = 0
 
+        self.Ax = self.problem.A(self.x)
         self.Ay = self.problem.A(self.y)
         self.operator_count += 1
 
         self.D = 0
-        self.D2 = 0
 
         self.lam = self.lam0
 
-        # self.cum_y = self.y # start average from y0
-        self.cum_y = np.zeros_like(self.y)  # start average from y1
+        self.cum_x = self.x.copy()
         self.averaged_result = None
-
-        # self.hist_for_avg = np.zeros((self.max_iters + 1, self.y.shape[0]))
-        # self.hist_for_avg[self.iter] = self.y
 
         return super().__iter__()
 
     def doStep(self):
-        # calculation scheme from the paper
-        # Convergence of the Method of Extrapolation from the Past for Variational Inequalities in Uniformly Convex Banach Spaces
-        py = self.y
+        py = self.y #.copy()
+        self.Ax = self.problem.A(self.x)
         if self.projection_type == ProjectionType.BREGMAN:
-            self.y = self.problem.bregmanProject(self.x, - self.lam * self.Ay)
+            self.y = self.problem.bregmanProject(self.x, - self.lam * self.Ax)
         else:
-            self.y = self.problem.Project(self.x - self.lam * self.Ay)
+            self.y = self.problem.Project(self.x - self.lam * self.Ax)
 
-        self.cum_y += self.y
-        self.averaged_result = self.cum_y / self.iter
-
-        # the first time we get here, iter = 1. So, to start average from y1 and not from y0, we need iter-1
-        #        self.hist_for_avg[self.iter-1] = self.y
-
-        pAy = self.Ay
+        pAy = self.Ay #.copy()
         self.Ay = self.problem.A(self.y)
-        px = self.x
 
+        px = self.x #.copy()
         if self.projection_type == ProjectionType.BREGMAN:
             self.x = self.problem.bregmanProject(self.x, - self.lam * self.Ay)
         else:
             self.x = self.problem.Project(self.x - self.lam * self.Ay)
 
+        # the first time we get here, iter = 1, and x0 is already in cum_x.
+        self.cum_x += self.x
+        self.averaged_result = self.cum_x / (self.iter + 1)
+
         if self.projection_type == ProjectionType.BREGMAN:
             self.D = np.linalg.norm(px - self.y, 1)
-            self.D2 = np.linalg.norm(self.x - px, 1)
         else:
             self.D = np.linalg.norm(px - self.y)
-            self.D2 = np.linalg.norm(self.x - px)
 
         self.projections_count += 2
-        self.operator_count += 1
+        self.operator_count += 2
 
-        if self.D + self.D2 >= self.zero_delta:
-            diff_A = pAy - self.Ay
-            diff_py = self.y - py
+        if self.D >= self.zero_delta:
+            diff_A = self.Ax - self.Ay
+            diff_pxy = px - self.y
 
             if self.use_step_increase:
-                diff_new_py = self.x - self.y
+                diff_newx_y = self.x - self.y
                 if self.projection_type == ProjectionType.BREGMAN:
-                    difnorm = np.linalg.norm(diff_py, 1)
-                    dif_newx_norm = np.linalg.norm(diff_new_py, 1)
+                    difnorm = np.linalg.norm(diff_pxy, 1)
+                    dif_newx_norm = np.linalg.norm(diff_newx_y, 1)
                     delta_A = np.linalg.norm(diff_A, inf)
                 else:
-                    difnorm = np.linalg.norm(diff_py)
-                    dif_newx_norm = np.linalg.norm(diff_new_py)
+                    difnorm = np.linalg.norm(diff_pxy)
+                    dif_newx_norm = np.linalg.norm(diff_newx_y)
                     delta_A = np.linalg.norm(diff_A)
 
                 if self.projection_type == ProjectionType.BREGMAN:
-                    dot_prod_to_check = np.dot(diff_A, diff_new_py)
+                    dot_prod_to_check = np.dot(diff_A, diff_newx_y)
                 else:
-                    dot_prod_to_check = np.dot(diff_A, diff_new_py)
+                    dot_prod_to_check = np.dot(diff_A, diff_newx_y)
 
                 lam_inc = self.step_increase_seq_rule(self.iter)
                 self.lam += lam_inc
@@ -133,9 +123,9 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
 
                 if delta_A > self.zero_delta:
                     if self.projection_type == ProjectionType.BREGMAN:
-                        difnorm = np.linalg.norm(diff_py, 1)
+                        difnorm = np.linalg.norm(diff_pxy, 1)
                     else:
-                        difnorm = np.linalg.norm(diff_py)
+                        difnorm = np.linalg.norm(diff_pxy)
 
                     t = self.tau * difnorm / delta_A
                     if self.lam > t:
@@ -152,19 +142,19 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
             # d = float(self.iter - start_iter_for_sum)
             # val_for_gap2 = t.sum(axis=0) / d
         else:  # calc gap from y0
-            val_for_gap = self.y
+            val_for_gap = self.x
         #            val_for_gap2 = val_for_gap
 
         # if self.problem.F(self.x_min_gap) > self.problem.F(self.y):
         #     self.x_min_gap = self.y
 
-        self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D + self.D2,
+        self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D,
                             goal_func_value=self.problem.F(self.x), goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):
         stop_condition_met: bool = False
         if self.stop_condition == StopCondition.STEP_SIZE:
-            stop_condition_met = (self.D + self.D2 < self.eps)
+            stop_condition_met = (self.D < self.eps)
         elif self.stop_condition == StopCondition.GAP:
             stop_condition_met = (self.iter > 0 and self.problem.F(self.averaged_result) < self.eps)
         elif self.stop_condition == StopCondition.EXACT_SOL_DIST:
@@ -180,7 +170,7 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
 
     def currentState(self) -> dict:
         return dict(super().currentState(), x=(self.x,), F=(self.problem.F(self.x),),
-                    D=self.D + self.D2, lam=self.lam, iterEndTime=self.iterEndTime)
+                    D=self.D, lam=self.lam, iterEndTime=self.iterEndTime)
 
     def currentStateString(self) -> str:
         return "{0}: x: {1}; lam: {2}; F(x): {3}".format(self.iter, self.problem.XToString(self.x), self.lam,

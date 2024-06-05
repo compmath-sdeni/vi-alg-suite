@@ -209,9 +209,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-8
-    algorithm_params.max_iters = 5000
-    algorithm_params.min_iters = 15
+    algorithm_params.eps = 1e-14
+    algorithm_params.max_iters = 500
+    algorithm_params.min_iters = 5
 
     algorithm_params.lam = 0.05
     # for Bregman variants
@@ -225,7 +225,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # algorithm_params.x_limits = [-0.1, 10.]
     # algorithm_params.y_limits = [0.02, 0.5]
 
-    algorithm_params.start_adaptive_lam = 2.5
+    algorithm_params.start_adaptive_lam = 10.0
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
     algorithm_params.adaptive_tau = 0.5 * 0.75
@@ -235,7 +235,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     algorithm_params.y_label = "$G(z_{avg})$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]

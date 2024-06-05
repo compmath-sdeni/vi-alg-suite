@@ -23,6 +23,7 @@ from methods.algorithm_params import AlgorithmParams
 from methods.extrapol_from_past import ExtrapolationFromPast
 from methods.extrapol_from_past_adaptive import ExtrapolationFromPastAdapt
 from methods.korpele_mod import KorpelevichMod
+from methods.korpele_adaptive import KorpelevichExtragradAdapt
 from methods.malitsky_tam import MalitskyTam
 from methods.malitsky_tam_adaptive import MalitskyTamAdaptive
 from methods.tseng import Tseng
@@ -249,8 +250,9 @@ sys.stdout = captured_io
 # endregion
 
 # region PageRank and SLE
+problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
-problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params)
+# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=20)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -580,7 +582,7 @@ problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params)
 
 def initAlgs():
     korpele = Korpelevich(problem, eps=params.eps, lam=params.lam, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Kor")
-    korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Kor (A)")
+#     korpele_adapt = KorpelevichMod(problem, eps=params.eps, min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Kor (A)")
 
     tseng = Tseng(problem, stop_condition=params.stop_by,
                   eps=params.eps, lam=params.lam,
@@ -613,16 +615,39 @@ def initAlgs():
 
     extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
-                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau_small,
+                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1 - E")
+                                                             hr_name="Екстраполяція з минулого, адаптивний", use_step_increase=False)
+
+    extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Екстраполяція з минулого, адаптивний+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
-                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Екстраполяція з минулого - KL симплекс", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Алгоритм 4 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
 
+    korpele_adaptive = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Екстраградієнтний, адаптивний", use_step_increase=False)
+
+    korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Екстраградієнтний, адаптивний+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+
+    korpele_adaptive_bregproj = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
+                                                             y0=params.x1.copy(), eps=params.eps,
+                                                             lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
+                                                             min_iters=params.min_iters, max_iters=params.max_iters,
+                                                             hr_name="Алгоритм 3 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
                                x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
@@ -650,13 +675,16 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-#       korpele_adapt,
+       korpele_adaptive,
+        korpele_adaptive_inc,
+#       korpele_adaptive_bregproj,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-#        extrapol_from_past_adaptive,
-        extrapol_from_past_adaptive_bregproj,
+         extrapol_from_past_adaptive,
+        extrapol_from_past_adaptive_inc,
+#        extrapol_from_past_adaptive_bregproj,
 #        malitsky_tam,
 #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,

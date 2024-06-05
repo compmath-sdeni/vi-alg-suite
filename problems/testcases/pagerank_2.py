@@ -267,7 +267,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     return res
 
 
-def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
+def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(), max_iters: int = 100, min_iters: int = 15):
     node_labels: list = None
 
     # region California search edges list
@@ -308,9 +308,9 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.save_history = True
     algorithm_params.save_plots = True
 
-    algorithm_params.eps = 1e-15
-    algorithm_params.max_iters = 20000
-    algorithm_params.min_iters = 15
+    algorithm_params.eps = 1e-14
+    algorithm_params.max_iters = max_iters
+    algorithm_params.min_iters = min_iters
 
     algorithm_params.lam = 0.05
     # for Bregman variants
@@ -324,10 +324,10 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     # algorithm_params.x_limits = [-0.1, 10.]
     # algorithm_params.y_limits = [0.02, 0.5]
 
-    algorithm_params.start_adaptive_lam = 2.5
+    algorithm_params.start_adaptive_lam = 50
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5 * 0.75
+    algorithm_params.adaptive_tau = 0.85
     algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(2*n)])))
@@ -342,7 +342,7 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
 
-    algorithm_params.plot_start_iter = 0
+    algorithm_params.plot_start_iter = 3
 
     res = PageRankProblem2Simplex(
         GraphMatr=GraphMatr,

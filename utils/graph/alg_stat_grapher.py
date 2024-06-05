@@ -22,7 +22,7 @@ class YAxisType(Enum):
 class DefaultLabels:
     X_AXIS = {
         XAxisType.ITERATION: "Номер ітерації",
-        XAxisType.TIME: "Час, ms."
+        XAxisType.TIME: "Час, с."
     }
     Y_AXIS = {
         YAxisType.REAL_ERROR: "$D_n$",  # "$||x_n - x^*||_2$",
@@ -131,11 +131,11 @@ class AlgStatGrapher:
                                                 'k-',
                                                 'y-',
                                                 'b-',
-                                                'k-',
-                                                'y-',
                                                 'r-',
-                                                'c--', 'c-',
-                                                'm--', 'm-'])
+                                                'c-',
+                                                'm-',
+                                                'k--'
+                                                'y--'])
 
         if plot_legend is None or len(plot_legend) == 0:
             plot_legend = []
@@ -201,7 +201,7 @@ class AlgStatGrapher:
         ax.set_yscale(yScale)
 
         plt.legend(loc="upper right", bbox_to_anchor=[1, 1],
-                   ncol=2, shadow=False, title="", fancybox=False, fontsize=self.defFont)
+                   ncol=1, shadow=False, title="", fancybox=False, fontsize=self.defFont)
 
         plt.xlabel(x_axis_label, fontsize=self.defFont + 2)
         plt.ylabel(y_axis_label, fontsize=self.defFont + 2)
