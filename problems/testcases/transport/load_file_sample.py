@@ -98,19 +98,19 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     algorithm_params.lam = 0.01
     algorithm_params.lam_medium = 0.00001
-    algorithm_params.lam_KL = 0.1
+    algorithm_params.lam_KL = 10.0
 
-    algorithm_params.min_iters = 3
+    algorithm_params.min_iters = 10
 
-    algorithm_params.start_adaptive_lam = 5.0
-    algorithm_params.start_adaptive_lam1 = 1.0
+    algorithm_params.start_adaptive_lam = 15.0
+    algorithm_params.start_adaptive_lam1 = 7.0
 
-    algorithm_params.adaptive_tau = 0.9
-    algorithm_params.adaptive_tau_small = 0.45
+    algorithm_params.adaptive_tau = 0.5 * 0.75
+    algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    algorithm_params.y_label = "Gap"
+    algorithm_params.y_label = "$G(z)$"
     # algorithm_params.x_label = "sec."
 
     algorithm_params.time_scale_divider = 1e+9

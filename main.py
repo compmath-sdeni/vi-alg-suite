@@ -252,7 +252,7 @@ sys.stdout = captured_io
 # region PageRank and SLE
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
-problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
+# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -273,12 +273,12 @@ problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
 #                                           )
 
-# problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.5,
-#                                           max_iters=1000, problem_name='SiouxFalls',
-#                                           max_od_paths_count=2, max_path_edges=10,
-#                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
-#                                           net_file_name='SiouxFalls_net.tntp',
-#                                           demands_file_name='SiouxFalls_trips.tntp')
+problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
+                                          max_iters=5000, problem_name='SiouxFalls',
+                                          max_od_paths_count=4, max_path_edges=12,
+                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
+                                          net_file_name='SiouxFalls_net.tntp',
+                                          demands_file_name='SiouxFalls_trips.tntp')
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -690,18 +690,18 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-       # korpele_adaptive,
-#        korpele_adaptive_inc,
-        korpele_adaptive_bregproj,
-        korpele_adaptive_bregproj_inc,
+#       korpele_adaptive,
+       korpele_adaptive_inc,
+#         korpele_adaptive_bregproj,
+#         korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-         # extrapol_from_past_adaptive,
-#         extrapol_from_past_adaptive_inc,
-        extrapol_from_past_adaptive_bregproj,
-        extrapol_from_past_adaptive_bregproj_inc,
+#         extrapol_from_past_adaptive,
+         extrapol_from_past_adaptive_inc,
+#         extrapol_from_past_adaptive_bregproj,
+#         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
 #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_bregproj,
