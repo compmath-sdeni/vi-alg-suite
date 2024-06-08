@@ -74,9 +74,9 @@ bs_css = ("https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.c
 # Create the Dash application based on Flask server
 server = flask.Flask(__name__)
 app = dash.Dash(__name__, server=server,
-                title='VI algorithms test suite',
+                title='Програмний комплекс на базі алгоритмів для варіаційних нерівностей',
                 background_callback_manager=background_callback_manager,
-                update_title='Loading...',
+                update_title='Завантаження ...',
                 external_stylesheets=[bs_css]
                 )
 #                , external_stylesheets=["netedit.css"]
