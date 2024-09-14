@@ -62,7 +62,7 @@ from methods.korpelevich import Korpelevich
 from utils.test_alghos import BasicAlgoTests
 
 params = AlgorithmParams(
-    eps=1e-5,
+    eps=1e-8,
     min_iters=10,
     max_iters=500,
     lam=0.01,
@@ -262,9 +262,9 @@ sys.stdout = captured_io
 
 # region Traffic equilibrium
 # problem = pigu_sample.prepareProblem(algorithm_params=params)
-#problem = braess_sample.prepareProblem(algorithm_params=params)
+# problem = braess_sample.prepareProblem(algorithm_params=params)
 
-# problem = load_file_sample.prepareProblem(algorithm_params=params,
+# problem = load_file_sample.prepareProblem(algorithm_params=params, max_iters=1000,
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
 #                                           pos_file_name='sample_pos.txt')
 
@@ -274,7 +274,7 @@ sys.stdout = captured_io
 #                                           )
 
 problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
-                                          max_iters=5000, problem_name='SiouxFalls',
+                                          max_iters=100, problem_name='SiouxFalls',
                                           max_od_paths_count=4, max_path_edges=12,
                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
                                           net_file_name='SiouxFalls_net.tntp',
@@ -617,13 +617,13 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.2 (евклідовий)", use_step_increase=False)
+                                                             hr_name="Alg. 3.2", use_step_increase=False)
 
     extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.2 (евклідовий)+", use_step_increase=True,
+                                                             hr_name="Alg. 3.2+", use_step_increase=True,
                                                                  step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
@@ -643,13 +643,13 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.1 (евклідовий)", use_step_increase=False)
+                                                             hr_name="Alg. 3.1", use_step_increase=False)
 
     korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.1 (евклідовий)+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+                                                             hr_name="Алг. 3.1+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive_bregproj = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -677,7 +677,16 @@ def initAlgs():
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
-                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 2 - E")
+                                                min_iters=params.min_iters, max_iters=params.max_iters,
+                                                hr_name="Alg. 3.3")
+
+    malitsky_tam_adaptive_inc = MalitskyTamAdaptive(problem,
+                                                x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
+                                                lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
+                                                tau=params.adaptive_tau,
+                                                min_iters=params.min_iters, max_iters=params.max_iters,
+                                                use_step_increase=True,
+                                                step_increase_seq_rule=lambda itr: 3.0/(itr**1.1), hr_name="Alg. 3.3+")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -690,20 +699,21 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-#       korpele_adaptive,
-       korpele_adaptive_inc,
+#         korpele_adaptive,
+        korpele_adaptive_inc,
 #         korpele_adaptive_bregproj,
 #         korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-#         extrapol_from_past_adaptive,
+           #extrapol_from_past_adaptive,
          extrapol_from_past_adaptive_inc,
 #         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
-#        malitsky_tam_adaptive,
+        # malitsky_tam_adaptive,
+        malitsky_tam_adaptive_inc,
 #        malitsky_tam_adaptive_bregproj,
 #         tseng_bregproj,
 #         extrapol_from_past_bregproj,

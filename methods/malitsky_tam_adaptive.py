@@ -11,7 +11,8 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
                  min_iters: int = 0, max_iters=5000, hr_name: str = None,
                  projection_type: ProjectionType = ProjectionType.EUCLID,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float = 0.25):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float = 0.25,
+                 use_step_increase: bool = False, step_increase_seq_rule=None):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
                          hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
 
@@ -35,6 +36,9 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         self.lam1 = lam1
 
         self.tau = tau
+
+        self.use_step_increase = use_step_increase
+        self.step_increase_seq_rule = step_increase_seq_rule
 
     def __iter__(self):
         self.ppx = self.problem.x0.copy()
@@ -93,15 +97,29 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         if self.D_1 + self.D > self.zero_delta:
             self.p_lam = self.lam
 
-            if self.projection_type == ProjectionType.BREGMAN:
-                nr = np.linalg.norm(self.delta_Ax, inf)
-            else:
-                nr = np.linalg.norm(self.delta_Ax, 2)
+            if self.use_step_increase:
+                lam_inc = self.step_increase_seq_rule(self.iter)
+                self.lam += lam_inc
 
-            if nr > self.zero_delta:
-                t = self.tau * self.D / nr
-                if self.lam >= t:
-                    self.lam = t
+                if self.projection_type == ProjectionType.BREGMAN:
+                    nr = np.linalg.norm(self.delta_Ax, inf)
+                else:
+                    nr = np.linalg.norm(self.delta_Ax, 2)
+
+                if nr > self.zero_delta:
+                    t = self.tau * self.D / nr
+                    if self.lam >= t:
+                        self.lam = t
+            else:
+                if self.projection_type == ProjectionType.BREGMAN:
+                    nr = np.linalg.norm(self.delta_Ax, inf)
+                else:
+                    nr = np.linalg.norm(self.delta_Ax, 2)
+
+                if nr > self.zero_delta:
+                    t = self.tau * self.D / nr
+                    if self.lam >= t:
+                        self.lam = t
 
     def doPostStep(self):
         if self.iter > 0:

@@ -91,7 +91,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
 
     algorithm_params.x1 = algorithm_params.x0.copy()
 
-    algorithm_params.eps = 1e-8
+    algorithm_params.eps = 1e-12
 
     if max_iters is not None:
         algorithm_params.max_iters = max_iters
