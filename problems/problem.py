@@ -20,7 +20,9 @@ class Problem:
                  x_dim: int = None,
                  lam_override: float = None,
                  lam_override_by_method: dict = None,
-                 zero_cutoff: float = None):
+                 zero_cutoff: float = None,
+                 auto_update_structure: bool = False,
+                 structure_update_freq: int = 1):
 
         self._x0: Union[np.ndarray, float] = x0
         self.C = C
@@ -31,6 +33,8 @@ class Problem:
         self.lam_override_by_method = lam_override_by_method
         self.x_dim = x_dim if x_dim is not None else x0.shape[0]
         self.zero_cutoff = zero_cutoff
+        self.auto_update_structure = auto_update_structure
+        self.structure_update_freq = structure_update_freq
 
     @property
     def x0(self) -> Union[np.ndarray, float]:
@@ -46,6 +50,7 @@ class Problem:
         pass
 
     def updateStructure(self, x: Union[np.ndarray, float]):
+        print("Base updateStructure called.")
         pass
 
     def getSavePath(self, path_prefix: str = None) -> str:

@@ -70,6 +70,7 @@ class TransportationNetwork:
             self.calc_paths()
 
     def show(self, *, limit: int = 7, print_edges_data: bool = False):
+        return
         print(self.graph)
         print("Edges:")
         for k in self.keyed_edges.keys():
@@ -253,6 +254,9 @@ class TransportationNetwork:
                     # print(f"Found {len(possible_paths)} simple paths of {max_path_edges} edges max from {d[0]} to {d[1]}")
 
                     for p in possible_paths:
+                        if p[0][0] != d[0] or p[-1][1] != d[1]:
+                            continue
+
                         edge_keys = np.ndarray((len(p),), dtype=int)
                         i = 0
                         for e in p:

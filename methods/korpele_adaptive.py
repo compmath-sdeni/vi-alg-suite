@@ -11,10 +11,12 @@ class KorpelevichExtragradAdapt(IterGradTypeMethod):
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, y0: np.ndarray,
                  min_iters: int = 0, max_iters=5000, tau: float = 0.3,
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, use_step_increase: bool = False, step_increase_seq_rule = None):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE,
+                 use_step_increase: bool = False, step_increase_seq_rule = None):
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition
+                         )
 
         self.x0 = self.problem.x0
         self.y0 = self.problem.x0

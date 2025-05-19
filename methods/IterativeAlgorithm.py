@@ -11,7 +11,8 @@ from utils.alg_history import AlgHistory
 class IterativeAlgorithm:
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
                  min_iters: int = 0, max_iters: int = 5000, hr_name: str = None,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True):
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True
+                 ):
         self.iter: int = 0
         self.projections_count: int = 0
         self.operator_count: int = 0
@@ -154,6 +155,9 @@ class IterativeAlgorithm:
                     self.history.extra_indicators[history_index] = extra
 
             self.doPostStep()
+
+            if self.problem.auto_update_structure and self.iter > 0 and self.iter % self.problem.structure_update_freq == 0:
+                self.problem.updateStructure(self.x)
 
             # return self.currentState()
         else:

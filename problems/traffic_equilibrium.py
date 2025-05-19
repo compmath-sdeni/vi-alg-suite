@@ -26,10 +26,13 @@ class TrafficEquilibrium(VIProblem):
                  lam_override: float = None,
                  lam_override_by_method: dict = None,
                  flow_eps: float = 0.0000001,
-                 zero_cutoff: float = None
+                 zero_cutoff: float = None,
+                 auto_update_structure: bool = False,
+                 structure_update_freq: int = 1
                  ):
         super().__init__(xtest=x_test, x0=x0, C=C, hr_name=hr_name, lam_override=lam_override,
-                         lam_override_by_method=lam_override_by_method, zero_cutoff=zero_cutoff)
+                         lam_override_by_method=lam_override_by_method, zero_cutoff=zero_cutoff,
+                         auto_update_structure=auto_update_structure, structure_update_freq=structure_update_freq)
 
         self.network = network
 

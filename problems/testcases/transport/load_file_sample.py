@@ -17,6 +17,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
                    demands_file_name: str = 'sample_trips.tntp',
                    max_od_paths_count: int = 3, max_path_edges = 10,
                    save_paths: bool = False, show_graph: bool = False,
+                   auto_update_structure: bool = False, structure_update_freq: int = 1,
                    pos_file_name: str = None, zero_cutoff: float = 0.5, max_iters: int = None):
 
     tnet = TransportationNetwork()
@@ -124,6 +125,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
         zero_cutoff=zero_cutoff,
         x0=algorithm_params.x0,
         x_test=real_solution,
+        auto_update_structure=auto_update_structure,
+        structure_update_freq=structure_update_freq,
         hr_name='$ traffic equilibrium ' +
                 #                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
                 #                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +

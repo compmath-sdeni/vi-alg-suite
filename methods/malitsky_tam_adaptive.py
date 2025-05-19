@@ -12,9 +12,11 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
                  min_iters: int = 0, max_iters=5000, hr_name: str = None,
                  projection_type: ProjectionType = ProjectionType.EUCLID,
                  stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float = 0.25,
-                 use_step_increase: bool = False, step_increase_seq_rule=None):
+                 use_step_increase: bool = False, step_increase_seq_rule=None
+                 ):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition
+                         )
 
         self.ppx = self.problem.x0.copy()
         self.px = self.problem.x0.copy()
@@ -64,10 +66,6 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
         return super().__iter__()
 
     def doStep(self):
-        # if self.iter>0 and self.iter % 10 == 0:
-        #     self.problem.updateStructure(self.x)
-        #     self.Ax = self.problem.A(self.x)
-
         self.ppx = self.px
         self.px = self.x.copy()
 

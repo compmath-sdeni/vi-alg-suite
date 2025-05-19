@@ -21,4 +21,5 @@ class IterGradTypeMethod(IterativeAlgorithm):
         self.averaged_result = None
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, stop_condition=stop_condition, save_history=save_history)
+                         hr_name=hr_name, stop_condition=stop_condition, save_history=save_history
+                         )

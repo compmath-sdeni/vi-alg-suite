@@ -76,6 +76,8 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         Gf=Ge, d=d, W=W, C=Rn(n),Q=Q,
         x0=algorithm_params.x0,
         x_test=real_solution,
+        # auto_update_structure=True,
+        # structure_update_freq=1,
         hr_name='$ traffic equilibrium ' +
                 #                f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
                 #                f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +

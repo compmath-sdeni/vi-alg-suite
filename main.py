@@ -261,7 +261,7 @@ sys.stdout = captured_io
 # endregion
 
 # region Traffic equilibrium
-# problem = pigu_sample.prepareProblem(algorithm_params=params)
+problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
 
 # problem = load_file_sample.prepareProblem(algorithm_params=params, max_iters=1000,
@@ -273,12 +273,13 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
 #                                           )
 
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
-                                          max_iters=100, problem_name='SiouxFalls',
-                                          max_od_paths_count=4, max_path_edges=12,
-                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
-                                          net_file_name='SiouxFalls_net.tntp',
-                                          demands_file_name='SiouxFalls_trips.tntp')
+# problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
+#                                           max_iters=2500, problem_name='SiouxFalls',
+#                                           max_od_paths_count=4, max_path_edges=12,
+#                                           auto_update_structure=False, structure_update_freq=1000,
+#                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
+#                                           net_file_name='SiouxFalls_net.tntp',
+#                                           demands_file_name='SiouxFalls_trips.tntp')
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -617,13 +618,13 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 3.2", use_step_increase=False)
+                                                             hr_name="Alg. 2", use_step_increase=False)
 
     extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 3.2+", use_step_increase=True,
+                                                             hr_name="Alg. 2+", use_step_increase=True,
                                                                  step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
@@ -643,19 +644,19 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 3.1", use_step_increase=False)
+                                                             hr_name="Alg. 1", use_step_increase=False)
 
     korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.1+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+                                                             hr_name="Alg. 1+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive_bregproj = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.1 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Alg. 3.1 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
 
     korpele_adaptive_bregproj_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -678,7 +679,7 @@ def initAlgs():
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 3.3")
+                                                hr_name="Alg. 3")
 
     malitsky_tam_adaptive_inc = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -686,7 +687,8 @@ def initAlgs():
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
                                                 use_step_increase=True,
-                                                step_increase_seq_rule=lambda itr: 3.0/(itr**1.1), hr_name="Alg. 3.3+")
+                                                step_increase_seq_rule=lambda itr: 3.0/(itr**1.1),
+                                                hr_name="Alg. 3+")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -699,21 +701,21 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-#         korpele_adaptive,
-        korpele_adaptive_inc,
+         korpele_adaptive,
+#        korpele_adaptive_inc,
 #         korpele_adaptive_bregproj,
 #         korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-           #extrapol_from_past_adaptive,
-         extrapol_from_past_adaptive_inc,
+         extrapol_from_past_adaptive,
+#         extrapol_from_past_adaptive_inc,
 #         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
-        # malitsky_tam_adaptive,
-        malitsky_tam_adaptive_inc,
+        malitsky_tam_adaptive,
+#        malitsky_tam_adaptive_inc,
 #        malitsky_tam_adaptive_bregproj,
 #         tseng_bregproj,
 #         extrapol_from_past_bregproj,

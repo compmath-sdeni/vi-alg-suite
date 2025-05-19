@@ -15,7 +15,8 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
                  step_increase_seq_rule=None):
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition
+                         )
 
         self.x0 = self.problem.x0
         self.y0 = y0

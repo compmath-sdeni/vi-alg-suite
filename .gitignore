@@ -8,3 +8,5 @@
 /webviews/storage/
 /storage/data/
 cbk_cache/
+__pycache__/
+.cursorignore
