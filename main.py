@@ -44,6 +44,8 @@ from problems.funcndmin import FuncNDMin
 
 from problems.testcases.zero_sum_game import minmax_game_1, minmax_game_2, blotto_game, minmax_game_test_1
 
+from problems.testcases.pagerank import pagerank_4_10
+
 from problems.testcases.transport import \
     pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample, test_three_sample, test_sample_1_2, \
     test_sample_1_3, test_multimod_one
@@ -252,7 +254,8 @@ sys.stdout = captured_io
 # region PageRank and SLE
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
-problem = pagerank_3.prepareProblem(algorithm_params=params)
+# problem = pagerank_3.prepareProblem(algorithm_params=params)
+problem = pagerank_4_10.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
