@@ -38,7 +38,7 @@ from problems.sle_saddle import SLESaddle
 from problems.nagurna_simplest import BloodDeliveryHardcodedOne
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear, pagerank_2
+    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear, pagerank_2, pagerank_3
 
 from problems.funcndmin import FuncNDMin
 
@@ -46,7 +46,7 @@ from problems.testcases.zero_sum_game import minmax_game_1, minmax_game_2, blott
 
 from problems.testcases.transport import \
     pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample, test_three_sample, test_sample_1_2, \
-    test_sample_1_3
+    test_sample_1_3, test_multimod_one
 
 from problems.testcases.slar_random import getSLE
 
@@ -252,6 +252,7 @@ sys.stdout = captured_io
 # region PageRank and SLE
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
+problem = pagerank_3.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
@@ -261,8 +262,9 @@ sys.stdout = captured_io
 # endregion
 
 # region Traffic equilibrium
-problem = pigu_sample.prepareProblem(algorithm_params=params)
+# problem = pigu_sample.prepareProblem(algorithm_params=params)
 # problem = braess_sample.prepareProblem(algorithm_params=params)
+# problem = test_multimod_one.prepareProblem(algorithm_params=params)
 
 # problem = load_file_sample.prepareProblem(algorithm_params=params, max_iters=1000,
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test-6nodes-4demands-4paths',
@@ -701,20 +703,20 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-         korpele_adaptive,
+#         korpele_adaptive,
 #        korpele_adaptive_inc,
-#         korpele_adaptive_bregproj,
-#         korpele_adaptive_bregproj_inc,
+#          korpele_adaptive_bregproj,
+#          korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-         extrapol_from_past_adaptive,
-#         extrapol_from_past_adaptive_inc,
+#          extrapol_from_past_adaptive,
+         extrapol_from_past_adaptive_inc,
 #         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
-        malitsky_tam_adaptive,
+#         malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_inc,
 #        malitsky_tam_adaptive_bregproj,
 #         tseng_bregproj,
@@ -799,7 +801,7 @@ else:
         except Exception as e:
             print(e)
 
-        BasicAlgoTests.PrintAlgRunStats(alg)
+        BasicAlgoTests.PrintAlgRunStats(alg, max_print_len = 20)
         alg_history_list.append(alg.history)
 
         if params.save_history:

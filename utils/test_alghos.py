@@ -103,7 +103,7 @@ class BasicAlgoTests:
         return True
 
     @staticmethod
-    def PrintAlgRunStats(alg_object: IterativeAlgorithm):
+    def PrintAlgRunStats(alg_object: IterativeAlgorithm, *, max_print_len=5):
         last_history_index: int = alg_object.history.iters_count - 1 if alg_object.save_history else 1
         print(f"{alg_object.hr_name} finished. "
               f"Iters: {alg_object.iter}; Projections: {alg_object.projections_count}; Operators calc: {alg_object.operator_count}; Time: {alg_object.totalTime / 1e+9} sec.; "
@@ -118,7 +118,6 @@ class BasicAlgoTests:
             print(f"Distance to C: {alg_object.problem.C.getDistance(alg_object.x[:alg_object.problem.x_dim])}")
 
         with np.printoptions(threshold=1500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
-            print_size = 5
             cum_res:np.ndarray = None
             try:
                 if alg_object.averaged_result  is not None:
@@ -127,14 +126,14 @@ class BasicAlgoTests:
                 pass
 
             round_decimals = 5
-            if alg_object.x.shape[0] <= print_size * 2:
+            if alg_object.x.shape[0] <= max_print_len * 2:
                 print("Result: {0}".format(alg_object.x))
                 if cum_res is not None:
                     print("Result AVG: {0}".format(cum_res))
             else:
                 print_len = int(alg_object.x.shape[0] / 2)
-                if print_len > print_size:
-                    print_len = print_size
+                if print_len > max_print_len:
+                    print_len = max_print_len
 
                 print("Result: {0} ... {1}\n".format(np.round(alg_object.x[:print_len], round_decimals), np.round(alg_object.x[-print_len:], round_decimals)))
                 if cum_res is not None:
