@@ -706,15 +706,15 @@ def initAlgs():
 
     algs_to_test = [
 #       korpele,
-#         korpele_adaptive,
-#        korpele_adaptive_inc,
+         korpele_adaptive,
+        korpele_adaptive_inc,
 #          korpele_adaptive_bregproj,
 #          korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
 #        extrapol_from_past,
-#          extrapol_from_past_adaptive,
+         extrapol_from_past_adaptive,
          extrapol_from_past_adaptive_inc,
 #         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,

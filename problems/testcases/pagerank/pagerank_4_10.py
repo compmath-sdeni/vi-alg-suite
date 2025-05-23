@@ -62,7 +62,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 1000
+    algorithm_params.max_iters = 2000
     algorithm_params.min_iters = 500
 
     algorithm_params.lam = 0.05
@@ -87,7 +87,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     algorithm_params.y_label = "$G({z_avg})$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
