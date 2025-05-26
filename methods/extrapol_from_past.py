@@ -8,12 +8,13 @@ from methods.IterGradTypeMethod import IterGradTypeMethod, ProjectionType
 class ExtrapolationFromPast(IterGradTypeMethod):
 
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, y0: np.ndarray,
-                 min_iters: int = 0, max_iters=5000,
+                 min_iters: int = 0, max_iters=5000, moving_average_window: int | None = None,
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
                  stop_condition: StopCondition = StopCondition.STEP_SIZE):
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition)
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition,
+                         moving_average_window=moving_average_window)
 
         self.x0 = self.problem.x0
         self.y0 = y0
@@ -21,9 +22,6 @@ class ExtrapolationFromPast(IterGradTypeMethod):
 
         self.x: np.ndarray = self.problem.x0
         self.Ay: np.ndarray = self.problem.A(self.y0)
-
-        self.cum_y = np.zeros_like(self.x)
-        self.averaged_result: np.ndarray = None
 
         self.D: float = 0
         self.D2: float = 0
@@ -41,8 +39,11 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         self.D = 0
         self.D2 = 0
 
-        self.cum_y = np.zeros_like(self.y)
-        self.averaged_result = None
+        # self.cum_y = np.zeros_like(self.y)
+        # self.averaged_result = None
+
+        # y0 instead of x0
+        self.averaged_result = self.y0.copy()
 
         return super().__iter__()
 
@@ -53,8 +54,7 @@ class ExtrapolationFromPast(IterGradTypeMethod):
         else:
             self.y = self.problem.Project(self.x - self.lam * self.Ay)
 
-        self.cum_y += self.y
-        self.averaged_result = self.cum_y / self.iter
+        self.update_average_result(self.y.copy())
 
         self.Ay = self.problem.A(self.y)
         px = self.x

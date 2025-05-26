@@ -12,10 +12,12 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
                  min_iters: int = 0, max_iters=5000, tau: float = 0.3,
                  hr_name: str = None, projection_type: ProjectionType = ProjectionType.EUCLID,
                  stop_condition: StopCondition = StopCondition.STEP_SIZE, use_step_increase: bool = False,
+                 moving_average_window: int | None = None,
                  step_increase_seq_rule=None):
 
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
-                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition
+                         hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition,
+                         moving_average_window=moving_average_window
                          )
 
         self.x0 = self.problem.x0
@@ -25,17 +27,11 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.x: np.ndarray = self.problem.x0
         self.Ay: np.ndarray = self.problem.A(self.y0)
 
-        self.cum_y: np.ndarray = np.zeros_like(self.y)
-        self.averaged_result: np.ndarray = None
-
         self.D: float = 0
         self.D2: float = 0
 
         self.lam0 = lam
         self.tau = tau
-
-        self.hist_for_avg: np.ndarray = None
-        self.x_min_gap: np.ndarray = self.x
 
         self.use_step_increase = use_step_increase
         self.step_increase_seq_rule = step_increase_seq_rule
@@ -56,12 +52,8 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
 
         self.lam = self.lam0
 
-        # self.cum_y = self.y # start average from y0
-        self.cum_y = np.zeros_like(self.y)  # start average from y1
-        self.averaged_result = None
-
-        # self.hist_for_avg = np.zeros((self.max_iters + 1, self.y.shape[0]))
-        # self.hist_for_avg[self.iter] = self.y
+        # y0 instead of x0
+        # self.averaged_result = self.y0.copy()
 
         return super().__iter__()
 
@@ -74,12 +66,6 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         else:
             self.y = self.problem.Project(self.x - self.lam * self.Ay)
 
-        self.cum_y += self.y
-        self.averaged_result = self.cum_y / self.iter
-
-        # the first time we get here, iter = 1. So, to start average from y1 and not from y0, we need iter-1
-        #        self.hist_for_avg[self.iter-1] = self.y
-
         pAy = self.Ay
         self.Ay = self.problem.A(self.y)
         px = self.x
@@ -88,6 +74,8 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
             self.x = self.problem.bregmanProject(self.x, - self.lam * self.Ay)
         else:
             self.x = self.problem.Project(self.x - self.lam * self.Ay)
+
+        self.update_average_result(self.x.copy())
 
         if self.projection_type == ProjectionType.BREGMAN:
             self.D = np.linalg.norm(px - self.y, 1)
@@ -143,23 +131,13 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
                         self.lam = t
 
     def doPostStep(self):
-        # if we want to start from y0, we need to use iter + 1 and do not skip the first time
-        # otherwise, we need to use iter and skip iteration-0
-        # val_for_gap = self.cum_y / (self.iter + 1)
         if self.iter > 0:
             val_for_gap = self.averaged_result
-            # start_iter_for_sum = 0  # int((self.iter) / 2)
-            # t = self.hist_for_avg[start_iter_for_sum: self.iter]
-            # d = float(self.iter - start_iter_for_sum)
-            # val_for_gap2 = t.sum(axis=0) / d
         else:  # calc gap from y0
             val_for_gap = self.y
-        #            val_for_gap2 = val_for_gap
 
-        # if self.problem.F(self.x_min_gap) > self.problem.F(self.y):
-        #     self.x_min_gap = self.y
 
-        self.setHistoryData(x=self.x, y=val_for_gap, step_delta_norm=self.D + self.D2,
+        self.setHistoryData(x=self.x, y=self.y, step_delta_norm=self.D + self.D2,
                             goal_func_value=self.problem.F(self.x), goal_func_from_average=self.problem.F(val_for_gap))
 
     def isStopConditionMet(self):

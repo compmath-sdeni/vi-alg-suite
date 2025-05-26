@@ -598,76 +598,81 @@ def initAlgs():
                            eps=params.eps,
                            lam=params.lam_KL,
                            min_iters=params.min_iters, max_iters=params.max_iters,
-                           hr_name="Alg. 1*", projection_type=ProjectionType.BREGMAN)
+                           hr_name="Tseng BP", projection_type=ProjectionType.BREGMAN)
 
     tseng_adaptive = TsengAdaptive(problem,
                                    eps=params.eps, lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                    save_history = params.save_history,
-                                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng (A)")
+                                   min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Tseng A")
 
     tseng_adaptive_bregproj = TsengAdaptive(problem, stop_condition=params.stop_by,
                                    eps=params.eps, lam=params.start_adaptive_lam1, tau=params.adaptive_tau_small,
                                    min_iters=params.min_iters, max_iters=params.max_iters,
-                                            hr_name="Alg. T - KL", projection_type=ProjectionType.BREGMAN)
+                                            hr_name="Tseng ABP", projection_type=ProjectionType.BREGMAN)
 
     extrapol_from_past = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                y0=params.x1.copy(), eps=params.eps, lam=params.lam*(math.sqrt(2.)-1),
+                                               moving_average_window=params.moving_average_window,
                                                min_iters=params.min_iters, max_iters=params.max_iters, hr_name="EfP")
 
     extrapol_from_past_bregproj = ExtrapolationFromPast(problem, stop_condition=params.stop_by,
                                                         y0=params.x1.copy(), eps=params.eps, lam=params.lam_KL * (math.sqrt(2.) - 1),
+                                                        moving_average_window=params.moving_average_window,
                                                         min_iters=params.min_iters, max_iters=params.max_iters,
-                                                        hr_name="Alg. 2*", projection_type=ProjectionType.BREGMAN)
+                                                        hr_name="EfP BP", projection_type=ProjectionType.BREGMAN)
 
     extrapol_from_past_adaptive = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
+                                                             moving_average_window=params.moving_average_window,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 2", use_step_increase=False)
+                                                             hr_name="EfP A", use_step_increase=False)
 
     extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 2+", use_step_increase=True,
+                                                             moving_average_window=params.moving_average_window,
+                                                             hr_name="EfP A+", use_step_increase=True,
                                                                  step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     extrapol_from_past_adaptive_bregproj = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.2 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+                                                             moving_average_window=params.moving_average_window,
+                                                             hr_name="EfP ABP", projection_type=ProjectionType.BREGMAN)
 
     extrapol_from_past_adaptive_bregproj_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.2 (KL, симплекс)+", projection_type=ProjectionType.BREGMAN,
+                                                             hr_name="EfP ABP+", projection_type=ProjectionType.BREGMAN,
                                                              use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1", use_step_increase=False)
+                                                             hr_name="Kor A", use_step_increase=False)
 
     korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
+                                                             hr_name="Kor A+", use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive_bregproj = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 3.1 (KL, симплекс)", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Kor ABP", projection_type=ProjectionType.BREGMAN)
 
     korpele_adaptive_bregproj_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Алг. 3.1 (KL, симплекс) +", projection_type=ProjectionType.BREGMAN,
+                                                             hr_name="Kor ABP+", projection_type=ProjectionType.BREGMAN,
                                                              use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
@@ -677,14 +682,14 @@ def initAlgs():
     malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
                                         x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
                                         min_iters=params.min_iters, max_iters=params.max_iters,
-                                        hr_name="Alg. 3*", projection_type=ProjectionType.BREGMAN)
+                                        hr_name="MT BP", projection_type=ProjectionType.BREGMAN)
 
     malitsky_tam_adaptive = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 3")
+                                                hr_name="MT A")
 
     malitsky_tam_adaptive_inc = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -693,35 +698,35 @@ def initAlgs():
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
                                                 use_step_increase=True,
                                                 step_increase_seq_rule=lambda itr: 3.0/(itr**1.1),
-                                                hr_name="Alg. 3+")
+                                                hr_name="MT A+")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
-                                                lam=params.start_adaptive_lam1, lam1=params.start_adaptive_lam1,
+                                                lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 2 - KL", projection_type=ProjectionType.BREGMAN)
+                                                hr_name="MT ABP", projection_type=ProjectionType.BREGMAN)
 
 
 
     algs_to_test = [
 #       korpele,
-         korpele_adaptive,
-        korpele_adaptive_inc,
-#          korpele_adaptive_bregproj,
+#        korpele_adaptive,
+#        korpele_adaptive_inc,
+#         korpele_adaptive_bregproj,
 #          korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
-#        extrapol_from_past,
+        # extrapol_from_past,
          extrapol_from_past_adaptive,
-         extrapol_from_past_adaptive_inc,
-#         extrapol_from_past_adaptive_bregproj,
+         # extrapol_from_past_adaptive_inc,
+ #        extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
-#         malitsky_tam_adaptive,
+ #        malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_inc,
-#        malitsky_tam_adaptive_bregproj,
+  #      malitsky_tam_adaptive_bregproj,
 #         tseng_bregproj,
 #         extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,

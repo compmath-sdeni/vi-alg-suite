@@ -11,7 +11,8 @@ from utils.alg_history import AlgHistory
 class IterativeAlgorithm:
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *,
                  min_iters: int = 0, max_iters: int = 5000, hr_name: str = None,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, save_history: bool = True,
+                 moving_average_window: int | None = None
                  ):
         self.iter: int = 0
         self.projections_count: int = 0
@@ -33,6 +34,15 @@ class IterativeAlgorithm:
         else:
             self.N = 1
 
+        self.moving_average_window = moving_average_window
+
+        if self.moving_average_window is not None and self.moving_average_window > 0:
+            self.averaging_buffer: list[Union[np.ndarray, float]] = []
+        else:
+            self.averaging_buffer = None
+
+        self.averaged_result: Union[np.ndarray, float] | None = None
+
         if hasattr(self.problem, 'lam_override_by_method') and self.problem.lam_override_by_method is not None:
             if type(self).__name__ in self.problem.lam_override_by_method:
                 self.lam = self.problem.lam_override_by_method[type(self).__name__]
@@ -47,7 +57,7 @@ class IterativeAlgorithm:
         self.history.alg_name = self.hr_name
         self.history.alg_class = self.__class__.__name__
 
-    def isStopConditionMet(self) -> float:
+    def isStopConditionMet(self) -> bool:
         return self.iter >= self.max_iters
 
     def doStep(self):
@@ -93,6 +103,18 @@ class IterativeAlgorithm:
         self.operator_count: int = 0
 
         self.totalTime = 0
+
+        # old averaging approach - full average
+        # self.cum_y = np.zeros_like(self.y)
+        # self.averaged_result = None
+
+        # moving average. If a window is None, no calculations are done. If the window size is < 0, do the full average.
+        if self.moving_average_window is not None:
+            if self.averaged_result is None: # can be set in a descendant class (if differs from x0)
+                self.averaged_result = self.x.copy()
+                
+            if self.moving_average_window > 0:
+                self.averaging_buffer.append(self.averaged_result)
 
         self.history.iter_time_ns[0] = 0
         self.history.lam[0] = self.lam
@@ -162,6 +184,19 @@ class IterativeAlgorithm:
             # return self.currentState()
         else:
             raise StopIteration()
+
+    def update_average_result(self, next_val: Union[np.ndarray, float]):
+        if self.moving_average_window is not None:
+            if self.moving_average_window < 0 or self.iter < self.moving_average_window:
+                # self.cum_y += self.y
+                # self.averaged_result = self.cum_y / self.iter
+                self.averaged_result = self.averaged_result * (self.iter / (self.iter + 1)) + next_val / (self.iter + 1)
+                self.averaging_buffer.append(next_val)
+            else:
+                self.averaged_result = self.averaged_result + (
+                            next_val - self.averaging_buffer[self.iter % self.moving_average_window]) / self.moving_average_window
+                self.averaging_buffer[self.iter % self.moving_average_window] = next_val
+
 
     def do(self):
         for curState in self:

@@ -62,8 +62,10 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.adaptive_tau = 0.9
     algorithm_params.adaptive_tau_small = 0.45
 
+    algorithm_params.moving_average_window = 1
+
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.REAL_ERROR
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     # algorithm_params.y_label = "Gap"
     # algorithm_params.x_label = "sec."
 

@@ -28,6 +28,7 @@ class AlgorithmParams:
                  adaptive_tau_small: float = None,
                  min_iters: int = None,
                  max_iters: int = None,
+                 moving_average_window: int | None = None,
                  x_axis_type: XAxisType = XAxisType.ITERATION,
                  y_axis_type: YAxisType = YAxisType.STEP_DELTA,
                  y_label: str = None,
@@ -58,6 +59,7 @@ class AlgorithmParams:
         self.start_adaptive_lam1 = start_adaptive_lam1
         self.adaptive_tau = adaptive_tau
         self.adaptive_tau_small = adaptive_tau_small
+        self.moving_average_window = moving_average_window
 
         self.max_iters = max_iters
         self.min_iters = min_iters
@@ -95,6 +97,7 @@ class AlgorithmParams:
                 f"start_adaptive_lam1:{self.start_adaptive_lam1}\n",
                 f"adaptive_tau:{self.adaptive_tau}\n",
                 f"adaptive_tau_small:{self.adaptive_tau_small}\n",
+                f"moving_average_window:{self.moving_average_window}\n",
                 f"max_iters:{self.max_iters}\n",
                 f"min_iters:{self.min_iters}\n"
                 f"x0:{np.array2string(self.x0, max_line_width=100000)}\n",

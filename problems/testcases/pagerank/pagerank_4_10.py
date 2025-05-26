@@ -15,16 +15,16 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 # region test PR problem
     GraphMatr: np.ndarray = np.array([
 #        1  2  3  4  5  6  7  8  9  10
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 1
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 2
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 3
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 5
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 6
-        [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],  # 7
-        [1, 1, 1, 1, 1, 0, 0, 0, 1, 0],  # 8
-        [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],  # 9
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0]  # 10
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 1
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 2
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 3
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 5
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 6
+        [ 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],  # 7
+        [ 1, 1, 1, 1, 1, 0, 0, 0, 1, 0],  # 8
+        [ 0, 0, 0, 0, 0, 1, 0, 1, 0, 0],  # 9
+        [ 0, 0, 0, 0, 0, 1, 1, 1, 0, 0]  # 10
 #        1  2  3  4  5  6  7  8  9  10
     ], dtype=np.float64)
 
@@ -62,12 +62,13 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 2000
+    algorithm_params.max_iters = 3000
     algorithm_params.min_iters = 500
 
-    algorithm_params.lam = 0.05
+    algorithm_params.lam = 0.1
     # for Bregman variants
     algorithm_params.lam_KL = 1.0/np.max(np.abs(GraphMatr - np.eye(GraphMatr.shape[0])))
+    algorithm_params.lam_KL = 0.1
 
     # algorithm_params.lam_spec = {'Tseng': 0.1}
     # algorithm_params.lam_spec_KL = {'Tseng': 3.0}
@@ -77,7 +78,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     # algorithm_params.x_limits = [-0.1, 10.]
     # algorithm_params.y_limits = [0.02, 0.5]
 
-    algorithm_params.start_adaptive_lam = 2.5
+    algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
     algorithm_params.adaptive_tau = 0.5 * 0.75
@@ -86,9 +87,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(n)])))
     algorithm_params.x1 = algorithm_params.x0.copy()
 
+    algorithm_params.moving_average_window = 150
+
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    algorithm_params.y_label = "$G({z_avg})$"
+    algorithm_params.y_label = "$G({x_n})$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 
@@ -179,7 +182,7 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.start_adaptive_lam = 2.5
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5 * 0.75
+    algorithm_params.adaptive_tau = 0.5
     algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(n)])))

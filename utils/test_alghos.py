@@ -102,6 +102,9 @@ class BasicAlgoTests:
 
         return True
 
+    # @staticmethod
+    # def CalculateRunningAverage(alg_object: IterativeAlgorithm, *, max_print_len=5):
+
     @staticmethod
     def PrintAlgRunStats(alg_object: IterativeAlgorithm, *, max_print_len=5):
         last_history_index: int = alg_object.history.iters_count - 1 if alg_object.save_history else 1
@@ -129,7 +132,7 @@ class BasicAlgoTests:
             if alg_object.x.shape[0] <= max_print_len * 2:
                 print("Result: {0}".format(alg_object.x))
                 if cum_res is not None:
-                    print("Result AVG: {0}".format(cum_res))
+                    print("ResAVG: {0}".format(cum_res))
             else:
                 print_len = int(alg_object.x.shape[0] / 2)
                 if print_len > max_print_len:
@@ -137,7 +140,7 @@ class BasicAlgoTests:
 
                 print("Result: {0} ... {1}\n".format(np.round(alg_object.x[:print_len], round_decimals), np.round(alg_object.x[-print_len:], round_decimals)))
                 if cum_res is not None:
-                    print("Result AVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
+                    print("ResAVG: {0} ... {1}\n".format(np.round(cum_res[:print_len], round_decimals), np.round(cum_res[-print_len:], round_decimals)))
 
             extra_indicators = alg_object.problem.GetExtraIndicators(alg_object.x, final=True, averaged_x=cum_res)
             if extra_indicators:
