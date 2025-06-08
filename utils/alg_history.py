@@ -18,8 +18,10 @@ class AlgHistFieldNames(Enum):
     STEP_DELTA_NORM = 'step_delta_norm',
     GOAL_FUNC_VALUE = 'goal_func_value',
     GOAL_FUNC_FROM_AVERAGE = 'goal_func_from_average',
+    GOAL_FUNC_AVERAGED = 'goal_func_averaged',
     ITER_TIME_NS = 'iter_time_ns',
     REAL_ERROR = 'real_error',
+    REAL_ERROR_AVERAGED = 'real_error_averaged',
     EXTRA_INDICATORS = 'extra_indicators'
 
     def __str__(self):
@@ -43,10 +45,26 @@ class AlgHistory:
         self.step_delta_norm = np.ndarray(max_iters, dtype=float)
         self.goal_func_value = np.ndarray(max_iters, dtype=float)
         self.goal_func_from_average = np.ndarray(max_iters, dtype=float)
+        self.averaged_goal_func_value = None
 
         self.iter_time_ns = np.ndarray(max_iters, dtype=int)
         self.real_error = np.ndarray(max_iters, dtype=float)
+        self.averaged_real_error = None
+
         self.extra_indicators = []
+
+    @classmethod
+    def create_history_of_averaged(cls, values_history: np.ndarray, window_size: int)->np.ndarray:
+        """
+        :param values_history: history of values
+        :param window_size: number of values to average
+        :return: history of averaged values
+        """
+
+        if values_history.shape[0] < window_size:
+            window_size = values_history.shape[0]
+
+        return np.convolve(values_history, np.ones(window_size)/window_size, mode='valid')
 
     def toPandasDF(self, *, labels: dict = None):
         x_res = []
@@ -69,6 +87,17 @@ class AlgHistory:
             AlgHistFieldNames.ITER_TIME_NS: self.iter_time_ns[:self.iters_count],
             AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count],
         }
+
+        if self.averaged_goal_func_value is not None:
+            avg_padded = np.ones(self.iters_count) * -1
+            avg_padded[:self.averaged_goal_func_value.shape[0]] = self.averaged_goal_func_value
+            frame_columns[AlgHistFieldNames.GOAL_FUNC_AVERAGED] = avg_padded
+
+        if self.averaged_real_error is not None:
+            avg_padded = np.ones(self.iters_count) * -1
+            avg_padded[:self.averaged_real_error.shape[0]] = self.averaged_real_error
+            frame_columns[AlgHistFieldNames.REAL_ERROR_AVERAGED] = avg_padded
+
 
         if len(self.extra_indicators) > 0:
             frame_columns[AlgHistFieldNames.EXTRA_INDICATORS] = self.extra_indicators

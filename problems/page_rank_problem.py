@@ -40,6 +40,16 @@ class PageRankProblem(VIProblem):
         self.simplex = ClassicSimplex(self.m)
         self.ball = L1Ball(self.m, 1)
 
+        try:
+            test_A = np.zeros((self.m * 2, self.m * 2))
+            test_A[:self.m, :self.m] = self.M1
+            test_A[self.m:, self.m:] = self.M2
+            singular_vals = np.linalg.svd(test_A, compute_uv=False)
+            self.L = np.max(singular_vals)
+        except:
+            self.L = None
+
+
     @classmethod
     def CreateRandom(cls, m: int, zeroPercent: float = 0) :
         """

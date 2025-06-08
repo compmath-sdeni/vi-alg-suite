@@ -53,7 +53,7 @@ class IterativeAlgorithm:
         self.min_iters: int = min_iters
         self.hr_name = hr_name if hr_name else type(self).__name__
 
-        self.history = AlgHistory(self.N, self.max_iters + 2 if self.save_history else 2)
+        self.history:AlgHistory = AlgHistory(self.N, self.max_iters + 2 if self.save_history else 2)
         self.history.alg_name = self.hr_name
         self.history.alg_class = self.__class__.__name__
 

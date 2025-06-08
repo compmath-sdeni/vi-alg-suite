@@ -62,7 +62,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 3000
+    algorithm_params.max_iters = 20100
     algorithm_params.min_iters = 500
 
     algorithm_params.lam = 0.1
@@ -81,13 +81,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5 * 0.75
-    algorithm_params.adaptive_tau_small = 0.33 * 0.75
+    # 1.1 - super fast extragrad
+    # 0.57 looks best where all three algs work
+    # 0.45 is the best for Bregman
+    algorithm_params.adaptive_tau = 0.3 # np.sqrt(2.0) - 1 # 0.5 * 0.75
+    algorithm_params.adaptive_tau_small = 0.1# 0.33 * 0.75
 
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(n)])))
     algorithm_params.x1 = algorithm_params.x0.copy()
 
-    algorithm_params.moving_average_window = 150
+    algorithm_params.moving_average_window = 10000
+    algorithm_params.result_averaging_window = 200
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
     algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
@@ -118,6 +122,11 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
         print(f"Top 50 ranks by test solution: {np.argsort(real_solution)[::-1][:50]}")
 
     print(f"Goal function on start: {res.F(algorithm_params.x0)}")
+
+    if res.L is not None:
+        print(f"Lipschitz constant: {res.L}; 1/L: {1.0/res.L}; 1/2L: {0.5/res.L}; 1/3L: {1.0/(3*res.L)}; (sqrt(2)-1)/L: {(np.sqrt(2)-1.0)/res.L}")
+    else:
+        print("Lipschitz constant not known")
 
     return res
 
@@ -182,14 +191,14 @@ def prepareCaliforniaGraphProblem(*, algorithm_params: AlgorithmParams = Algorit
     algorithm_params.start_adaptive_lam = 2.5
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
-    algorithm_params.adaptive_tau = 0.5
+    algorithm_params.adaptive_tau = 0.7
     algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
     algorithm_params.x0 = np.concatenate((np.array([1. / n for i in range(n)]), np.array([1. / n for i in range(n)])))
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_OF_AVERAGED
+    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
     algorithm_params.y_label = "$G(z_n)$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]

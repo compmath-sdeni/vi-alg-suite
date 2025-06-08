@@ -27,6 +27,9 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
         self.x: np.ndarray = self.problem.x0
         self.Ay: np.ndarray = self.problem.A(self.y0)
 
+        # self.cum_x = np.zeros_like(self.x)
+        # self.averaged_result: np.ndarray = None
+
         self.D: float = 0
         self.D2: float = 0
 
@@ -94,13 +97,13 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
             if self.use_step_increase:
                 diff_new_py = self.x - self.y
                 if self.projection_type == ProjectionType.BREGMAN:
-                    difnorm = np.linalg.norm(diff_py, 1)
-                    dif_newx_norm = np.linalg.norm(diff_new_py, 1)
+                    difnorm = np.linalg.norm(diff_py, inf)
+                    dif_newx_norm = np.linalg.norm(diff_new_py, inf)
                     delta_A = np.linalg.norm(diff_A, inf)
                 else:
-                    difnorm = np.linalg.norm(diff_py)
-                    dif_newx_norm = np.linalg.norm(diff_new_py)
-                    delta_A = np.linalg.norm(diff_A)
+                    difnorm = np.linalg.norm(diff_py, 2)
+                    dif_newx_norm = np.linalg.norm(diff_new_py, 2)
+                    delta_A = np.linalg.norm(diff_A, 2)
 
                 if self.projection_type == ProjectionType.BREGMAN:
                     dot_prod_to_check = 1.0  # for bregman div always check!
@@ -118,20 +121,20 @@ class ExtrapolationFromPastAdapt(IterGradTypeMethod):
                 if self.projection_type == ProjectionType.BREGMAN:
                     delta_A = np.linalg.norm(diff_A, inf)
                 else:
-                    delta_A = np.linalg.norm(diff_A)
+                    delta_A = np.linalg.norm(diff_A, 2)
 
                 if delta_A > self.zero_delta:
                     if self.projection_type == ProjectionType.BREGMAN:
-                        difnorm = np.linalg.norm(diff_py, 1)
+                        difnorm = np.linalg.norm(diff_py, inf)
                     else:
-                        difnorm = np.linalg.norm(diff_py)
+                        difnorm = np.linalg.norm(diff_py, 2)
 
                     t = self.tau * difnorm / delta_A
                     if self.lam > t:
                         self.lam = t
 
     def doPostStep(self):
-        if self.iter > 0:
+        if self.iter > 0 and self.averaged_result is not None:
             val_for_gap = self.averaged_result
         else:  # calc gap from y0
             val_for_gap = self.y

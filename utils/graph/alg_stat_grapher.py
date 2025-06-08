@@ -73,8 +73,9 @@ class AlgStatGrapher:
     def plot_by_history(self, *, alg_history_list: List[np.ndarray],
                         x_axis_type: XAxisType = XAxisType.ITERATION,
                         y_axis_type: YAxisType = YAxisType.REAL_ERROR,
+                        use_averaged_data: bool = False,
                         plot_step_delta: bool = False, plot_real_error: bool = False, plot_residue: bool = False,
-                        plot_residue_avg: bool = False,
+                        plot_residue_avg: bool = False, diverged_error_threshold = 0.01,
                         x_axis_label: str = None, y_axis_label: str = None, plot_title: str = None,
                         legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log',
                         start_iter: int = 2, styles: List[str] = None, time_scale_divider: int = 1e+6):
@@ -89,8 +90,18 @@ class AlgStatGrapher:
             xDataIndices.append([0])
             yDataIndices.append([1])
 
-            if x_len < alg_history.iters_count - start_iter - 1:
-                x_len = alg_history.iters_count - start_iter - 1
+            alg_data_len = 0
+            if use_averaged_data:
+                if y_axis_type == YAxisType.GOAL_FUNCTION:
+                    alg_data_len = alg_history.averaged_goal_func_value.shape[0] - start_iter - 1
+                elif y_axis_type == YAxisType.REAL_ERROR:
+                    alg_data_len = alg_history.averaged_real_error.shape[0]- start_iter - 1
+
+            if alg_data_len == 0:
+                alg_data_len = alg_history.iters_count - start_iter - 1
+
+            if x_len < alg_data_len:
+                x_len = alg_data_len
 
         if y_axis_type == YAxisType.STEP_DELTA:
             plot_step_delta = True
@@ -163,32 +174,48 @@ class AlgStatGrapher:
         for i in range(algs_count):
             iters_count = alg_history_list[i].iters_count-1
 
-            plot_data: np.ndarray = np.zeros((y_dims + 1, iters_count - start_iter), dtype=float)
+            plot_data_len = iters_count - start_iter
+
+            if use_averaged_data:
+                if y_axis_type == YAxisType.GOAL_FUNCTION:
+                    plot_data_len = alg_history_list[i].averaged_goal_func_value.shape[0]  - start_iter
+                elif y_axis_type == YAxisType.REAL_ERROR:
+                    plot_data_len = alg_history_list[i].averaged_real_error.shape[0] - start_iter
+
+            plot_data: np.ndarray = np.zeros((y_dims + 1, plot_data_len), dtype=float)
 
             if x_axis_type == XAxisType.ITERATION:
-                plot_data[0] = np.arange(0, iters_count - start_iter)
+                plot_data[0] = np.arange(0, plot_data_len)
             elif x_axis_type == XAxisType.TIME:
-                plot_data[0] = alg_history_list[i].iter_time_ns[start_iter:iters_count]/time_scale_divider
+                plot_data[0] = alg_history_list[i].iter_time_ns[start_iter:plot_data_len + start_iter]/time_scale_divider
 
             yDataIndices = []
             k = 1
             if plot_step_delta:
-                plot_data[k] = alg_history_list[i].step_delta_norm[start_iter:iters_count]
+                plot_data[k] = alg_history_list[i].step_delta_norm[start_iter:plot_data_len+start_iter]
                 yDataIndices.append(k)
                 k += 1
 
             if plot_real_error:
-                plot_data[k] = alg_history_list[i].real_error[start_iter:iters_count]
+                if use_averaged_data:
+                    plot_data[k] = alg_history_list[i].averaged_real_error[start_iter:plot_data_len+start_iter]
+                else:
+                    plot_data[k] = alg_history_list[i].real_error[start_iter:plot_data_len+start_iter]
+
                 yDataIndices.append(k)
                 k += 1
 
             if plot_residue:
-                plot_data[k] = alg_history_list[i].goal_func_value[start_iter:iters_count]
+                if use_averaged_data:
+                    plot_data[k] = alg_history_list[i].averaged_goal_func_value[start_iter:plot_data_len+start_iter]
+                else:
+                    plot_data[k] = alg_history_list[i].goal_func_value[start_iter:plot_data_len+start_iter]
+
                 yDataIndices.append(k)
                 k += 1
 
             if plot_residue_avg:
-                plot_data[k] = alg_history_list[i].goal_func_from_average[start_iter:iters_count]
+                plot_data[k] = alg_history_list[i].goal_func_from_average[start_iter:plot_data_len+start_iter]
                 yDataIndices.append(k)
                 k += 1
 

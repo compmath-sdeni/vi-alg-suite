@@ -87,7 +87,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
 
         if self.projection_type == ProjectionType.BREGMAN:
             self.D_1 = self.D
-            self.D = np.linalg.norm(self.x - self.px, 1)
+            self.D = np.linalg.norm(self.x - self.px, inf)
         else:
             self.D_1 = self.D
             self.D = np.linalg.norm(self.x - self.px, 2)

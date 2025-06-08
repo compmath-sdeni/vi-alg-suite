@@ -97,13 +97,13 @@ class KorpelevichExtragradAdapt(IterGradTypeMethod):
             if self.use_step_increase:
                 diff_newx_y = self.x - self.y
                 if self.projection_type == ProjectionType.BREGMAN:
-                    difnorm = np.linalg.norm(diff_pxy, 1)
-                    dif_newx_norm = np.linalg.norm(diff_newx_y, 1)
+                    difnorm = np.linalg.norm(diff_pxy, inf)
+                    dif_newx_norm = np.linalg.norm(diff_newx_y, inf)
                     delta_A = np.linalg.norm(diff_A, inf)
                 else:
-                    difnorm = np.linalg.norm(diff_pxy)
-                    dif_newx_norm = np.linalg.norm(diff_newx_y)
-                    delta_A = np.linalg.norm(diff_A)
+                    difnorm = np.linalg.norm(diff_pxy, 2)
+                    dif_newx_norm = np.linalg.norm(diff_newx_y, 2)
+                    delta_A = np.linalg.norm(diff_A, 2)
 
                 if self.projection_type == ProjectionType.BREGMAN:
                     dot_prod_to_check = 1.0 # for bregman div always check!
@@ -121,13 +121,13 @@ class KorpelevichExtragradAdapt(IterGradTypeMethod):
                 if self.projection_type == ProjectionType.BREGMAN:
                     delta_A = np.linalg.norm(diff_A, inf)
                 else:
-                    delta_A = np.linalg.norm(diff_A)
+                    delta_A = np.linalg.norm(diff_A, 2)
 
                 if delta_A > self.zero_delta:
                     if self.projection_type == ProjectionType.BREGMAN:
-                        difnorm = np.linalg.norm(diff_pxy, 1)
+                        difnorm = np.linalg.norm(diff_pxy, inf)
                     else:
-                        difnorm = np.linalg.norm(diff_pxy)
+                        difnorm = np.linalg.norm(diff_pxy, 2)
 
                     t = self.tau * difnorm / delta_A
                     if self.lam > t:

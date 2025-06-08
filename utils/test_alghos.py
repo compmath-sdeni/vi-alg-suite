@@ -5,6 +5,7 @@ from typing import Callable
 import numpy as np
 
 from methods.IterativeAlgorithm import IterativeAlgorithm
+from methods.algorithm_params import AlgorithmParams
 
 
 class BasicAlgoTests:
@@ -106,13 +107,30 @@ class BasicAlgoTests:
     # def CalculateRunningAverage(alg_object: IterativeAlgorithm, *, max_print_len=5):
 
     @staticmethod
-    def PrintAlgRunStats(alg_object: IterativeAlgorithm, *, max_print_len=5):
+    def PrintAlgRunStats(alg_object: IterativeAlgorithm, *, max_print_len=5, params: AlgorithmParams):
         last_history_index: int = alg_object.history.iters_count - 1 if alg_object.save_history else 1
+        last_avg_history_index: int | None = None
+
+
+        last_goal_func_value = alg_object.history.goal_func_value[last_history_index]
+        last_real_error_value = alg_object.history.real_error[last_history_index]
+        last_real_error_label = "Exact error"
+        last_goal_value_label = "Goal function"
+        if params.result_averaging_window:
+            last_avg_history_index = alg_object.history.averaged_goal_func_value.shape[0] - 1
+            last_goal_func_value = alg_object.history.averaged_goal_func_value[last_avg_history_index]
+            last_goal_value_label = f"GAP - last {params.result_averaging_window} averaged"
+
+            last_avg_history_index = alg_object.history.averaged_real_error.shape[0] - 1
+            last_real_error_value = alg_object.history.averaged_real_error[last_avg_history_index]
+            last_real_error_label = f"Exact error - last {params.result_averaging_window} averaged"
+
+
         print(f"{alg_object.hr_name} finished. "
               f"Iters: {alg_object.iter}; Projections: {alg_object.projections_count}; Operators calc: {alg_object.operator_count}; Time: {alg_object.totalTime / 1e+9} sec.; "
               f"\nLast step: {alg_object.history.step_delta_norm[last_history_index]}; "
-              f"Exact error: {alg_object.history.real_error[last_history_index]}; "
-              f"Goal function: {alg_object.history.goal_func_value[last_history_index]}; "
+              f"{last_real_error_label}: {last_real_error_value}; "
+              f"{last_goal_value_label}: {last_goal_func_value}; "
               f"Goal function form avg: {alg_object.history.goal_func_from_average[last_history_index]}; "
               f"Lambda: {alg_object.lam}; "
               )

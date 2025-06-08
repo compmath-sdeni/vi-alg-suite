@@ -1,3 +1,4 @@
+import json
 import math
 import datetime
 import os
@@ -251,12 +252,15 @@ sys.stdout = captured_io
 # problem = minmax_game_2.prepareProblem(algorithm_params=params)
 # endregion
 
+tau_variants = np.linspace(0.1, 1.5, 56)
+# tau_variants = [0.1, 0.2, 0.3, 0.5, 0.6, 0.8, 0.9, 1.0, 1.2, 1.4, 1.5, 1.7]
+
 # region PageRank and SLE
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
 # problem = pagerank_3.prepareProblem(algorithm_params=params)
 problem = pagerank_4_10.prepareProblem(algorithm_params=params)
-# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
+# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=500, min_iters=50)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -626,7 +630,7 @@ def initAlgs():
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              moving_average_window=params.moving_average_window,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 2", use_step_increase=False)
+                                                             hr_name="EfP A", use_step_increase=False)
 
     extrapol_from_past_adaptive_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -654,7 +658,7 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Alg. 1", use_step_increase=False)
+                                                             hr_name="Kor A", use_step_increase=False)
 
     korpele_adaptive_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
@@ -689,7 +693,7 @@ def initAlgs():
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 3")
+                                                hr_name="MT A")
 
     malitsky_tam_adaptive_inc = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -724,7 +728,7 @@ def initAlgs():
 #         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
-          malitsky_tam_adaptive,
+         malitsky_tam_adaptive,
 #        malitsky_tam_adaptive_inc,
 #        malitsky_tam_adaptive_bregproj,
 #         tseng_bregproj,
@@ -749,7 +753,6 @@ def initAlgs():
 # endregion
 
 # region Run all algs and save data and results
-start = time.monotonic()
 
 saved_history_dir = f"storage/stats/PhdUlt-{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
@@ -757,57 +760,42 @@ saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)
 
 problem.saveToDir(path_to_save=os.path.join(saved_history_dir, "problem"))
-params.saveToDir(os.path.join(saved_history_dir, "params"))
 
 print(f"Problem: {problem.GetFullDesc()}")
-
-print(f"eps: {params.eps}; tau1: {params.adaptive_tau}; tau2: {params.adaptive_tau_small}; "
+print(f"eps: {params.eps}; tau2: {params.adaptive_tau_small}; "
       f"start_lam: {params.start_adaptive_lam}; start_lam1: {params.start_adaptive_lam1}; "
       f"lam: {params.lam}; lam_KL: {params.lam_KL}")
 
-if params.save_history and params.excel_history:
-    writer = pd.ExcelWriter(
-        os.path.join(saved_history_dir, f"history-{test_mnemo}.xlsx"),
-        engine='xlsxwriter')
+param_dependent_stats = []
 
-timings = {}
-alg_history_list = []
+class AlgStats:
+    last_gap: float
+    last_gap_from_avg: float
+    last_adaptive_lam: float
+    run_time_sec: float
 
-if params.test_time:
-    algs_to_test: List = None
-    for i in range(params.test_time_count):
-        algs_to_test = initAlgs()
-        for alg in algs_to_test:
-            total_time: float = 0
-            alg.do()
-            if alg.isStopConditionMet() and alg.iter < params.max_iters:
-                total_time = alg.history.iter_time_ns[alg.history.iters_count - 1]
-            else:
-                total_time = math.inf
+for tau in tau_variants:
+    params.adaptive_tau = tau
 
-            if alg.hr_name not in timings:
-                timings[alg.hr_name] = {'time': 0.0}
+    params_set_name = f"tau_{tau}"
 
-            timings[alg.hr_name]['time'] += float(total_time)
-            print(f"{i+1}: {alg.hr_name} time: {total_time/params.time_scale_divider}s.")
+    param_variant_idx = len(param_dependent_stats)
+    param_dependent_stats.append({'tau': tau})
 
-            timings[alg.hr_name]['iter'] = alg.history.iters_count
-            timings[alg.hr_name]['oper'] = alg.history.operator_count
-            timings[alg.hr_name]['proj'] = alg.history.projections_count
+    print(f"Run for params {params_set_name}. tau: {params.adaptive_tau}")
+    params.saveToDir(os.path.join(saved_history_dir, f"params_{params_set_name}"))
 
-    for alg in algs_to_test:
-        timings[alg.hr_name]['time'] /= params.test_time_count
-        timings[alg.hr_name]['time'] /= params.time_scale_divider
+    timings = {}
+    alg_history_list = []
 
-        BasicAlgoTests.PrintAlgRunStats(alg)
-
-else:
     algs_to_test = initAlgs()
     for alg in algs_to_test:
         try:
             alg.do()
         except Exception as e:
             print(e)
+
+        last_it = alg.history.iters_count - 1
 
         if params.result_averaging_window:
             if alg.history.goal_func_value is not None:
@@ -816,106 +804,70 @@ else:
             if alg.history.real_error is not None:
                 alg.history.averaged_real_error = AlgHistory.create_history_of_averaged(alg.history.real_error, params.result_averaging_window)
 
+
         BasicAlgoTests.PrintAlgRunStats(alg, max_print_len = 20, params=params)
+
+        alg_stats = AlgStats()
+        alg_stats.last_gap = alg.history.goal_func_value[last_it] if params.result_averaging_window is None else alg.history.averaged_goal_func_value[-1]
+        alg_stats.last_gap_from_avg = alg.history.goal_func_from_average[last_it]
+        alg_stats.last_adaptive_lam = alg.lam
+        alg_stats.run_time_sec = alg.totalTime / 1e+9
+
         alg_history_list.append(alg.history)
 
-        if params.save_history:
+        # convert object to dict
+        alg_stats_dict = {
+            'last_gap': alg_stats.last_gap,
+            'last_gap_from_avg': alg_stats.last_gap_from_avg,
+            'last_adaptive_lam': alg_stats.last_adaptive_lam,
+            'run_time_sec': alg_stats.run_time_sec
+        }
 
-            # save to excel
-            if params.excel_history:
-                # formatting params - precision is ignored for some reason...
-                with np.printoptions(threshold=500, precision=3, edgeitems=10, linewidth=sys.maxsize, floatmode='fixed'):
-                    df: pandas.DataFrame = alg.history.toPandasDF()
-                    df.to_excel(writer, sheet_name=alg.hr_name.replace("*", "_star")[:30], index=False)
-
-            # save to csv without cutting data (without ...)
-            with np.printoptions(threshold=sys.maxsize, precision=3, linewidth=sys.maxsize, floatmode='fixed'):
-                # pandas.set_option('display.max_columns', None)
-                # pandas.set_option('display.max_colwidth', None)
-                # pandas.set_option('display.max_seq_items', None)
-
-                df: pandas.DataFrame = alg.history.toPandasDF()
-                df.to_csv(os.path.join(saved_history_dir, f"history-{test_mnemo}.csv"))
-
-        print('')
+        param_dependent_stats[param_variant_idx][alg.hr_name] = alg_stats_dict
 
         # save last approximation - to start from it next time
         # np.save('traff_eq_lastx', alg.history.x[alg.history.iters_count - 1])
 
-if params.test_time:
-    print(f"Averaged time over {params.test_time_count} runs. Stop conditions: {params.stop_by} with epsilon {params.eps}")
-    for k in timings:
-        print(f"{k}: {timings[k]}")
+    sys.stdout = sys.__stdout__
 
-if params.save_history and params.excel_history:
-    # save excel file
-    # writer.save()
-    writer.close()
+    if show_output:
+        print(captured_io.getvalue())
 
-sys.stdout = sys.__stdout__
+    f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}-{params_set_name}.txt"), "w")
+    f.write(captured_io.getvalue())
+    f.close()
 
-if show_output:
-    print(captured_io.getvalue())
+    # endregion
 
-f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "w")
-f.write(captured_io.getvalue())
-f.close()
+    # region Plot and save graphs
+    if params.save_plots or params.show_plots:
+        if not params.save_history:
+            print("Graphics generation is impossible if history is not collected!")
+        else:
+            grapher = AlgStatGrapher()
+            grapher.plot_by_history(
+                alg_history_list=alg_history_list,
+                use_averaged_data=params.result_averaging_window is not None,
+                x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
+                styles=params.styles, start_iter=params.plot_start_iter,
+                x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
+            )
 
-# save history - takes too much space for big matrices!
-# for idx, h in enumerate(alg_history_list):
-#     hp = os.path.join(saved_history_dir, 'history', str(idx))
-#     h.saveToDir(hp)
+            if params.x_limits is not None:
+                plt.xlim(params.x_limits)
 
-finish = time.monotonic()
+            if params.y_limits is not None:
+                plt.ylim(params.y_limits)
 
-final_timing_str = f'Total time of calculation, history saving etc. (without plotting): {(finish - start):.0f} sec.'
+            if params.save_plots:
+                dpi = 300.
 
-print(final_timing_str)
+                plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}-{params_set_name}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
+                plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}-{params_set_name}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
 
-f = open(os.path.join(saved_history_dir, f"log-{test_mnemo}.txt"), "a+")
-f.write(final_timing_str)
-f.close()
+                plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}-{params_set_name}.png"), bbox_inches='tight', dpi=dpi)
+    # endregion
 
-# endregion
-
-
-# region Plot and save graphs
-if params.save_plots or params.show_plots:
-    if not params.save_history:
-        print("Graphics generation is impossible if history is not collected!")
-    else:
-        grapher = AlgStatGrapher()
-        grapher.plot_by_history(
-            alg_history_list=alg_history_list,
-            use_averaged_data=(params.result_averaging_window is not None and params.result_averaging_window > 1),
-            x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
-            styles=params.styles, start_iter=params.plot_start_iter,
-            x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
-        )
-
-        if params.x_limits is not None:
-            plt.xlim(params.x_limits)
-
-        if params.y_limits is not None:
-            plt.ylim(params.y_limits)
-
-        if params.save_plots:
-            dpi = 300.
-
-            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.svg"), bbox_inches='tight', dpi=dpi, format='svg')
-            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.eps"), bbox_inches='tight', dpi=dpi, format='eps')
-
-            plt.savefig(os.path.join(saved_history_dir, f"graph-{test_mnemo}.png"), bbox_inches='tight', dpi=dpi)
-
-        if params.show_plots:
-            # plt.title(problem.hr_name, loc='center')
-            plt.show()
-
-        exit(0)
-
-# endregion
-
-# table - time for getting to epsilon error
-# for 1 and 2 - "real error"
-# for 3 - step error (can be multiple solutions) and see F(x)
-# show lambda on separate graph
+# save param_dependent_stats as json
+with open(os.path.join(saved_history_dir, f"param-dep-stats-{test_mnemo}.json"), "w") as f:
+    json.dump(param_dependent_stats, f, indent=4)
