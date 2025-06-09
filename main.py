@@ -641,13 +641,13 @@ def initAlgs():
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
                                                              moving_average_window=params.moving_average_window,
-                                                             hr_name="EfP ABP", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Alg. 2 KL", projection_type=ProjectionType.BREGMAN)
 
     extrapol_from_past_adaptive_bregproj_inc = ExtrapolationFromPastAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="EfP ABP+", projection_type=ProjectionType.BREGMAN,
+                                                             hr_name="Alg. 2 KL+", projection_type=ProjectionType.BREGMAN,
                                                              use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     korpele_adaptive = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
@@ -666,13 +666,13 @@ def initAlgs():
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Kor ABP", projection_type=ProjectionType.BREGMAN)
+                                                             hr_name="Alg. 1 KL", projection_type=ProjectionType.BREGMAN)
 
     korpele_adaptive_bregproj_inc = KorpelevichExtragradAdapt(problem, stop_condition=params.stop_by,
                                                              y0=params.x1.copy(), eps=params.eps,
                                                              lam=params.start_adaptive_lam1, tau=params.adaptive_tau,
                                                              min_iters=params.min_iters, max_iters=params.max_iters,
-                                                             hr_name="Kor ABP+", projection_type=ProjectionType.BREGMAN,
+                                                             hr_name="Alg. 1 KL+", projection_type=ProjectionType.BREGMAN,
                                                              use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
     malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
@@ -705,28 +705,37 @@ def initAlgs():
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="MT ABP", projection_type=ProjectionType.BREGMAN)
+                                                hr_name="Alg. 3 KL", projection_type=ProjectionType.BREGMAN)
 
+    malitsky_tam_adaptive_bregproj_inc = MalitskyTamAdaptive(problem,
+                                                x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
+                                                lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
+                                                tau=params.adaptive_tau,
+                                                min_iters=params.min_iters, max_iters=params.max_iters,
+                                                use_step_increase=True,
+                                                step_increase_seq_rule=lambda itr: 3.0 / (itr ** 1.1),
+                                                hr_name="Alg. 3 KL+", projection_type=ProjectionType.BREGMAN)
 
 
     algs_to_test = [
 #       korpele,
 #        korpele_adaptive,
-        korpele_adaptive_inc,
-#         korpele_adaptive_bregproj,
+#         korpele_adaptive_inc,
+         korpele_adaptive_bregproj,
 #          korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
         # extrapol_from_past,
 #         extrapol_from_past_adaptive,
-          extrapol_from_past_adaptive_inc,
-#         extrapol_from_past_adaptive_bregproj,
+#          extrapol_from_past_adaptive_inc,
+         extrapol_from_past_adaptive_bregproj,
 #         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
 #          malitsky_tam_adaptive,
-        malitsky_tam_adaptive_inc,
-#        malitsky_tam_adaptive_bregproj,
+#        malitsky_tam_adaptive_inc,
+         malitsky_tam_adaptive_bregproj,
+#        malitsky_tam_adaptive_bregproj_inc,
 #         tseng_bregproj,
 #         extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,
@@ -889,7 +898,7 @@ if params.save_plots or params.show_plots:
             alg_history_list=alg_history_list,
             use_averaged_data=(params.result_averaging_window is not None and params.result_averaging_window > 1),
             x_axis_type=params.x_axis_type, y_axis_type=params.y_axis_type, y_axis_label=params.y_label,
-            styles=params.styles, start_iter=params.plot_start_iter, yScale = "linear",
+            styles=params.styles, start_iter=params.plot_start_iter,
             x_axis_label=params.x_label, time_scale_divider=params.time_scale_divider
         )
 

@@ -88,15 +88,15 @@ class AlgHistory:
             AlgHistFieldNames.REAL_ERROR: self.real_error[:self.iters_count],
         }
 
-        if self.averaged_goal_func_value is not None:
-            avg_padded = np.ones(self.iters_count) * -1
-            avg_padded[:self.averaged_goal_func_value.shape[0]] = self.averaged_goal_func_value
-            frame_columns[AlgHistFieldNames.GOAL_FUNC_AVERAGED] = avg_padded
+        #if self.averaged_goal_func_value is not None:
+            # avg_padded = np.ones(self.iters_count) * -1
+            # avg_padded[:self.averaged_goal_func_value.shape[0]] = self.averaged_goal_func_value
+            # frame_columns[AlgHistFieldNames.GOAL_FUNC_AVERAGED] = avg_padded
 
-        if self.averaged_real_error is not None:
-            avg_padded = np.ones(self.iters_count) * -1
-            avg_padded[:self.averaged_real_error.shape[0]] = self.averaged_real_error
-            frame_columns[AlgHistFieldNames.REAL_ERROR_AVERAGED] = avg_padded
+        # if self.averaged_real_error is not None:
+        #     avg_padded = np.ones(self.iters_count) * -1
+        #     avg_padded[:self.averaged_real_error.shape[0]] = self.averaged_real_error
+        #     frame_columns[AlgHistFieldNames.REAL_ERROR_AVERAGED] = avg_padded
 
 
         if len(self.extra_indicators) > 0:
