@@ -62,7 +62,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.save_plots = True
 
     algorithm_params.eps = 1e-18
-    algorithm_params.max_iters = 20100
+    algorithm_params.max_iters = 6500
     algorithm_params.min_iters = 500
 
     algorithm_params.lam = 0.1
@@ -94,8 +94,9 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.result_averaging_window = 200
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
-    algorithm_params.y_axis_type = YAxisType.GOAL_FUNCTION
-    algorithm_params.y_label = "$G({x_n})$"
+    algorithm_params.y_axis_type = YAxisType.STEP_SIZE
+    algorithm_params.y_label = "$\lambda_n$"
+    # algorithm_params.y_label = "$G({x_n})$"
     # algorithm_params.x_label = "sec."
     # algorithm_params.y_limits = [1e-3,10]
 

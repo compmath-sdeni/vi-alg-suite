@@ -90,7 +90,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
             self.D = np.linalg.norm(self.x - self.px, inf)
         else:
             self.D_1 = self.D
-            self.D = np.linalg.norm(self.x - self.px, 2)
+            self.D = np.linalg.norm(self.x - self.px)
 
         if self.D_1 + self.D > self.zero_delta:
             self.p_lam = self.lam
@@ -102,7 +102,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
                 if self.projection_type == ProjectionType.BREGMAN:
                     nr = np.linalg.norm(self.delta_Ax, inf)
                 else:
-                    nr = np.linalg.norm(self.delta_Ax, 2)
+                    nr = np.linalg.norm(self.delta_Ax)
 
                 if nr > self.zero_delta:
                     t = self.tau * self.D / nr
@@ -112,7 +112,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
                 if self.projection_type == ProjectionType.BREGMAN:
                     nr = np.linalg.norm(self.delta_Ax, inf)
                 else:
-                    nr = np.linalg.norm(self.delta_Ax, 2)
+                    nr = np.linalg.norm(self.delta_Ax)
 
                 if nr > self.zero_delta:
                     t = self.tau * self.D / nr

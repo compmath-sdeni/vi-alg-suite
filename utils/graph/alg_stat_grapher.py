@@ -13,10 +13,11 @@ class XAxisType(Enum):
 
 @unique
 class YAxisType(Enum):
-    REAL_ERROR = 1,
-    GOAL_FUNCTION = 2,
-    STEP_DELTA = 3,
+    REAL_ERROR = 1
+    GOAL_FUNCTION = 2
+    STEP_DELTA = 3
     GOAL_OF_AVERAGED = 4
+    STEP_SIZE = 5
 
 
 class DefaultLabels:
@@ -28,7 +29,8 @@ class DefaultLabels:
         YAxisType.REAL_ERROR: "$D_n$",  # "$||x_n - x^*||_2$",
         YAxisType.STEP_DELTA: "$D_n$",  # "$||x_{n} - x_{n-1}||_2$",
         YAxisType.GOAL_FUNCTION: "$G(z)$",  # "$||P_C(x_n - \lambda Ax_n)||_2$"
-        YAxisType.GOAL_OF_AVERAGED: "$G(z_{avg})$"
+        YAxisType.GOAL_OF_AVERAGED: "$G(z_{avg})$",
+        YAxisType.STEP_SIZE: "$\lambda_n$"
     }
 
 
@@ -75,7 +77,7 @@ class AlgStatGrapher:
                         y_axis_type: YAxisType = YAxisType.REAL_ERROR,
                         use_averaged_data: bool = False,
                         plot_step_delta: bool = False, plot_real_error: bool = False, plot_residue: bool = False,
-                        plot_residue_avg: bool = False, diverged_error_threshold = 0.01,
+                        plot_residue_avg: bool = False, plot_step_size: bool = False, diverged_error_threshold = 0.01,
                         x_axis_label: str = None, y_axis_label: str = None, plot_title: str = None,
                         legend: List[List[str]] = [], xScale: str = 'linear', yScale: str = 'log',
                         start_iter: int = 2, styles: List[str] = None, time_scale_divider: int = 1e+6):
@@ -111,18 +113,13 @@ class AlgStatGrapher:
             plot_residue = True
         if y_axis_type == YAxisType.GOAL_OF_AVERAGED:
             plot_residue_avg = True
+        if y_axis_type == YAxisType.STEP_SIZE:
+            plot_step_size = True
 
-        if plot_step_delta:
-            y_dims += 1
-
-        if plot_real_error:
-            y_dims += 1
-
-        if plot_residue:
-            y_dims += 1
-
-        if plot_residue_avg:
-            y_dims += 1
+        plot_graps = [plot_step_delta, plot_real_error, plot_residue, plot_residue_avg, plot_step_size]
+        for v in plot_graps:
+            if v:
+                y_dims += 1
 
         # plot_data: np.ndarray = np.zeros((algs_count, x_len, y_dims+1), dtype=float)
 
@@ -152,17 +149,9 @@ class AlgStatGrapher:
             plot_legend = []
             for i in range(algs_count):
                 alg_legends = []
-                if plot_step_delta:
-                    alg_legends.append(f"{alg_history_list[i].alg_name}")
-
-                if plot_real_error:
-                    alg_legends.append(f"{alg_history_list[i].alg_name}")
-
-                if plot_residue:
-                    alg_legends.append(f"{alg_history_list[i].alg_name}")
-
-                if plot_residue_avg:
-                    alg_legends.append(f"{alg_history_list[i].alg_name}")
+                for v in plot_graps:
+                    if v:
+                        alg_legends.append(f"{alg_history_list[i].alg_name}")
 
                 plot_legend.append(alg_legends)
 
@@ -181,6 +170,8 @@ class AlgStatGrapher:
                     plot_data_len = alg_history_list[i].averaged_goal_func_value.shape[0]  - start_iter
                 elif y_axis_type == YAxisType.REAL_ERROR:
                     plot_data_len = alg_history_list[i].averaged_real_error.shape[0] - start_iter
+                elif y_axis_type == YAxisType.STEP_SIZE:
+                    plot_data_len = alg_history_list[i].lam.shape[0] - start_iter
 
             plot_data: np.ndarray = np.zeros((y_dims + 1, plot_data_len), dtype=float)
 
@@ -216,6 +207,11 @@ class AlgStatGrapher:
 
             if plot_residue_avg:
                 plot_data[k] = alg_history_list[i].goal_func_from_average[start_iter:plot_data_len+start_iter]
+                yDataIndices.append(k)
+                k += 1
+
+            if plot_step_size:
+                plot_data[k] = alg_history_list[i].lam[start_iter:plot_data_len+start_iter]
                 yDataIndices.append(k)
                 k += 1
 
