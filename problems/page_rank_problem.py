@@ -57,7 +57,7 @@ class PageRankProblem(VIProblem):
         :param m: Nodes count
         :param zeroPercent: Probability of zero element
         """
-        res = PageRankProblem(np.ones((m,m), float))
+        res = PageRankProblem(GraphMatr = np.ones((m,m), float))
 
         B = np.random.rand(m, m)
         np.fill_diagonal(B, 0)

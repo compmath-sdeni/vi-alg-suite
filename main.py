@@ -44,7 +44,7 @@ from problems.funcndmin import FuncNDMin
 
 from problems.testcases.zero_sum_game import minmax_game_1, minmax_game_2, blotto_game, minmax_game_test_1
 
-from problems.testcases.pagerank import pagerank_4_10
+from problems.testcases.pagerank import pagerank_4_10, pagerank_rand
 
 from problems.testcases.transport import \
     pigu_sample, braess_sample, load_file_sample, test_one_sample, test_two_sample, test_three_sample, test_sample_1_2, \
@@ -255,8 +255,9 @@ sys.stdout = captured_io
 # problem = pagerank_1.prepareProblem(algorithm_params=params)
 # problem = pagerank_2.prepareProblem(algorithm_params=params)
 # problem = pagerank_3.prepareProblem(algorithm_params=params)
-problem = pagerank_4_10.prepareProblem(algorithm_params=params)
-# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=2000, min_iters=2000)
+# problem = pagerank_4_10.prepareProblem(algorithm_params=params)
+problem = pagerank_rand.prepareProblem(n=5, algorithm_params=params)
+# problem = pagerank_2.prepareCaliforniaGraphProblem(algorithm_params=params, max_iters=1000, min_iters=20)
 
 # problem = sle_saddle_regression_100_100000.prepareProblem(algorithm_params=params)
 
@@ -721,21 +722,21 @@ def initAlgs():
 #       korpele,
 #        korpele_adaptive,
 #         korpele_adaptive_inc,
-         korpele_adaptive_bregproj,
-#          korpele_adaptive_bregproj_inc,
+#         korpele_adaptive_bregproj,
+          korpele_adaptive_bregproj_inc,
 #        tseng,
 #        tseng_adaptive,
 #        tseng_adaptive_bregproj,
         # extrapol_from_past,
 #         extrapol_from_past_adaptive,
 #          extrapol_from_past_adaptive_inc,
-         extrapol_from_past_adaptive_bregproj,
-#         extrapol_from_past_adaptive_bregproj_inc,
+#         extrapol_from_past_adaptive_bregproj,
+         extrapol_from_past_adaptive_bregproj_inc,
 #        malitsky_tam,
 #          malitsky_tam_adaptive,
-#        malitsky_tam_adaptive_inc,
-         malitsky_tam_adaptive_bregproj,
-#        malitsky_tam_adaptive_bregproj_inc,
+#         malitsky_tam_adaptive_inc,
+#         malitsky_tam_adaptive_bregproj,
+        malitsky_tam_adaptive_bregproj_inc,
 #         tseng_bregproj,
 #         extrapol_from_past_bregproj,
 #        malitsky_tam_bregproj,
