@@ -106,7 +106,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams(),
     algorithm_params.start_adaptive_lam = 15.0
     algorithm_params.start_adaptive_lam1 = 7.0
 
-    algorithm_params.adaptive_tau = 0.5 * 0.75
+    algorithm_params.adaptive_tau = 0.7
     algorithm_params.adaptive_tau_small = 0.33 * 0.75
 
     algorithm_params.x_axis_type = XAxisType.ITERATION
