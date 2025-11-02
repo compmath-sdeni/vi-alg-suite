@@ -11,8 +11,8 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
     def __init__(self, problem: VIProblem, eps: float = 0.0001, lam: float = 0.1, *, x1: np.ndarray,
                  min_iters: int = 0, max_iters=5000, hr_name: str = None,
                  projection_type: ProjectionType = ProjectionType.EUCLID,
-                 stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float = 0.25,
-                 use_step_increase: bool = False, step_increase_seq_rule=None
+                 stop_condition: StopCondition = StopCondition.STEP_SIZE, lam1: float = 0.1, tau: float|None = None,
+                 use_step_increase: bool = False, step_increase_seq_rule=None, static_step=False
                  ):
         super().__init__(problem, eps, lam, min_iters=min_iters, max_iters=max_iters,
                          hr_name=hr_name, projection_type=projection_type, stop_condition=stop_condition
@@ -36,6 +36,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
 
         self.p_lam = self.lam0 = lam
         self.lam1 = lam1
+        self.static_step = static_step
 
         self.tau = tau
 
@@ -60,8 +61,12 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
 
         self.delta_Ax = self.Ax - self.Apx
 
-        self.p_lam = self.lam0
-        self.lam = self.lam1
+        if self.static_step:
+            self.lam = self.lam0
+            self.p_lam = self.lam
+        else:
+            self.p_lam = self.lam0
+            self.lam = self.lam1
 
         return super().__iter__()
 
@@ -92,7 +97,7 @@ class MalitskyTamAdaptive(IterGradTypeMethod):
             self.D_1 = self.D
             self.D = np.linalg.norm(self.x - self.px)
 
-        if self.D_1 + self.D > self.zero_delta:
+        if (not self.static_step) and (self.D_1 + self.D > self.zero_delta):
             self.p_lam = self.lam
 
             if self.use_step_increase:

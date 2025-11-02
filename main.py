@@ -32,13 +32,14 @@ from problems.harker_test import HarkerTest
 from problems.matrix_oper_vi import MatrixOperVI
 from problems.pseudomonotone_oper_one import PseudoMonotoneOperOne
 from problems.pseudomonotone_oper_two import PseudoMonotoneOperTwo
+from problems.pseudomonotone_oper_a_norm_x import PseudoMonotoneOperAMinusNorm
 from problems.sle_direct import SLEDirect
 from problems.sle_saddle import SLESaddle
 
 from problems.nagurna_simplest import BloodDeliveryHardcodedOne
 
 from problems.testcases import pseudo_mono_3, pseudo_mono_5, sle_saddle_hardcoded, sle_saddle_random_one, harker_test, \
-    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear, pagerank_2, pagerank_3
+    sle_saddle_regression_100_100000, pagerank_1, func_nd_min_mean_linear, pagerank_2, pagerank_3, pseudo_mono_a_minus_norm
 
 from problems.funcndmin import FuncNDMin
 
@@ -239,6 +240,7 @@ sys.stdout = captured_io
 
 # region Standart test problems
 
+problem = pseudo_mono_a_minus_norm.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
@@ -279,13 +281,13 @@ sys.stdout = captured_io
 #                                           data_path='/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/data/TransportationNetworks/Test2'
 #                                           )
 
-problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
-                                          max_iters=2500, problem_name='SiouxFalls',
-                                          max_od_paths_count=4, max_path_edges=12,
-                                          auto_update_structure=False, structure_update_freq=1000,
-                                          data_path='storage/data/TransportationNetworks/SiouxFalls',
-                                          net_file_name='SiouxFalls_net.tntp',
-                                          demands_file_name='SiouxFalls_trips.tntp')
+# problem = load_file_sample.prepareProblem(algorithm_params=params, zero_cutoff=0.1,
+#                                           max_iters=2500, problem_name='SiouxFalls',
+#                                           max_od_paths_count=4, max_path_edges=12,
+#                                           auto_update_structure=False, structure_update_freq=1000,
+#                                           data_path='storage/data/TransportationNetworks/SiouxFalls',
+#                                           net_file_name='SiouxFalls_net.tntp',
+#                                           demands_file_name='SiouxFalls_trips.tntp')
 
 # problem = test_one_sample.prepareProblem(algorithm_params=params)
 # problem = test_two_sample.prepareProblem(algorithm_params=params)
@@ -676,9 +678,15 @@ def initAlgs():
                                                              hr_name="Alg. 1 KL+", projection_type=ProjectionType.BREGMAN,
                                                              use_step_increase=True, step_increase_seq_rule=lambda itr: 3.0/(itr**1.1))
 
-    malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
-                               x1=params.x1.copy(), eps=params.eps, lam=params.lam/2.,
-                               min_iters=params.min_iters, max_iters=params.max_iters, hr_name="MT")
+    # malitsky_tam = MalitskyTam(problem, stop_condition=params.stop_by,
+    #                            x1=params.x1.copy(), eps=params.eps, lam=params.lam,
+    #                            min_iters=params.min_iters, max_iters=params.max_iters, hr_name="Alg. 1")
+
+    malitsky_tam = MalitskyTamAdaptive(problem,
+                                                x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
+                                                lam=params.lam, lam1=params.lam,
+                                                min_iters=params.min_iters, max_iters=params.max_iters,
+                                                hr_name="Alg. 1", static_step=True)
 
     malitsky_tam_bregproj = MalitskyTam(problem, stop_condition=params.stop_by,
                                         x1=params.x1.copy(), eps=params.eps, lam=params.lam_KL / 2.,
@@ -690,7 +698,7 @@ def initAlgs():
                                                 lam=params.start_adaptive_lam, lam1=params.start_adaptive_lam,
                                                 tau=params.adaptive_tau,
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
-                                                hr_name="Alg. 3")
+                                                hr_name="Alg. 2")
 
     malitsky_tam_adaptive_inc = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -721,7 +729,7 @@ def initAlgs():
     algs_to_test = [
 #       korpele,
 #        korpele_adaptive,
-           korpele_adaptive_inc,
+#           korpele_adaptive_inc,
 #         korpele_adaptive_bregproj,
 #           korpele_adaptive_bregproj_inc,
 #        tseng,
@@ -729,12 +737,12 @@ def initAlgs():
 #        tseng_adaptive_bregproj,
         # extrapol_from_past,
 #         extrapol_from_past_adaptive,
-          extrapol_from_past_adaptive_inc,
+#          extrapol_from_past_adaptive_inc,
 #         extrapol_from_past_adaptive_bregproj,
 #          extrapol_from_past_adaptive_bregproj_inc,
-#        malitsky_tam,
-#          malitsky_tam_adaptive,
-         malitsky_tam_adaptive_inc,
+        malitsky_tam,
+        malitsky_tam_adaptive,
+#         malitsky_tam_adaptive_inc,
 #         malitsky_tam_adaptive_bregproj,
 #        malitsky_tam_adaptive_bregproj_inc,
 #         tseng_bregproj,
@@ -761,7 +769,7 @@ def initAlgs():
 # region Run all algs and save data and results
 start = time.monotonic()
 
-saved_history_dir = f"storage/stats/PhdUlt-{datetime.datetime.today().strftime('%Y-%m')}"
+saved_history_dir = f"storage/stats/MCIT-25-26-{datetime.datetime.today().strftime('%Y-%m')}"
 test_mnemo = f"{problem.__class__.__name__}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 saved_history_dir = os.path.join(saved_history_dir, test_mnemo)
 os.makedirs(saved_history_dir, exist_ok=True)
