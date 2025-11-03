@@ -102,12 +102,14 @@ GetExtraIndicators function).
 
 ### Solver ###
 
-Solver is a work in progress, and in current version it is partially unstructured script, which is responsible for:
+Solver is a convenience script to run algorithms for selected problems, plot and save graphs etc. 
+In the current version, it's responsible for:
 * Creating problem and feasible set objects
 * Creating algorithm objects
 * Running algorithms
 * Saving results and history
 * Plotting graphs
+
 It uses auxiliary classes `BasicAlgoTests` and `AlgStatGrapher`, to print standard information about the run and draw 
 corresponding graphs.
 
