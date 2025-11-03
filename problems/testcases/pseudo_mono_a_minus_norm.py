@@ -9,15 +9,20 @@ from utils.graph.alg_stat_grapher import YAxisType, XAxisType
 def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
 
     N = 3
-    algorithm_params.x0 = np.array([1., 1., 1.])
+    r = 3
+    a = 4.0
+    L = 6.0
+
+    algorithm_params.x0 = np.array([-5., 5., -3.])
+    algorithm_params.x0 = algorithm_params.x0 / np.linalg.norm(algorithm_params.x0)
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     real_solution = np.array([0.0 for i in range(N)])
 
-    algorithm_params.lam = 1.6/12.0
-    algorithm_params.adaptive_tau = 0.49
+    algorithm_params.lam = 0.25/L
+    algorithm_params.adaptive_tau = 0.35
 
-    algorithm_params.start_adaptive_lam = 0.5
+    algorithm_params.start_adaptive_lam = 2.0
     algorithm_params.start_adaptive_lam1 = algorithm_params.start_adaptive_lam
 
     algorithm_params.lam_KL = algorithm_params.lam / 2.
@@ -41,17 +46,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.plot_start_iter = 0
     algorithm_params.time_scale_divider = 1e+9
 
-    l2b = L2Ball(3, 3)
+    l2b = L2Ball(N, r)
     constraints = l2b
 
     return PseudoMonotoneOperAMinusNorm(
         arity=N,
-        a = 4.0,
-        r = 3.0,
-        L = 6.0,
+        a = a,
+        r = r,
+        L = L,
         x0=algorithm_params.x0,
         C=constraints,
-        hr_name='$(a-\|x\|)x, C = \{x \in R^d : : \|x\| \leq r \} ' +
+        hr_name=f'$({a}-\\|x\\|)x, C = \\{{x \\in R^{N} : \\|x\\| \\leq {r} \\}} ' +
                 f", \ \\lambda = {round(algorithm_params.lam, 5)}" +
                 f", \ \\lambda_{{small}} = {round(algorithm_params.lam_KL, 5)}" +
                 f", \ \\tau = {round(algorithm_params.adaptive_tau, 3)}" +
