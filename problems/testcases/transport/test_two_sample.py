@@ -89,18 +89,17 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.x1 = algorithm_params.x0.copy()
 
     algorithm_params.eps = 1e-10
-    algorithm_params.max_iters = 200
+    algorithm_params.max_iters = 300
+    algorithm_params.min_iters = 300
 
-    algorithm_params.lam = 0.025
-    algorithm_params.lam_medium = 0.00001
+    algorithm_params.lam = 0.03
+    algorithm_params.lam_medium = 0.01
     algorithm_params.lam_KL = 0.1
 
-    algorithm_params.min_iters = 3
-
-    algorithm_params.start_adaptive_lam = 0.02
+    algorithm_params.start_adaptive_lam = 1.0
     algorithm_params.start_adaptive_lam1 = 0.02
 
-    algorithm_params.adaptive_tau = 0.5
+    algorithm_params.adaptive_tau = 0.6
     algorithm_params.adaptive_tau_small = 0.25
 
     algorithm_params.x_axis_type = XAxisType.ITERATION

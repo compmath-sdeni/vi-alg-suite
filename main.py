@@ -240,8 +240,8 @@ sys.stdout = captured_io
 
 # region Standart test problems
 
-problem = pseudo_mono_a_minus_norm.prepareProblem(algorithm_params=params)
-# problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
+# problem = pseudo_mono_a_minus_norm.prepareProblem(algorithm_params=params)
+problem = pseudo_mono_3.prepareProblem(algorithm_params=params)
 # problem = pseudo_mono_5.prepareProblem(algorithm_params=params)
 
 # problem = harker_test.prepareProblem(algorithm_params=params)
@@ -707,7 +707,7 @@ def initAlgs():
                                                 min_iters=params.min_iters, max_iters=params.max_iters,
                                                 use_step_increase=True,
                                                 step_increase_seq_rule=lambda itr: 3.0/(itr**1.1),
-                                                hr_name="Alg. 3+")
+                                                hr_name="Alg. 2+")
 
     malitsky_tam_adaptive_bregproj = MalitskyTamAdaptive(problem,
                                                 x1=params.x1.copy(), eps=params.eps, stop_condition=params.stop_by,
@@ -742,7 +742,7 @@ def initAlgs():
 #          extrapol_from_past_adaptive_bregproj_inc,
         malitsky_tam,
         malitsky_tam_adaptive,
-#         malitsky_tam_adaptive_inc,
+        malitsky_tam_adaptive_inc,
 #         malitsky_tam_adaptive_bregproj,
 #        malitsky_tam_adaptive_bregproj_inc,
 #         tseng_bregproj,

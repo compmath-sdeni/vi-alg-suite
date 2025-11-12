@@ -114,7 +114,7 @@ def main():
     ]
     # User configuration
 
-    out_dir: str = '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/plots'
+    out_dir: str = '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/talk_plots'
 
     # PseudoMono3 oper, MCIT-25-26
     # output_image: str = 'ex2_sn_2cases.png'
@@ -125,31 +125,44 @@ def main():
     # ]
 
     # 4 - ||x|| oper, MCIT-25-26
-    output_image: str = 'ex1_sn_2cases.png'
+    # output_image: str = 'ex1_sn_2cases.png'
+    # file_paths: List[str] = [
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27.xlsx',
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22.xlsx',
+    # ]
+
+    # small TE problem, MCIT-25-26
+    # output_image: str = 'traffic1_2cases.png'
+    # file_paths: List[str] = [
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/TrafficEquilibrium-2025-11-11_17-09-02/history-TrafficEquilibrium-2025-11-11_17-09-02.xlsx',
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/TrafficEquilibrium-2025-11-11_17-09-27/history-TrafficEquilibrium-2025-11-11_17-09-27.xlsx',
+    # ]
+
+    # PseudoMono3 oper, MCIT-25-26 - with step increase also
+    output_image: str = 'ex2_dn_3algs_inc.png'
     file_paths: List[str] = [
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27.xlsx',
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22.xlsx',
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-11_17-51-45/history-PseudoMonotoneOperOne-2025-11-11_17-51-45.xlsx'
     ]
 
     x_column: str = 'iterations'
     x_label: str = 'Iteration'
 
     # real_error or step_delta_norm
-    y_column: str = 'step_delta_norm'
+    y_column: str = 'real_error'
 
     # D_n or S_n
-    y_label: str = '$S_n$'
+    y_label: str = '$D_n$'
 
     max_x = None
     # max_x = 400
 
-    sheet_nums: List[int] = [[0, 1], [0, 1], [],[1]]
-    legend_names: List[str] = ['Alg. 1, $\\alpha=0.125$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.49$',
-                               'Alg. 1, $\\alpha=0.042$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.35$',
-#                               'Alg. 1, $\\alpha=0.042$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.35$'
+    sheet_nums: List[int] = [[0, 1, 2]]
+    legend_names: List[str] = ['Alg. 1, $\\alpha=0.2$', 'Alg. 2, $\\alpha_0=1, \  \\tau=0.49$',
+                               'Alg. 2+, $\\alpha_0=1, \  \\tau=0.49$'
                                ]
 
-    order = [0, 2, 1, 3]
+    order = [0, 1, 2]
+    # order = [0, 2, 1, 3]
     color_style_cycle = [
         {
             'color': color_cycle[0]['color'],

@@ -50,7 +50,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.eps = 1e-9
     algorithm_params.max_iters = 3000
 
-    algorithm_params.lam = 0.01
+    algorithm_params.lam = 0.087
     algorithm_params.lam_medium = 0.1
     algorithm_params.lam_KL = 0.1
 
@@ -72,7 +72,7 @@ def prepareProblem(*, algorithm_params: AlgorithmParams = AlgorithmParams()):
     algorithm_params.time_scale_divider = 1e+9
     # algorithm_params.x_label = "Time, sec."
 
-    algorithm_params.plot_start_iter = 3
+    algorithm_params.plot_start_iter = 4
 
     return TrafficEquilibrium(
         Gf=Ge, d=d, W=W, C=Rn(n),Q=Q,
