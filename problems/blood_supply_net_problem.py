@@ -50,7 +50,8 @@ class BloodSupplyNetwork:
                  r: Sequence[tuple] = None, r_string: Sequence[tuple] = None,
                  expected_shortage: Sequence[tuple], expected_surplus: Sequence[tuple], edge_loss: Sequence[float],
                  lam_minus: Sequence[float], lam_plus: Sequence[float], theta: float,
-                 paths: Sequence[Sequence[int]] = None, pos: Dict[int, List[float]] = None
+                 paths: Sequence[Sequence[int]] = None, pos: Dict[int, List[float]] = None,
+                 expected_demand: Sequence[dict] = None
                  ):
         self.n_C = n_C
         self.n_B = n_B
@@ -85,6 +86,7 @@ class BloodSupplyNetwork:
 
         self.expected_shortage = expected_shortage
         self.expected_surplus = expected_surplus
+        self.expected_demand = expected_demand
 
         self.lam_minus = lam_minus
         self.lam_plus = lam_plus
@@ -123,6 +125,236 @@ class BloodSupplyNetwork:
         self.n_p = len(self.paths)
 
         self.build_static_params()
+
+    @staticmethod
+    def get_default_edge_cost_strings():
+        return ("1 * y", "1"), ("0", "0"), ("1 * y", "1"), 1.0
+
+    @staticmethod
+    def get_default_expected_demand():
+        return {"min": 0.0, "max": 1.0, "distribution": "uniform"}
+
+    @staticmethod
+    def build_expected_functions_from_specs(expected_demand):
+        expected_shortage = []
+        expected_surplus = []
+        for spec in expected_demand:
+            a = float(spec.get("min", 0.0))
+            b = float(spec.get("max", a + 1.0))
+            if b == a:
+                b = a + 1.0
+
+            expected_shortage.append((
+                BloodSupplyNetwork.get_uniform_rand_shortage_expectation_func(a, b),
+                BloodSupplyNetwork.get_uniform_rand_shortage_expectation_derivative(a, b)
+            ))
+            expected_surplus.append((
+                BloodSupplyNetwork.get_uniform_rand_surplus_expectation_func(a, b),
+                BloodSupplyNetwork.get_uniform_rand_surplus_expectation_derivative(a, b)
+            ))
+
+        return expected_shortage, expected_surplus
+
+    def rebuild_after_topology_change(self):
+        self.edges = [tuple(e) for e in self.edges]
+        self.nodes_count = 1 + self.n_C + self.n_B + self.n_Cmp + self.n_S + self.n_D + self.n_R
+
+        self.adj_dict = {}
+        for idx, e in enumerate(self.edges):
+            if e[0] not in self.adj_dict:
+                self.adj_dict[e[0]] = {e[1]: idx}
+            else:
+                self.adj_dict[e[0]][e[1]] = idx
+
+        self.update_functions_from_strings()
+        self.n_L = len(self.edges)
+        self.projected_demands = np.zeros(self.n_R)
+        self.build_demand_points_dict()
+
+        G, auto_pos, labels = self.to_nx_graph()
+        self.G = G
+        self.labels = labels
+        if self.pos is None:
+            self.pos = auto_pos
+
+        demand_points = [k for k in self.demand_points_dic.keys()]
+        self.paths = []
+        if demand_points and 0 in self.G:
+            for path in nx.all_simple_paths(self.G, source=0, target=demand_points):
+                path_edge_indices = []
+                v1 = path[0]
+                for i in range(1, len(path)):
+                    v2 = path[i]
+                    path_edge_indices.append(self.adj_dict[v1][v2])
+                    v1 = v2
+                self.paths.append(path_edge_indices)
+
+        self.path_loss = np.ones(len(self.paths))
+        self.n_p = len(self.paths)
+        self.build_static_params()
+
+    def get_layer_ranges(self):
+        start = 1
+        ranges = {}
+        for layer, count in [
+            ("C", self.n_C),
+            ("B", self.n_B),
+            ("P", self.n_Cmp),
+            ("S", self.n_S),
+            ("D", self.n_D),
+            ("R", self.n_R),
+        ]:
+            ranges[layer] = (start, start + count)
+            start += count
+        return ranges
+
+    def get_node_layer(self, node_id: int):
+        if node_id == 0:
+            return "ROOT", 0
+
+        for layer, (start, end) in self.get_layer_ranges().items():
+            if start <= node_id < end:
+                return layer, node_id - start
+
+        return None, None
+
+    def add_vertex(self, layer: str, *, pos=None):
+        layer = layer.upper()
+        count_attr = {
+            "C": "n_C",
+            "B": "n_B",
+            "P": "n_Cmp",
+            "S": "n_S",
+            "D": "n_D",
+            "R": "n_R",
+        }.get(layer)
+        if count_attr is None:
+            raise ValueError(f"Unknown network layer: {layer}")
+
+        insert_at = self.get_layer_ranges()[layer][1]
+        self.edges = [
+            ((u + 1 if u >= insert_at else u), (v + 1 if v >= insert_at else v))
+            for u, v in self.edges
+        ]
+        if self.pos is not None:
+            self.pos = {
+                (int(node_id) + 1 if int(node_id) >= insert_at else int(node_id)): position
+                for node_id, position in self.pos.items()
+            }
+            self.pos[insert_at] = pos if pos is not None else [300, 250]
+
+        setattr(self, count_attr, getattr(self, count_attr) + 1)
+
+        if layer == "R":
+            spec = self.get_default_expected_demand()
+            if self.expected_demand is None:
+                self.expected_demand = [self.get_default_expected_demand() for _ in range(self.n_R - 1)]
+            self.expected_demand.append(spec)
+            shortage, surplus = self.build_expected_functions_from_specs([spec])
+            self.expected_shortage.append(shortage[0])
+            self.expected_surplus.append(surplus[0])
+            self.lam_minus.append(0)
+            self.lam_plus.append(0)
+
+        self.rebuild_after_topology_change()
+        return insert_at
+
+    def remove_vertex(self, node_id: int):
+        node_id = int(node_id)
+        if node_id == 0:
+            raise ValueError("The root source node cannot be removed.")
+
+        layer, layer_index = self.get_node_layer(node_id)
+        if layer is None:
+            raise ValueError(f"Node {node_id} does not exist.")
+
+        count_attr = {
+            "C": "n_C",
+            "B": "n_B",
+            "P": "n_Cmp",
+            "S": "n_S",
+            "D": "n_D",
+            "R": "n_R",
+        }[layer]
+
+        new_edges = []
+        new_c_string = []
+        new_z_string = []
+        new_r_string = []
+        new_edge_loss = []
+        for idx, (u, v) in enumerate(self.edges):
+            if u == node_id or v == node_id:
+                continue
+
+            new_edges.append((u - 1 if u > node_id else u, v - 1 if v > node_id else v))
+            new_c_string.append(self.c_string[idx])
+            new_z_string.append(self.z_string[idx])
+            if self.r_string is not None and idx < len(self.r_string):
+                new_r_string.append(self.r_string[idx])
+            new_edge_loss.append(self.edge_loss[idx])
+
+        self.edges = new_edges
+        self.c_string = new_c_string
+        self.z_string = new_z_string
+        self.r_string = new_r_string if self.r_string is not None else None
+        self.edge_loss = new_edge_loss
+
+        if self.pos is not None:
+            self.pos = {
+                (int(key) - 1 if int(key) > node_id else int(key)): value
+                for key, value in self.pos.items()
+                if int(key) != node_id
+            }
+
+        setattr(self, count_attr, getattr(self, count_attr) - 1)
+
+        if layer == "R":
+            if self.expected_demand is not None and layer_index < len(self.expected_demand):
+                del self.expected_demand[layer_index]
+            if layer_index < len(self.expected_shortage):
+                del self.expected_shortage[layer_index]
+            if layer_index < len(self.expected_surplus):
+                del self.expected_surplus[layer_index]
+            if layer_index < len(self.lam_minus):
+                del self.lam_minus[layer_index]
+            if layer_index < len(self.lam_plus):
+                del self.lam_plus[layer_index]
+
+        self.rebuild_after_topology_change()
+
+    def add_edge(self, source_node: int, target_node: int, *, c_string=None, z_string=None, r_string=None,
+                 edge_loss=1.0):
+        source_node = int(source_node)
+        target_node = int(target_node)
+        if source_node < 0 or source_node >= self.nodes_count or target_node < 0 or target_node >= self.nodes_count:
+            raise ValueError("Source or target node does not exist.")
+        if source_node == target_node:
+            raise ValueError("An edge cannot connect a node to itself.")
+        if (source_node, target_node) in self.edges:
+            raise ValueError("This edge already exists.")
+
+        default_c, default_z, default_r, default_loss = self.get_default_edge_cost_strings()
+        self.edges.append((source_node, target_node))
+        self.c_string.append(c_string if c_string is not None else default_c)
+        self.z_string.append(z_string if z_string is not None else default_z)
+        if self.r_string is not None:
+            self.r_string.append(r_string if r_string is not None else default_r)
+        self.edge_loss.append(float(edge_loss) if edge_loss is not None else default_loss)
+        self.rebuild_after_topology_change()
+        return len(self.edges) - 1
+
+    def remove_edge(self, edge_index: int):
+        edge_index = int(edge_index)
+        if edge_index < 0 or edge_index >= len(self.edges):
+            raise ValueError(f"Edge {edge_index} does not exist.")
+
+        del self.edges[edge_index]
+        del self.c_string[edge_index]
+        del self.z_string[edge_index]
+        if self.r_string is not None and edge_index < len(self.r_string):
+            del self.r_string[edge_index]
+        del self.edge_loss[edge_index]
+        self.rebuild_after_topology_change()
 
     def update_functions_from_strings(self):
         if self.c_string is not None:
@@ -219,6 +451,12 @@ class BloodSupplyNetwork:
 
     # need recalculation after every change of the paths flows x
     def recalc_link_flows_and_demands(self, x: np.ndarray):
+        if len(x) != self.n_p:
+            raise ValueError(
+                f"Path-flow vector has length {len(x)}, but the network currently has {self.n_p} paths. "
+                "Refresh the problem and algorithm parameters after changing the network topology."
+            )
+
         self.link_flows = np.zeros(self.n_L)
         self.projected_demands = np.zeros(self.n_R)
 
@@ -486,8 +724,12 @@ class BloodSupplyNetwork:
             "theta": self.theta,
             #           "predefined_paths": self.paths,
             "edges": self.edges,
+            "edge_loss": self.edge_loss,
             "pos": self.pos
         }
+
+        if self.expected_demand is not None:
+            network_data["expected_demand"] = self.expected_demand
 
         if self.c_string is not None:
             network_data["c"] = []
@@ -527,7 +769,8 @@ class BloodSupplyNetwork:
             self.lam_minus = net_data["lam_minus"]
             self.lam_plus = net_data["lam_plus"]
             self.theta = net_data["theta"]
-            self.edges = net_data["edges"]
+            self.edges = [tuple(edge) for edge in net_data["edges"]]
+            self.edge_loss = net_data.get("edge_loss", [1.0 for _ in self.edges])
 
             if "c" in net_data:
                 self.c_string = []
@@ -546,52 +789,21 @@ class BloodSupplyNetwork:
 
             self.update_functions_from_strings()
 
+            if "expected_demand" in net_data:
+                self.expected_demand = net_data["expected_demand"]
+                self.expected_shortage, self.expected_surplus = self.build_expected_functions_from_specs(
+                    self.expected_demand
+                )
+            elif len(self.expected_shortage) != self.n_R or len(self.expected_surplus) != self.n_R:
+                self.expected_demand = [self.get_default_expected_demand() for _ in range(self.n_R)]
+                self.expected_shortage, self.expected_surplus = self.build_expected_functions_from_specs(
+                    self.expected_demand
+                )
+
             self.pos = {}
             for node_idx in net_data["pos"]:
                 self.pos[int(node_idx)] = net_data["pos"][node_idx]
-
-            # also we have virtual node 0 - source node, "regional division"
-            self.nodes_count = 1 + self.n_C + self.n_B + self.n_Cmp + self.n_S + self.n_D + self.n_R
-
-            self.adj_dict = {}
-            for idx, e in enumerate(self.edges):
-                if e[0] not in self.adj_dict:
-                    self.adj_dict[e[0]] = {e[1]: idx}
-                else:
-                    self.adj_dict[e[0]][e[1]] = idx
-
-            self.lam_minus = net_data["lam_minus"]
-            self.lam_plus = net_data["lam_plus"]
-            self.theta = net_data["theta"]
-
-            self.n_L = len(self.edges)
-
-            self.projected_demands = np.zeros(self.n_R)
-
-            self.build_demand_points_dict()
-
-            G, auto_pos, labels = self.to_nx_graph()
-            self.G = G
-            self.labels = labels
-
-            if self.pos is None:
-                self.pos = auto_pos
-
-            demand_points = [k for k in self.demand_points_dic.keys()]
-            self.paths = []
-            for path in nx.all_simple_paths(self.G, source=0, target=demand_points):
-                path_edge_indices = []
-                v1 = path[0]
-                for i in range(1, len(path)):
-                    v2 = path[i]
-                    path_edge_indices.append(self.adj_dict[v1][v2])
-                    v1 = v2
-                self.paths.append(path_edge_indices)
-
-            self.path_loss = np.ones(len(self.paths))
-            self.n_p = len(self.paths)
-
-            self.build_static_params()
+            self.rebuild_after_topology_change()
 
 
 class BloodSupplyNetworkProblem(VIProblem):
@@ -613,6 +825,19 @@ class BloodSupplyNetworkProblem(VIProblem):
 
         self.vis = vis if vis is not None else VisualParams()
         self.defaultProjection = np.zeros(self.arity)
+
+    def rebuild_after_net_change(self):
+        old_x0 = self.x0
+        self.arity = self.net.n_p
+        self.C = RnPlus(self.arity)
+        self.defaultProjection = np.zeros(self.arity)
+        if isinstance(old_x0, np.ndarray) and old_x0.shape == (self.arity,):
+            self._x0 = old_x0
+        else:
+            self._x0 = np.ones(self.arity)
+        self.x_dim = self.arity
+        if not (isinstance(self.xtest, np.ndarray) and self.xtest.shape == (self.arity,)):
+            self.xtest = None
 
     def F(self, x: np.ndarray) -> float:
         return self.net.get_loss(x)

@@ -309,7 +309,7 @@ class AlgsRunner:
                 timings[alg.hr_name]['time'] /= self.params.test_time_count
                 timings[alg.hr_name]['time'] /= self.params.time_scale_divider
 
-                BasicAlgoTests.PrintAlgRunStats(alg)
+                BasicAlgoTests.PrintAlgRunStats(alg, params=self.params)
 
         else:
             algs_to_test = [self.available_algs_dict[alg_name] for alg_name in algs_to_test_names]
@@ -319,7 +319,7 @@ class AlgsRunner:
                 except Exception as e:
                     print(e)
 
-                BasicAlgoTests.PrintAlgRunStats(alg)
+                BasicAlgoTests.PrintAlgRunStats(alg, params=self.params)
                 alg_history_list.append(alg.history)
 
                 if self.params.save_history:

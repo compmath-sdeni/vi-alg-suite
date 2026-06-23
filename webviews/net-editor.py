@@ -1,6 +1,8 @@
 import hashlib
 import json
 import re
+import base64
+import mimetypes
 from transliterate import translit
 import threading
 
@@ -22,6 +24,7 @@ from dash.dependencies import Input, Output, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
 import diskcache
 import networkx as nx
+import numpy as np
 
 from methods.algorithm_params import AlgorithmParams
 from problems.blood_supply_net_problem import BloodSupplyNetwork, BloodSupplyNetworkProblem
@@ -35,8 +38,6 @@ from logging.handlers import RotatingFileHandler
 from net_editor_layout import get_layout, get_cytoscape_graph_elements, update_net_by_cytoscape_elements, \
     build_graph_view_layout
 from run_algs_lib import AlgsRunner
-
-from PIL import Image
 
 # https://dash.plotly.com/basic-callbacks
 # https://dash.plotly.com/cytoscape/events
@@ -203,6 +204,60 @@ def get_initial_layout():
     return res
 
 
+def build_current_graph_view(problem):
+    G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
+    if problem.net.pos:
+        pos = problem.net.pos
+    return build_graph_view_layout(problem.net, G, pos, labels)
+
+
+def sync_solver_dimensions(problem, alg_params=None):
+    problem.rebuild_after_net_change()
+    if alg_params is None:
+        return
+
+    arity = problem.net.n_p
+    if not isinstance(alg_params.x0, np.ndarray) or alg_params.x0.shape != (arity,):
+        alg_params.x0 = problem.x0.copy()
+
+    if not isinstance(alg_params.x1, np.ndarray) or alg_params.x1.shape != (arity,):
+        alg_params.x1 = alg_params.x0.copy()
+
+
+def image_file_to_data_url(image_path):
+    mime_type, _ = mimetypes.guess_type(image_path)
+    if mime_type is None:
+        mime_type = 'image/png'
+
+    with open(image_path, 'rb') as image_file:
+        encoded_image = base64.b64encode(image_file.read()).decode('ascii')
+
+    return f"data:{mime_type};base64,{encoded_image}"
+
+
+def build_solver_image_preview(image_path, image_index):
+    image_src = image_file_to_data_url(image_path)
+    image_name = os.path.basename(image_path)
+
+    return html.Button(
+        id={"type": "solver-result-image", "index": image_index},
+        n_clicks=0,
+        title=f"Open {image_name}",
+        className="btn p-0 border-0 bg-transparent w-100 mb-3",
+        style={"cursor": "zoom-in"},
+        children=html.Img(
+            src=image_src,
+            alt=image_name,
+            style={
+                "width": "100%",
+                "border": "1px solid #dee2e6",
+                "borderRadius": "4px",
+                "backgroundColor": "white"
+            }
+        )
+    )
+
+
 @app.callback(
     [
         Output('console-output', 'children', allow_duplicate=True),
@@ -224,6 +279,7 @@ def get_initial_layout():
         Output('expected_demand_min', 'disabled'),
         Output('expected_demand_max', 'disabled'),
         Output('expected_demand_distribution_type', 'disabled'),
+        Output('selected-node-id', 'value'),
     ],
     [
         Input({"type": "graph_presenter", "id": ALL}, 'tapEdgeData'),
@@ -245,8 +301,8 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_e
 
     edgeData = edgeDatas[0]
     nodeData = nodeDatas[0]
-    sourceNode = sourceNodes[0] if sourceNodes is not None else None
-    # targetNode = targetNodes[0] if targetNodes is not None else None
+    sourceNode = sourceNodes if sourceNodes is not None else ''
+    targetNode = targetNodes if targetNodes is not None else ''
     graph_elements = graphs_elements[0]
 
     problem = get_problem_from_cache(session_id)
@@ -277,6 +333,7 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_e
     alpha_value = dash.no_update
 
     selected_edge_index = dash.no_update
+    selected_node_id = dash.no_update
 
     console_message = ''
 
@@ -284,6 +341,7 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_e
         logger.info(f"onGraphElementClick: edge data: {edgeData}")
         set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, edgeData)
         set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, None)
+        selected_node_id = ''
 
         source_node_value = edgeData['source']
         target_node_value = edgeData['target']
@@ -307,9 +365,16 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_e
         expected_demand_enabled = is_expected_demand_edge
 
         if is_expected_demand_edge:
-            expected_demand_min = problem.net.expected_demand[selected_edge_index][0]
-            expected_demand_max = problem.net.expected_demand[selected_edge_index][1]
-            expected_demand_distribution = problem.net.expected_demand[selected_edge_index][2]
+            demand_idx = problem.net.demand_points_dic[int(edgeData['target'])]
+            if problem.net.expected_demand and demand_idx < len(problem.net.expected_demand):
+                expected_demand = problem.net.expected_demand[demand_idx]
+                expected_demand_min = expected_demand.get("min")
+                expected_demand_max = expected_demand.get("max")
+                expected_demand_distribution = expected_demand.get("distribution", "uniform")
+            else:
+                expected_demand_min = ''
+                expected_demand_max = ''
+                expected_demand_distribution = 'uniform'
 
         console_message = "clicked/tapped the edge between " + edgeData['source'].upper() + " and " + edgeData[
             'target'].upper()
@@ -324,24 +389,35 @@ def onGraphElementClick(edgeDatas, nodeDatas, sourceNodes, targetNodes, graphs_e
         prev_active_node = get_cached_value(session_id, CACHE_KEY_ACTIVE_NODE)
         set_cached_value(session_id, CACHE_KEY_ACTIVE_NODE, el)
         set_cached_value(session_id, CACHE_KEY_ACTIVE_EDGE, None)
+        clicked_node = nodeData['id']
+        selected_node_id = clicked_node
 
-        if sourceNode and sourceNode != nodeData['id']:
-            target_node_value = nodeData['id']
-        elif sourceNode == nodeData['id']:
-            source_node_value = None
-            target_node_value = None
+        if sourceNode == clicked_node:
+            source_node_value = ''
+            target_node_value = ''
+            selected_node_id = ''
+            console_message = f"edge endpoint selection cleared from node {clicked_node}"
+        elif targetNode == clicked_node:
+            source_node_value = dash.no_update
+            target_node_value = ''
+            console_message = f"target node {clicked_node} cleared"
+        elif sourceNode and targetNode:
+            source_node_value = clicked_node
+            target_node_value = ''
+            console_message = f"started a new edge selection from node {clicked_node}"
+        elif sourceNode:
+            target_node_value = clicked_node
+            console_message = f"selected target node {clicked_node}"
         else:
-            source_node_value = nodeData['id']
-            target_node_value = None
-
-        console_message = "clicked/tapped the node " + nodeData['id'].upper() + '; First node pos: ' + str(
-            graph_elements[0]['position']) + '; Sec: ' + str(graph_elements[1]['position'])
+            source_node_value = clicked_node
+            target_node_value = ''
+            console_message = f"selected source node {clicked_node}"
 
     return console_message, source_node_value, target_node_value, selected_edge_index, \
         oper_cost_value, oper_cost_deriv_value, waste_discard_cost_value, waste_discard_cost_deriv_value, \
         risk_cost_value, risk_cost_deriv_value, not risk_cost_enabled, not risk_cost_enabled, alpha_value, \
         expected_demand_min, expected_demand_max, expected_demand_distribution, not expected_demand_enabled, \
-        not expected_demand_enabled, not expected_demand_enabled
+        not expected_demand_enabled, not expected_demand_enabled, selected_node_id
 
 
 @app.callback(
@@ -551,6 +627,8 @@ def load_problem_click(n_clicks, problem_name, session_id):  # , elements
         problem = get_problem_from_cache(session_id)
 
         problem.net.loadFromDir(problem.net, path_to_load=problem_dir)
+        alg_params = get_params_from_cache(session_id)
+        sync_solver_dimensions(problem, alg_params)
         logger.info("load_problem_click: problem network data loaded from folder %s", problem_dir)
 
         G, pos, labels = problem.net.to_nx_graph(x_left=200, x_right=600, y_bottom=500, y_top=0)
@@ -565,7 +643,7 @@ def load_problem_click(n_clicks, problem_name, session_id):  # , elements
 
         new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
 
-        save_problem_to_cache(session_id, problem)
+        save_problem_to_cache(session_id, problem, alg_params)
 
         logger.info("load_problem_click: elements ready.")
         return new_graph_view, problem_name, 'NOT_USED'  # json.dumps(new_elements)
@@ -590,6 +668,9 @@ def load_problem_click(n_clicks, problem_name, session_id):  # , elements
     State('risk-cost-input', 'value'),
     State('risk-cost-deriv-input', 'value'),
     State('edge-loss-input', 'value'),
+    State('expected_demand_min', 'value'),
+    State('expected_demand_max', 'value'),
+    State('expected_demand_distribution_type', 'value'),
     State('session-id', 'data'),
     #    State({"type":"graph_presenter", "id": MATCH}, 'elements'),
     prevent_initial_call=True
@@ -597,7 +678,8 @@ def load_problem_click(n_clicks, problem_name, session_id):  # , elements
 def set_edge_params_click(
         n_clicks, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv, waste_discard_cost,
         waste_discard_cost_deriv,
-        risk_cost, risk_cost_deriv, edge_loss, session_id):
+        risk_cost, risk_cost_deriv, edge_loss, expected_demand_min, expected_demand_max,
+        expected_demand_distribution, session_id):
     if n_clicks is None:
         raise PreventUpdate
 
@@ -611,12 +693,35 @@ def set_edge_params_click(
     problem.net.z_string[selected_edge_index] = (waste_discard_cost, waste_discard_cost_deriv)
 
     if risk_cost is not None and risk_cost != "":
+        while problem.net.r_string is not None and len(problem.net.r_string) <= selected_edge_index:
+            problem.net.r_string.append(("0", "0"))
         problem.net.r_string[selected_edge_index] = (risk_cost, risk_cost_deriv)
 
     if edge_loss is not None and edge_loss != "":
-        problem.net.edge_loss[selected_edge_index] = edge_loss
+        problem.net.edge_loss[selected_edge_index] = float(edge_loss)
+
+    if problem.net.is_demand_point_edge(selected_edge_index):
+        target_node = int(problem.net.edges[selected_edge_index][1])
+        demand_idx = problem.net.demand_points_dic[target_node]
+        if problem.net.expected_demand is None:
+            problem.net.expected_demand = [
+                problem.net.get_default_expected_demand() for _ in range(problem.net.n_R)
+            ]
+
+        default_spec = problem.net.get_default_expected_demand()
+        spec = {
+            "min": float(expected_demand_min) if expected_demand_min not in (None, '') else default_spec["min"],
+            "max": float(expected_demand_max) if expected_demand_max not in (None, '') else default_spec["max"],
+            "distribution": expected_demand_distribution or "uniform"
+        }
+        problem.net.expected_demand[demand_idx] = spec
+        problem.net.expected_shortage, problem.net.expected_surplus = (
+            problem.net.build_expected_functions_from_specs(problem.net.expected_demand)
+        )
 
     problem.net.update_functions_from_strings()
+    problem.net.rebuild_after_topology_change()
+    problem.rebuild_after_net_change()
 
     save_problem_to_cache(session_id, problem)
 
@@ -632,6 +737,114 @@ def set_edge_params_click(
     # new_graph_view = build_graph_view_layout(problem.net, G, pos, labels)
 
     return f"Edge parameters updated for edge {source_node} -> {target_node}"
+
+
+@app.callback(
+    [
+        Output('graph-container', 'children', allow_duplicate=True),
+        Output('console-output', 'children', allow_duplicate=True),
+        Output('source-node-input', 'value', allow_duplicate=True),
+        Output('target-node-input', 'value', allow_duplicate=True),
+        Output('selected-edge-index', 'value', allow_duplicate=True),
+        Output('selected-node-id', 'value', allow_duplicate=True),
+    ],
+    [
+        Input('add-vertex-button', 'n_clicks'),
+        Input('remove-vertex-button', 'n_clicks'),
+        Input('add-edge-button', 'n_clicks'),
+        Input('remove-edge-button', 'n_clicks'),
+        Input('clear-selection-button', 'n_clicks'),
+    ],
+    [
+        State('add-vertex-layer-dropdown', 'value'),
+        State('selected-node-id', 'value'),
+        State('source-node-input', 'value'),
+        State('target-node-input', 'value'),
+        State('selected-edge-index', 'value'),
+        State('oper-cost-input', 'value'),
+        State('oper-cost-deriv-input', 'value'),
+        State('waste-discard-cost-input', 'value'),
+        State('waste-discard-cost-deriv-input', 'value'),
+        State('risk-cost-input', 'value'),
+        State('risk-cost-deriv-input', 'value'),
+        State('edge-loss-input', 'value'),
+        State('session-id', 'data'),
+    ],
+    prevent_initial_call=True
+)
+def edit_topology_click(
+        add_vertex_clicks, remove_vertex_clicks, add_edge_clicks, remove_edge_clicks, clear_selection_clicks,
+        vertex_layer, selected_node_id, source_node, target_node, selected_edge_index, oper_cost, oper_cost_deriv,
+        waste_discard_cost, waste_discard_cost_deriv, risk_cost, risk_cost_deriv, edge_loss, session_id):
+    context = dash.ctx.triggered
+    if not context or not session_id:
+        raise PreventUpdate
+
+    problem = get_problem_from_cache(session_id)
+    if problem is None:
+        raise PreventUpdate
+
+    event_source = context[0]['prop_id']
+
+    try:
+        if event_source == 'add-vertex-button.n_clicks':
+            new_node_id = problem.net.add_vertex(vertex_layer)
+            message = f"Vertex {new_node_id} added to layer {vertex_layer}"
+            source_node = str(new_node_id)
+            target_node = ''
+            selected_edge_index = ''
+            selected_node_id = str(new_node_id)
+        elif event_source == 'remove-vertex-button.n_clicks':
+            node_to_remove = selected_node_id or source_node
+            if node_to_remove in (None, ''):
+                return dash.no_update, "Select a vertex before removing it.", dash.no_update, dash.no_update, \
+                    dash.no_update, dash.no_update
+
+            problem.net.remove_vertex(int(node_to_remove))
+            message = f"Vertex {node_to_remove} removed"
+            source_node = ''
+            target_node = ''
+            selected_edge_index = ''
+            selected_node_id = ''
+        elif event_source == 'add-edge-button.n_clicks':
+            if source_node in (None, '') or target_node in (None, ''):
+                return dash.no_update, "Select source and target vertices before adding an edge.", dash.no_update, \
+                    dash.no_update, dash.no_update, dash.no_update
+
+            default_c, default_z, default_r, default_loss = problem.net.get_default_edge_cost_strings()
+            c_string = (oper_cost or default_c[0], oper_cost_deriv or default_c[1])
+            z_string = (waste_discard_cost or default_z[0], waste_discard_cost_deriv or default_z[1])
+            r_string = (risk_cost or default_r[0], risk_cost_deriv or default_r[1])
+            new_edge_index = problem.net.add_edge(
+                int(source_node), int(target_node),
+                c_string=c_string,
+                z_string=z_string,
+                r_string=r_string,
+                edge_loss=float(edge_loss) if edge_loss not in (None, '') else default_loss
+            )
+            message = f"Edge {new_edge_index} added: {source_node} -> {target_node}"
+            selected_edge_index = str(new_edge_index)
+            selected_node_id = ''
+        elif event_source == 'remove-edge-button.n_clicks':
+            if selected_edge_index in (None, ''):
+                return dash.no_update, "Select an edge before removing it.", dash.no_update, dash.no_update, \
+                    dash.no_update, dash.no_update
+
+            problem.net.remove_edge(int(selected_edge_index))
+            message = f"Edge {selected_edge_index} removed"
+            selected_edge_index = ''
+        elif event_source == 'clear-selection-button.n_clicks':
+            return dash.no_update, "Selection cleared", '', '', '', ''
+        else:
+            raise PreventUpdate
+    except ValueError as exc:
+        logger.warning("edit_topology_click: %s", exc)
+        return dash.no_update, str(exc), dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+    problem.rebuild_after_net_change()
+    save_problem_to_cache(session_id, problem)
+
+    return build_current_graph_view(problem), message, source_node, target_node, selected_edge_index, selected_node_id
 
 
 @app.callback(
@@ -652,7 +865,7 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
     if n_clicks is None:
         raise PreventUpdate
 
-    problem_name = problem_name.strip()
+    problem_name = problem_name.strip() if problem_name else ''
 
     if not problem_name:
         return "Please enter problem name", {'color': 'red'}
@@ -676,8 +889,11 @@ def save_problem_click(n_clicks, problem_name, graphs_elements, session_id):
     if session_id:
         problem = get_problem_from_cache(session_id)
 
-        # update_net_by_cytoscape_elements(graph_elements, problem.net)
-        # problem.net.update_functions_from_strings()
+        graph_elements = graphs_elements[0]
+        update_net_by_cytoscape_elements(graph_elements, problem.net)
+        problem.net.update_functions_from_strings()
+        problem.net.rebuild_after_topology_change()
+        problem.rebuild_after_net_change()
 
         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 
@@ -723,6 +939,9 @@ def solve_problem_click(n_clicks, solvers, session_id):
         user_email = get_cached_value(session_id, CACHE_KEY_EMAIL)
 
         if user_email:
+            sync_solver_dimensions(problem, alg_params)
+            save_problem_to_cache(session_id, problem, alg_params)
+
             runner = AlgsRunner(problem=problem, params=alg_params,
                                 runs_data_save_path=os.path.join(get_user_folder(user_email), RUN_STATS_SUBDIR))
 
@@ -740,9 +959,8 @@ def solve_problem_click(n_clicks, solvers, session_id):
                 res_images = []
 
                 if 'graph_results' in result:
-                    for image_path in result['graph_results']:
-                        pil_image = Image.open(image_path)
-                        res_images.append(html.Img(src=pil_image, style={'width': '100%'}))
+                    for image_index, image_path in enumerate(result['graph_results']):
+                        res_images.append(build_solver_image_preview(image_path, image_index))
 
             return [res_text, res_images]
         else:
@@ -751,6 +969,46 @@ def solve_problem_click(n_clicks, solvers, session_id):
     else:
         logger.info("solve_problem_click: no session and not logged in")
         return [["You need to log in to be able to test solvers!"], []]
+
+
+@app.callback(
+    [
+        Output('solver-image-modal', 'style'),
+        Output('solver-image-modal-img', 'src'),
+        Output('solver-image-modal-img', 'alt'),
+    ],
+    [
+        Input({"type": "solver-result-image", "index": ALL}, 'n_clicks'),
+        Input('solver-image-modal-close', 'n_clicks'),
+        Input('solver-image-modal-backdrop', 'n_clicks'),
+    ],
+    [
+        State({"type": "solver-result-image", "index": ALL}, 'children'),
+    ],
+    prevent_initial_call=True
+)
+def solver_image_modal_click(image_clicks, close_clicks, backdrop_clicks, image_buttons):
+    context = dash.ctx.triggered_id
+
+    hidden_style = {"display": "none"}
+    visible_style = {"display": "block"}
+
+    if context in ('solver-image-modal-close', 'solver-image-modal-backdrop'):
+        return hidden_style, dash.no_update, dash.no_update
+
+    if not isinstance(context, dict) or context.get("type") != "solver-result-image":
+        raise PreventUpdate
+
+    image_index = context.get("index")
+    if image_index is None or image_index >= len(image_buttons):
+        raise PreventUpdate
+
+    image_child = image_buttons[image_index]
+    if isinstance(image_child, list):
+        image_child = image_child[0] if image_child else None
+
+    image_props = image_child.get("props", {}) if isinstance(image_child, dict) else {}
+    return visible_style, image_props.get("src"), image_props.get("alt", "Solver plot")
 
 
 if __name__ == "__main__":

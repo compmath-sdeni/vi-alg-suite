@@ -317,11 +317,43 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                               html.Button("Видалити ребро", id='remove-edge-button',
                                                                           className="btn btn-danger"),
                                                           ]),
+
+                                                          html.Div(className="col-auto", children=[
+                                                              html.Button("Очистити вибір", id='clear-selection-button',
+                                                                          className="btn btn-secondary"),
+                                                          ]),
+                                                      ]),
+                                             html.Div([html.H4("Дані вершини", className="my-0 py-0")],
+                                                      className="form row align-items-left mt-3 g-1"),
+                                             html.Div(className="form row align-items-left mt-2 g-1",
+                                                      children=[
+                                                          html.Div(className="col-sm-3", children=[
+                                                              html.Label("Шар нової вершини",
+                                                                         htmlFor="add-vertex-layer-dropdown",
+                                                                         className="form-label"),
+                                                              dcc.Dropdown(id='add-vertex-layer-dropdown',
+                                                                           options=[
+                                                                               {'value': 'C', 'label': 'Collection site (C)'},
+                                                                               {'value': 'B', 'label': 'Blood center (B)'},
+                                                                               {'value': 'P', 'label': 'Component lab (P)'},
+                                                                               {'value': 'S', 'label': 'Storage facility (S)'},
+                                                                               {'value': 'D', 'label': 'Distribution center (D)'},
+                                                                               {'value': 'R', 'label': 'Demand point (R)'},
+                                                                           ],
+                                                                           value='C',
+                                                                           clearable=False)
+                                                          ]),
+                                                          html.Div(className="col-auto align-self-end", children=[
+                                                              html.Button("Додати вершину", id='add-vertex-button',
+                                                                          className="btn btn-primary"),
+                                                          ]),
+                                                          html.Div(className="col-auto align-self-end", children=[
+                                                              html.Button("Видалити обрану вершину",
+                                                                          id='remove-vertex-button',
+                                                                          className="btn btn-danger"),
+                                                          ]),
                                                       ]),
                                              html.Hr(),
-                                             # html.Div([html.H4("Node data", className="my-0 py-0")],
-                                             #          className="form row align-items-left mt-2 g-1"),
-                                             # html.Hr(),
                                              html.Div([html.H4("Зберегти задачу", className="my-0 py-0")],
                                                       className="form row align-items-left mt-2 g-1"),
                                              html.Div("Назва задачі відповідає теці зберігання даних",
@@ -370,21 +402,71 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                             ])]),
                                     ], className="form row"),
                                 ]),
-                                html.Div(id='solver-output', children=[
-                                    html.H4("Результати та історія виконання алгоритмів", className="bg-info p-1 mb-1 mt-4 text-center"),
-                                    html.Div(className="row", children=[
-                                        html.Div(className="col-sm-12 ps-1 pe-4", children=[
-                                            html.Div(id='solver-images-output'),
-                                        ])
-                                    ]),
-                                    html.Div(className="row", children=[
-                                        html.Div(className="col-sm-12", children=[
-                                            html.Div(id='solver-console-output'),
+                                dcc.Loading(
+                                    id="solver-loading",
+                                    type="default",
+                                    fullscreen=False,
+                                    children=html.Div(id='solver-output', children=[
+                                        html.H4("Результати та історія виконання алгоритмів", className="bg-info p-1 mb-1 mt-4 text-center"),
+                                        html.Div(className="row", children=[
+                                            html.Div(className="col-sm-12 ps-1 pe-4", children=[
+                                                html.Div(id='solver-images-output'),
+                                            ])
+                                        ]),
+                                        html.Div(className="row", children=[
+                                            html.Div(className="col-sm-12", children=[
+                                                html.Div(id='solver-console-output'),
+                                            ]),
                                         ]),
                                     ]),
-                                ]),
+                                ),
                             ]),
                         ]),
                     ])
-                ])
+                ]),
+            html.Div(id="solver-image-modal", style={"display": "none"}, children=[
+                html.Div(
+                    id="solver-image-modal-backdrop",
+                    style={
+                        "position": "fixed",
+                        "left": 0,
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "backgroundColor": "rgba(0, 0, 0, 0.65)",
+                        "zIndex": 1050,
+                    }
+                ),
+                html.Div(
+                    style={
+                        "position": "fixed",
+                        "left": "3vw",
+                        "top": "3vh",
+                        "right": "3vw",
+                        "bottom": "3vh",
+                        "zIndex": 1051,
+                        "backgroundColor": "#ffffff",
+                        "borderRadius": "6px",
+                        "boxShadow": "0 0.75rem 2rem rgba(0,0,0,.35)",
+                        "display": "flex",
+                        "flexDirection": "column",
+                    },
+                    children=[
+                        html.Div(
+                            className="d-flex justify-content-end p-2 border-bottom",
+                            children=html.Button("Закрити", id="solver-image-modal-close",
+                                                 className="btn btn-secondary")
+                        ),
+                        html.Div(
+                            style={"overflow": "auto", "padding": "12px", "flex": "1 1 auto"},
+                            children=html.Img(
+                                id="solver-image-modal-img",
+                                src="",
+                                alt="",
+                                style={"maxWidth": "none", "width": "140%", "height": "auto"}
+                            )
+                        ),
+                    ]
+                ),
+            ])
         ])

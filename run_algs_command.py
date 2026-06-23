@@ -194,13 +194,13 @@ if params.test_time:
         timings[alg.hr_name]['time'] /= params.test_time_count
         timings[alg.hr_name]['time'] /= params.time_scale_divider
 
-        BasicAlgoTests.PrintAlgRunStats(alg)
+        BasicAlgoTests.PrintAlgRunStats(alg, params=params)
 
 else:
     algs_to_test = prepare_algs_to_test(alg_names, problem)
     for alg in algs_to_test:
         alg.do()
-        BasicAlgoTests.PrintAlgRunStats(alg)
+        BasicAlgoTests.PrintAlgRunStats(alg, params=params)
         alg_history_list.append(alg.history)
 
         if params.save_history:
