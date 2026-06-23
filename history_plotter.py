@@ -117,25 +117,25 @@ def main():
     out_dir: str = '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/plots'
 
     # PseudoMono3 oper, MCIT-25-26
-    # output_image: str = 'ex2_sn_2cases.png'
-    # file_paths: List[str] = [
-    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-02_21-39-22/history-PseudoMonotoneOperOne-2025-11-02_21-39-22.xlsx',
-    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-02_21-54-37/history-PseudoMonotoneOperOne-2025-11-02_21-54-37.xlsx',
-    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-03_19-02-06/history-PseudoMonotoneOperOne-2025-11-03_19-02-06.xlsx'
-    # ]
+    output_image: str = 'ex2_sn_2cases.png'
+    file_paths: List[str] = [
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-02_21-39-22/history-PseudoMonotoneOperOne-2025-11-02_21-39-22.xlsx',
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-02_21-54-37/history-PseudoMonotoneOperOne-2025-11-02_21-54-37.xlsx',
+        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperOne-2025-11-03_19-02-06/history-PseudoMonotoneOperOne-2025-11-03_19-02-06.xlsx'
+    ]
 
     # 4 - ||x|| oper, MCIT-25-26
-    output_image: str = 'ex1_sn_2cases.png'
-    file_paths: List[str] = [
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27.xlsx',
-        '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22.xlsx',
-    ]
+    # output_image: str = 'ex1_sn_2cases.png'
+    # file_paths: List[str] = [
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-05-27.xlsx',
+    #     '/home/sd/prj/thesis/PyProgs/MethodsCompare/storage/stats/MCIT-25-26-2025-11/PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22/history-PseudoMonotoneOperAMinusNorm-2025-11-03_20-08-22.xlsx',
+    # ]
 
     x_column: str = 'iterations'
     x_label: str = 'Iteration'
 
     # real_error or step_delta_norm
-    y_column: str = 'step_delta_norm'
+    y_column: str = 'real_error'
 
     # D_n or S_n
     y_label: str = '$S_n$'
@@ -143,9 +143,9 @@ def main():
     max_x = None
     # max_x = 400
 
-    sheet_nums: List[int] = [[0, 1], [0, 1], [],[1]]
-    legend_names: List[str] = ['Alg. 1, $\\alpha=0.125$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.49$',
-                               'Alg. 1, $\\alpha=0.042$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.35$',
+    sheet_nums: List[int] = [[0, 1], [0], [1]]
+    legend_names: List[str] = ['FRB, $\\lambda=0.2$', 'adaFRB, $\\lambda_0=2, \  \\tau=0.49$',
+                               'FRB, $\\lambda=0.1$', 'adaFRB, $\\lambda_0=0.5, \  \\tau=0.49$',
 #                               'Alg. 1, $\\alpha=0.042$', 'Alg. 2, $\\alpha_0=2, \  \\tau=0.35$'
                                ]
 
