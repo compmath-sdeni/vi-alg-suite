@@ -75,9 +75,9 @@ bs_css = ("https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.c
 # Create the Dash application based on Flask server
 server = flask.Flask(__name__)
 app = dash.Dash(__name__, server=server,
-                title='Програмний комплекс на базі алгоритмів для варіаційних нерівностей',
+                title='Software system based on algorithms for variational inequalities',
                 background_callback_manager=background_callback_manager,
-                update_title='Завантаження ...',
+                update_title='Loading ...',
                 external_stylesheets=[bs_css]
                 )
 #                , external_stylesheets=["netedit.css"]
@@ -832,7 +832,10 @@ def edit_topology_click(
 
             problem.net.remove_edge(int(selected_edge_index))
             message = f"Edge {selected_edge_index} removed"
+            source_node = ''
+            target_node = ''
             selected_edge_index = ''
+            selected_node_id = ''
         elif event_source == 'clear-selection-button.n_clicks':
             return dash.no_update, "Selection cleared", '', '', '', ''
         else:

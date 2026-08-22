@@ -30,25 +30,26 @@ def get_cytoscape_graph_elements(net: BloodSupplyNetwork, *, G: nx.Graph = None,
 
     try:
         return [
-            {"data": {"id": str(node), "label": "Nod " + str(i)},
+            {"data": {"id": str(node), "label": "Node " + str(i)},
              "position": {"x": pos[node][0], "y": pos[node][1]}} for i, node in
             enumerate(G.nodes())
         ] + [
             {
                 "data": {
+                    "id": f"edge-{idx}",
                     "source": str(edge[0]), "target": str(edge[1]), "edge_index": str(idx), "edge_label": str(idx),
                     "operational_cost": net.c_string[idx], "waste_discard_cost": net.z_string[idx],
                     "risk_cost": (net.r_string[idx] if len(net.r_string) > idx else ''),
                     "alpha": net.edge_loss[idx],
                 }
-            } for idx, edge in enumerate(G.edges())
+            } for idx, edge in enumerate(net.edges)
         ]
     except Exception as e:
         logger.error(f"Error in get_cytoscape_graph_elements: {e}")
         for i, node in enumerate(G.nodes()):
             print(i, node, pos[node][0], pos[node][1])
 
-        for idx, edge in enumerate(G.edges()):
+        for idx, edge in enumerate(net.edges):
             print(idx, edge[0], edge[1], net.c_string[idx], net.z_string[idx],
                   (net.r_string[idx] if len(net.r_string) > idx else ''), net.edge_loss[idx])
         return []
@@ -134,7 +135,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                     html.Div(className="col-sm-5", id="graph-container", style={"border": "1px solid green"},
                              children=build_graph_view_layout(problem.net, G, pos, labels)),
                     html.Div(className="col-sm-7", style={"border": "1px solid gray"}, children=[
-                        html.H4("Активний користувач ", className="bg-info text-white p-2 mb-2 mt-1 text-center"),
+                        html.H4("User and session", className="bg-info text-white p-2 mb-2 mt-1 text-center"),
                         html.Div(className="form", children=[
                             html.Div(id="login-form-block", className="mb-2", children=[
                                 html.Div(className="row align-items-left mt-2", children=[
@@ -144,10 +145,10 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                     ]),
                                     html.Div(className="col-sm-3", children=[
                                         dcc.Input(id='password-input', type='password',
-                                                  placeholder="password", className="form-control"),
+                                                  placeholder="Password", className="form-control"),
                                     ]),
                                     html.Div(className="col-sm-3", children=[
-                                        html.Button("Увійти в систему", id='login-button',
+                                        html.Button("Log in", id='login-button',
                                                     className="btn btn-primary"),
                                     ]),
                                 ])
@@ -155,22 +156,22 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                             html.Div(id="user-session-block", className="mb-2", style={"display": "none"}, children=[
                                 html.Div(className="row align-items-left mt-2 ml-2", children=[
                                     html.Div(className="col-sm-2 mt-1", children=[
-                                        html.Span("Вітаю, "),
+                                        html.Span("Hello, "),
                                         html.Span(id='user-email-show',
                                                   style={"fontWeight": "bold", "fontSize": "larger"}),
                                     ]),
                                     html.Div(className="col-sm-2", children=[
-                                        html.Button("Вийти", id='logout-button',
+                                        html.Button("Log out", id='logout-button',
                                                     className="btn btn-warning"),
                                     ]),
                                     html.Div(className="col-sm-5", children=[
                                         dcc.Dropdown(id='user-saved-problems',
                                                      options=[{'value': problem["value"], 'label': problem["value"]} for
                                                               problem in get_saved_problems_list()], value=None,
-                                                     placeholder="Обрати задачу")
+                                                     placeholder="Select problem")
                                     ]),
                                     html.Div(className="col-sm-3", children=[
-                                        html.Button("Завантажити задачу", id='load-problem-button',
+                                        html.Button("Load problem", id='load-problem-button',
                                                     className="btn btn-primary")
                                     ]),
                                 ])
@@ -180,28 +181,28 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                         ]),
 
                         dcc.Tabs([
-                            dcc.Tab(label='Редагування задачі', children=[
+                            dcc.Tab(label='Problem editor', children=[
                                 html.Div(className="form",
                                          children=[
                                              html.Hr(),
-                                             html.Div([html.H4("Дані ребра", className="my-0 py-0")],
+                                             html.Div([html.H4("Edge data", className="my-0 py-0")],
                                                       className="form row align-items-left mt-2 g-1"),
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-sm-1", children=[
-                                                              html.Label("З", htmlFor="source-node-input",
+                                                              html.Label("Source", htmlFor="source-node-input",
                                                                          className="form-label"),
                                                               dcc.Input(id='source-node-input', type='text',
                                                                         placeholder="1", className="form-control"),
                                                           ]),
                                                           html.Div(className="col-sm-1", children=[
-                                                              html.Label("До", htmlFor="target-node-input",
+                                                              html.Label("Dest.", htmlFor="target-node-input",
                                                                          className="form-label"),
                                                               dcc.Input(id='target-node-input', type='text',
                                                                         placeholder="2", className="form-control"),
                                                           ]),
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Затрати: c(y); c'(y)",
+                                                              html.Label("Oper. cost: c(y); c'(y)",
                                                                          htmlFor="oper-cost-input",
                                                                          className="form-label"),
                                                               html.Div(className="row g-1", children=[
@@ -218,7 +219,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                               ]),
                                                           ]),
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Утилізація: z(y); z'(y)",
+                                                              html.Label("Waste cost: z(y); z'(y)",
                                                                          htmlFor="waste-discard-cost-input",
                                                                          className="form-label"),
                                                               html.Div(className="row g-1", children=[
@@ -241,7 +242,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                           html.Div(className="col-sm-3", children=[
                                                               html.Div(className="row g-1", children=[
                                                                   html.Div(className="col-sm-6", children=[
-                                                                  html.Label("Ризики: r(y)",
+                                                                  html.Label("Risk cost: r(y)",
                                                                              htmlFor="risk-cost-input",
                                                                              className="form-label"),]),
                                                                   html.Div(className="col-sm-6", children=[
@@ -263,7 +264,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                               ]),
                                                           ]),
                                                           html.Div(className="col-sm-1", children=[
-                                                              html.Label("1-втрати", htmlFor="edge-loss-input",
+                                                              html.Label("1-loss", htmlFor="edge-loss-input",
                                                                          className="form-label"),
                                                               dcc.Input(id='edge-loss-input', type='text',
                                                                         placeholder="e.g. 0.9",
@@ -273,14 +274,14 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-md-3 px-2", children=[
-                                                              html.Label("Прогноз. попит, min", htmlFor="expected_demand_min",
+                                                              html.Label("Expected demand, min", htmlFor="expected_demand_min",
                                                                          className="form-label"),
                                                               dcc.Input(id='expected_demand_min', type='text',
                                                                         placeholder="e.g. 2",
                                                                         className="form-control")
                                                           ]),
                                                           html.Div(className="col-md-3 px-2", children=[
-                                                              html.Label("Прогноз. попит, max",
+                                                              html.Label("Expected demand, max",
                                                                          htmlFor="expected_demand_max",
                                                                          className="form-label"),
                                                               dcc.Input(id='expected_demand_max', type='text',
@@ -288,47 +289,47 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                                         className="form-control")
                                                           ]),
                                                           html.Div(className="col-md-3 px-2", children=[
-                                                              html.Label("Розподіл",
+                                                              html.Label("Distribution type",
                                                                          htmlFor="expected_demand_distribution_type",
                                                                          className="form-label"),
                                                               dcc.Dropdown(id='expected_demand_distribution_type',
                                                                        options=[{'value': method["value"],
                                                                                  'label': method["label"]} for
-                                                                                method in [{'value': 'uniform', 'label': 'Рівномірний'}]],
+                                                                               method in [{'value': 'uniform', 'label': 'Uniform'}]],
                                                                        value="uniform",
                                                                        clearable=False,
-                                                                       placeholder="Тип розподілу імовірності")
+                                                                       placeholder="Probability distribution type")
                                                           ]),
                                             ]),
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-auto", children=[
-                                                              html.Button("Додати ребро", id='add-edge-button',
+                                                              html.Button("Add Edge", id='add-edge-button',
                                                                           className="btn btn-primary"),
                                                           ]),
 
                                                           html.Div(className="col-auto", children=[
-                                                              html.Button("Встановити параметри ребра",
+                                                              html.Button("Set edge parameters",
                                                                           id='set-edge-params-button',
                                                                           className="btn btn-info"),
                                                           ]),
 
                                                           html.Div(className="col-auto", children=[
-                                                              html.Button("Видалити ребро", id='remove-edge-button',
+                                                              html.Button("Remove Edge", id='remove-edge-button',
                                                                           className="btn btn-danger"),
                                                           ]),
 
                                                           html.Div(className="col-auto", children=[
-                                                              html.Button("Очистити вибір", id='clear-selection-button',
+                                                              html.Button("Clear selection", id='clear-selection-button',
                                                                           className="btn btn-secondary"),
                                                           ]),
                                                       ]),
-                                             html.Div([html.H4("Дані вершини", className="my-0 py-0")],
+                                             html.Div([html.H4("Vertex data", className="my-0 py-0")],
                                                       className="form row align-items-left mt-3 g-1"),
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-sm-3", children=[
-                                                              html.Label("Шар нової вершини",
+                                                              html.Label("New vertex layer",
                                                                          htmlFor="add-vertex-layer-dropdown",
                                                                          className="form-label"),
                                                               dcc.Dropdown(id='add-vertex-layer-dropdown',
@@ -344,29 +345,29 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                                            clearable=False)
                                                           ]),
                                                           html.Div(className="col-auto align-self-end", children=[
-                                                              html.Button("Додати вершину", id='add-vertex-button',
+                                                              html.Button("Add vertex", id='add-vertex-button',
                                                                           className="btn btn-primary"),
                                                           ]),
                                                           html.Div(className="col-auto align-self-end", children=[
-                                                              html.Button("Видалити обрану вершину",
+                                                              html.Button("Remove selected vertex",
                                                                           id='remove-vertex-button',
                                                                           className="btn btn-danger"),
                                                           ]),
                                                       ]),
                                              html.Hr(),
-                                             html.Div([html.H4("Зберегти задачу", className="my-0 py-0")],
+                                             html.Div([html.H4("Save problem", className="my-0 py-0")],
                                                       className="form row align-items-left mt-2 g-1"),
-                                             html.Div("Назва задачі відповідає теці зберігання даних",
+                                             html.Div("Name will be name of folder with the problem data",
                                                       className="form row align-items-left mt-2 g-1"),
                                              html.Div(className="form row align-items-left mt-2 g-1",
                                                       children=[
                                                           html.Div(className="col-sm-4", children=[
                                                               dcc.Input(id='save-problem-name-input', type='text',
-                                                                        placeholder="Назва задачі",
+                                                                        placeholder="Problem name",
                                                                         className="form-control"),
                                                           ]),
                                                           html.Div(className="col-auto", children=[
-                                                              html.Button("Зберегти", id='save-problem-button',
+                                                              html.Button("Save", id='save-problem-button',
                                                                           className="btn btn-success"),
                                                           ]),
                                                           html.Div(className="col-auto", children=[
@@ -376,15 +377,15 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                           ])
                                                       ]),
                                          ]),
-                                html.H4("Відлагоджувальна інформація", className="bg-info p-1 mb-1 mt-4 text-center"),
+                                html.H4("Debug information", className="bg-info p-1 mb-1 mt-4 text-center"),
                                 html.Div(id='console-output'),
                             ]),
-                            dcc.Tab(label="Розв'язання", children=[
+                            dcc.Tab(label="Problem solver", children=[
                                 html.Hr(),
                                 html.Div(className="form", children=[
                                     html.Div([
                                         html.Div(className="col-sm-2", children=[
-                                            html.H4("Алгоритми", className="mt-1"),
+                                            html.H4("Solve with", className="mt-1"),
                                         ]),
                                         html.Div(className="col-sm-8", children=[
                                             dcc.Dropdown(id='solver-methods',
@@ -393,11 +394,11 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                                                   method in get_available_solvers()],
                                                          value=None,
                                                          multi=True,
-                                                         placeholder="Обрати алгоритм"),
+                                                         placeholder="Select algorithms"),
                                         ]),
                                         html.Div(className="col-sm-2", children=[
                                             html.Div(children=[
-                                                html.Button("Розв'язати", id='solve-problem-button',
+                                                html.Button("Solve", id='solve-problem-button',
                                                             className="btn btn-success"),
                                             ])]),
                                     ], className="form row"),
@@ -407,7 +408,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                                     type="default",
                                     fullscreen=False,
                                     children=html.Div(id='solver-output', children=[
-                                        html.H4("Результати та історія виконання алгоритмів", className="bg-info p-1 mb-1 mt-4 text-center"),
+                                        html.H4("Results and algorithm run history", className="bg-info p-1 mb-1 mt-4 text-center"),
                                         html.Div(className="row", children=[
                                             html.Div(className="col-sm-12 ps-1 pe-4", children=[
                                                 html.Div(id='solver-images-output'),
@@ -454,7 +455,7 @@ def get_layout(problem: BloodSupplyNetworkProblem, session_id: str, *, selected_
                     children=[
                         html.Div(
                             className="d-flex justify-content-end p-2 border-bottom",
-                            children=html.Button("Закрити", id="solver-image-modal-close",
+                            children=html.Button("Close", id="solver-image-modal-close",
                                                  className="btn btn-secondary")
                         ),
                         html.Div(
